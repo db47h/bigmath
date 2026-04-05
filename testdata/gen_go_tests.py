@@ -5,6 +5,7 @@
 import sys
 import argparse
 import gmpy2
+import builtins
 
 def generate_go_tests(input_file, output_file, precision):
     
@@ -53,7 +54,17 @@ var data = []testData{{
                 
                 # Logic that might panic
                 mpfr_args = [gmpy2.mpfr(arg) for arg in str_args]
-                func = getattr(gmpy2, func_name)
+                
+                # Lookup function: gmpy2 -> globals -> builtins
+                func = getattr(gmpy2, func_name, None)
+                if func is None:
+                    func = globals().get(func_name)
+                if func is None:
+                    func = getattr(builtins, func_name, None)
+                
+                if func is None:
+                    raise AttributeError(f"function '{func_name}' not found")
+                
                 result = func(*mpfr_args)
                 
                 # Hex float format for bit-perfect transfer

@@ -17,6 +17,7 @@ import (
 var fnMap = map[string]any{
 	"exp": bigmath.Exp,
 	"log": bigmath.Log,
+	"pow": bigmath.Pow,
 }
 
 // func testExp(z *big.Float, args ...big.Float) *big.Float {
@@ -57,6 +58,46 @@ func TestBigMath(t *testing.T) {
 			if got.Cmp(want) != 0 {
 				t.Fatalf("%s(%v): got %s, want %s", d.fn, d.args, got.Text('x', -1), want.Text('x', -1))
 			}
+		})
+	}
+}
+
+func TestLogErrNaN(t *testing.T) {
+	tests := []string{"-1", "-10", "-inf"}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Log(%s)", tt), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("Log(%s) did not panic", tt)
+				} else if _, ok := r.(bigmath.ErrNaN); !ok {
+					t.Errorf("Log(%s) panicked with %v, want ErrNaN", tt, r)
+				}
+			}()
+			x, _, _ := new(big.Float).SetPrec(dataPrec).Parse(tt, 0)
+			bigmath.Log(new(big.Float).SetPrec(dataPrec), x)
+		})
+	}
+}
+
+func TestPowErrNaN(t *testing.T) {
+	tests := []struct {
+		x, y string
+	}{
+		{"-2", "0.5"},
+		{"-1", "1.5"},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("Pow(%s,%s)", tt.x, tt.y), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("Pow(%s, %s) did not panic", tt.x, tt.y)
+				} else if _, ok := r.(bigmath.ErrNaN); !ok {
+					t.Errorf("Pow(%s, %s) panicked with %v, want ErrNaN", tt.x, tt.y, r)
+				}
+			}()
+			x, _, _ := new(big.Float).SetPrec(dataPrec).Parse(tt.x, 0)
+			y, _, _ := new(big.Float).SetPrec(dataPrec).Parse(tt.y, 0)
+			bigmath.Pow(new(big.Float).SetPrec(dataPrec), x, y)
 		})
 	}
 }
