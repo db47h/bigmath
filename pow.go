@@ -7,12 +7,7 @@ import (
 )
 
 func isOdd(x *big.Float) bool {
-	if !x.IsInt() {
-		return false
-	}
-	var i big.Int
-	x.Int(&i)
-	return i.Bit(0) != 0
+	return x.IsInt() && x.Sign() != 0 && x.MantExp(nil) == int(x.MinPrec())
 }
 
 func absCmpOne(x *big.Float) int {
