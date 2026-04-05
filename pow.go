@@ -4,6 +4,7 @@ package bigmath
 
 import (
 	"math/big"
+	"math/bits"
 )
 
 func isOdd(x *big.Float) bool {
@@ -111,12 +112,18 @@ func Pow(z, x, y *big.Float) *big.Float {
 		panic(ErrNaN("Pow(x, y) where x < 0 and y is not an integer"))
 	}
 
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+
 	// For integer exponents, use optimizations.
 	if y.IsInt() {
-		// Detect huge exponents that will surely overflow or underflow
+		// Detect huge exponents that will surely overflow or underflow.
+		// yExp > 64 implies |y| >= 2^64 (as f*2^e with 0.5 <= f < 1).
 		yExp := y.MantExp(nil)
 		if yExp > 64 {
-			// y is huge.
 			cmp := absCmpOne(x)
 			if (y.Sign() > 0 && cmp > 0) || (y.Sign() < 0 && cmp < 0) {
 				if x.Signbit() && isOdd(y) {
@@ -131,46 +138,20 @@ func Pow(z, x, y *big.Float) *big.Float {
 			return z.Set(zero)
 		}
 
+		// Since yExp <= 64, |y| fits in a big.Int with BitLen() <= 64.
+		// Binary exponentiation is efficient for this range.
 		n := new(big.Int)
 		y.Int(n)
-
-		// Binary exponentiation is O(log(n)) multiplications.
-		// Exp(y * Log(x)) is O(log(prec)) multiplications.
-		if n.BitLen() <= 128 {
-			return powInt(z, x, n)
-		}
-
-		if x.Signbit() {
-			absX := new(big.Float).Abs(x)
-			odd := n.Bit(0) != 0
-			z = Pow(z, absX, y)
-			if odd {
-				z.Neg(z)
-			}
-			return z
-		}
+		return powInt(z, x, n)
 	}
 
 	// General case: x^y = exp(y * ln(x))
-	prec := z.Prec()
-	if prec == 0 {
-		prec = x.Prec()
-	}
-
-	// Working precision
-	workPrec := addPrec(prec, 64)
+	// Working precision: add at least one word of guard bits.
+	workPrec := addPrec(prec, uint(bits.UintSize))
 
 	l := newFloat(workPrec)
 	Log(l, x)
-	
-	temp := newFloat(workPrec)
-	temp.Mul(l, y)
-	l, temp = temp, l
-
-	// Set z precision if it was 0
-	if z.Prec() == 0 {
-		z.SetPrec(prec)
-	}
+	l.Mul(l, y)
 
 	return Exp(z, l)
 }
@@ -180,8 +161,9 @@ func powInt(z, x *big.Float, n *big.Int) *big.Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
+		z.SetPrec(prec)
 	}
-	workPrec := addPrec(prec, 64)
+	workPrec := addPrec(prec, uint(bits.UintSize))
 
 	neg := n.Sign() < 0
 	absN := new(big.Int).Abs(n)
