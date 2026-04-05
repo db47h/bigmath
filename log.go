@@ -41,7 +41,7 @@ func Log(z, x *big.Float) *big.Float {
 		if x.Sign() == 0 {
 			return z.SetInf(true).Neg(z) // ln(0) = -Inf
 		}
-		return z.SetInf(false) // ln(neg) = NaN (big.Float uses Inf for simplicity or you can handle differently)
+		panic(ErrNaN("logarithm of negative number"))
 	}
 	if x.IsInf() {
 		return z.Set(x)

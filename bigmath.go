@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-// Package bigmath implements big.Float math functions.
+// Package bigmath provides arbitrary precision mathematical functions for [big.Float].
+// The functions in this package follow the same rounding and precision semantics
+// as the standard [big.Float] operations.
 package bigmath
 
 // An ErrNaN panic is raised by a [big.Float] operation that would lead to
