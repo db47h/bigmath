@@ -3,9 +3,15 @@
 package bigmath
 
 import (
+	"math"
 	"math/big"
 	"math/bits"
 	"sync"
+)
+
+const (
+	maxExp = math.MaxInt32
+	minExp = math.MinInt32
 )
 
 // constProvider is an internal function type used to generate a mathematical
@@ -35,6 +41,8 @@ var (
 	one  = new(big.Float).SetUint64(1)
 	two  = new(big.Float).SetUint64(2)
 	ten  = new(big.Float).SetUint64(10)
+
+	minusOne = new(big.Float).SetInt64(-1)
 
 	// cached constants
 	sqrt2 = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })

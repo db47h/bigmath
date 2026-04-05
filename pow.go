@@ -15,6 +15,21 @@ func isOdd(x *big.Float) bool {
 	return i.Bit(0) != 0
 }
 
+func absCmpOne(x *big.Float) int {
+	exp := x.MantExp(nil)
+	if exp > 1 {
+		return 1
+	}
+	if exp < 1 {
+		return -1
+	}
+	// exp == 1 => 1 <= |x| < 2
+	if x.Signbit() {
+		return -x.Cmp(minusOne)
+	}
+	return x.Cmp(one)
+}
+
 // Pow sets z to the rounded value of x^y and returns z.
 //
 // If z's precision is 0, it is changed to x's precision before the operation.
@@ -73,8 +88,7 @@ func Pow(z, x, y *big.Float) *big.Float {
 	}
 
 	if y.IsInf() {
-		absX := new(big.Float).Abs(x)
-		cmp := absX.Cmp(one)
+		cmp := absCmpOne(x)
 		if cmp == 0 {
 			return z.Set(one)
 		}
@@ -102,19 +116,35 @@ func Pow(z, x, y *big.Float) *big.Float {
 		panic(ErrNaN("Pow(x, y) where x < 0 and y is not an integer"))
 	}
 
-	// For integer exponents, use exponentiation by squaring if it's likely
-	// to be faster than the transcendental approach.
+	// For integer exponents, use optimizations.
 	if y.IsInt() {
+		// Detect huge exponents that will surely overflow or underflow
+		yExp := y.MantExp(nil)
+		if yExp > 64 {
+			// y is huge.
+			cmp := absCmpOne(x)
+			if (y.Sign() > 0 && cmp > 0) || (y.Sign() < 0 && cmp < 0) {
+				if x.Signbit() && isOdd(y) {
+					return z.SetInf(true)
+				}
+				return z.SetInf(false)
+			}
+			// underflow
+			if x.Signbit() && isOdd(y) {
+				return z.Set(zero).Neg(z)
+			}
+			return z.Set(zero)
+		}
+
 		n := new(big.Int)
 		y.Int(n)
+
 		// Binary exponentiation is O(log(n)) multiplications.
 		// Exp(y * Log(x)) is O(log(prec)) multiplications.
-		// Use a conservative threshold for now.
 		if n.BitLen() <= 128 {
 			return powInt(z, x, n)
 		}
-		// if x < 0 and n is large, we still need to use Pow(abs(x), y)
-		// and correct the sign.
+
 		if x.Signbit() {
 			absX := new(big.Float).Abs(x)
 			odd := n.Bit(0) != 0
@@ -137,7 +167,10 @@ func Pow(z, x, y *big.Float) *big.Float {
 
 	l := newFloat(workPrec)
 	Log(l, x)
-	l.Mul(l, y)
+	
+	temp := newFloat(workPrec)
+	temp.Mul(l, y)
+	l, temp = temp, l
 
 	// Set z precision if it was 0
 	if z.Prec() == 0 {
@@ -159,12 +192,21 @@ func powInt(z, x *big.Float, n *big.Int) *big.Float {
 	absN := new(big.Int).Abs(n)
 
 	res := newFloat(workPrec).SetUint64(1)
+	temp := newFloat(workPrec)
 	base := newFloat(workPrec).Set(x)
 
 	for i := absN.BitLen() - 1; i >= 0; i-- {
-		res.Mul(res, res)
+		temp.Mul(res, res)
+		res, temp = temp, res
+		if res.IsInf() {
+			break
+		}
 		if absN.Bit(i) != 0 {
-			res.Mul(res, base)
+			temp.Mul(res, base)
+			res, temp = temp, res
+		}
+		if res.IsInf() {
+			break
 		}
 	}
 
