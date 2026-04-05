@@ -3,9 +3,9 @@
 package bigmath_test
 
 import (
+	"crypto/rand"
 	"fmt"
 	"math/big"
-	"math/rand/v2"
 	"testing"
 
 	"github.com/db47h/bigmath"
@@ -18,28 +18,17 @@ func benchmarkPowInt(b *testing.B, x, y, z *big.Float) {
 	}
 }
 
-func randomBigInt(rng *rand.Rand, prec uint) *big.Int {
-	bytes := make([]byte, (prec+7)/8)
-	for i := range bytes {
-		bytes[i] = byte(rng.Uint32())
-	}
-	n := new(big.Int).SetBytes(bytes)
-	// Ensure it has exactly 'prec' bits
-	n.SetBit(n, int(prec-1), 1)
-	// Ensure it's not a power of 2 by making it odd
-	n.SetBit(n, 0, 1)
-	return n
-}
-
 func BenchmarkPow(b *testing.B) {
 	precisions := []uint{256, 1024, 2048}
 	exponents := []int64{10, 100, 1000, 10000}
 
-	rng := rand.New(rand.NewPCG(42, 42))
-
 	for _, prec := range precisions {
-		// Pre-generate x once for each precision
-		xInt := randomBigInt(rng, prec)
+		// Pre-generate x once for each precision.
+		// Use a random prime to ensure it's not a power of 2 and has full precision.
+		xInt, err := rand.Prime(rand.Reader, int(prec))
+		if err != nil {
+			b.Fatalf("Failed to generate random prime: %v", err)
+		}
 		x := new(big.Float).SetPrec(prec).SetInt(xInt)
 
 		for _, exp := range exponents {
