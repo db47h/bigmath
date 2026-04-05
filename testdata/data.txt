@@ -1,0 +1,20 @@
+# exponential
+exp 0
+exp 1
+exp 0.001
+exp 100
+exp inf
+exp -inf
+# min max values such that exp(x) is finite
+# for mpfr with 30 bits emin/emax
+exp 744261117
+exp -744261117
+# if mpfr supports full 32 bits emin, emax:
+# exp 1488522234.523491675
+
+# log
+log 2
+log 1
+log 1e-100
+log 1e100
+log 1.0000000000000001
