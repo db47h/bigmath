@@ -18,6 +18,7 @@ var fnMap = map[string]any{
 	"exp":      bigmath.Exp,
 	"log":      bigmath.Log,
 	"pow":      bigmath.Pow,
+	"atan":     bigmath.Atan,
 	"const_pi": testPiConst,
 }
 
