@@ -7,23 +7,6 @@ import (
 	"math/big"
 )
 
-// addPrec returns the prec+extra, capped at big.MaxPrec
-// uses checked math to prevent overflows.
-func addPrec(prec uint, extra uint) uint {
-	if extra > big.MaxPrec || prec > big.MaxPrec-extra {
-		return big.MaxPrec
-	}
-	return prec + extra
-}
-
-func newFloat(prec uint) *big.Float {
-	return new(big.Float).SetPrec(prec)
-}
-
-func ULPExponent(x *big.Float) int {
-	return x.MantExp(nil) - int(x.Prec())
-}
-
 // Exp sets z to the rounded value of e^x, and returns z.
 //
 // If z's precision is 0, it is changed to x's precision before the operation.

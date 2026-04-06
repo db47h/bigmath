@@ -5,6 +5,10 @@
 // as the standard [big.Float] operations.
 package bigmath
 
+import (
+	"math/big"
+)
+
 // An ErrNaN panic is raised by a [big.Float] operation that would lead to
 // a NaN under IEEE 754 rules. An ErrNaN implements the error interface.
 type ErrNaN string
@@ -23,4 +27,46 @@ type ErrNaN string
 
 func (err ErrNaN) Error() string {
 	return string(err)
+}
+
+// addPrec returns the prec+extra, capped at big.MaxPrec
+// uses checked math to prevent overflows.
+func addPrec(prec uint, extra uint) uint {
+	if extra > big.MaxPrec || prec > big.MaxPrec-extra {
+		return big.MaxPrec
+	}
+	return prec + extra
+}
+
+func newFloat(prec uint) *big.Float {
+	return new(big.Float).SetPrec(prec)
+}
+
+func ULPExponent(x *big.Float) int {
+	return x.MantExp(nil) - int(x.Prec())
+}
+
+// fma sets z to x * y + t and returns z.
+// z may be an alias of x or y without causing any extra memory allocations.
+// temp is a scratch variable that will hold the temp result of the multiplication with added precision.
+// temp should not be an alias of any other argument.
+func fma(z, x, y, t, temp *big.Float) *big.Float {
+	// Use full precision for the product. Mul computes the product with full
+	// precision before rounding. As a result, setting temp's precision to
+	// x.prec + z.prec does not cause any extra allocations, even if
+	// x.MinPrec() < x.Prec().
+	// Since z's precision may change and z could be an alias for x or y, set
+	//  temp's precision early.
+	temp.SetPrec(0).SetPrec(x.Prec() + y.Prec())
+
+	if z.Prec() == 0 {
+		z.SetPrec(max(x.Prec(), y.Prec(), t.Prec()))
+	}
+	return z.Add(temp.Mul(x, y), t)
+}
+
+// FMA sets z to x * y + t and returns z.
+// The operation is performed with extra precision to minimize rounding errors.
+func FMA(z, x, y, t *big.Float) *big.Float {
+	return fma(z, x, y, t, new(big.Float))
 }
