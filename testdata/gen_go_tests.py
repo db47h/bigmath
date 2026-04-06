@@ -56,20 +56,28 @@ var data = []testData{{
                 mpfr_args = [gmpy2.mpfr(arg) for arg in str_args]
                 
                 # Lookup function: gmpy2 -> globals -> builtins
-                func = getattr(gmpy2, func_name, None)
-                if func is None:
-                    func = globals().get(func_name)
-                if func is None:
-                    func = getattr(builtins, func_name, None)
-                
-                if func is None:
-                    raise AttributeError(f"function '{func_name}' not found")
-                
-                result = func(*mpfr_args)
+                if func_name.startswith("const_"):
+                    # Constant: ignores args
+                    func = getattr(gmpy2, func_name, None)
+                    if func is None:
+                        raise AttributeError(f"constant function '{func_name}' not found in gmpy2")
+                    result = func()
+                    go_args = ""
+                else:
+                    func = getattr(gmpy2, func_name, None)
+                    if func is None:
+                        func = globals().get(func_name)
+                    if func is None:
+                        func = getattr(builtins, func_name, None)
+                    
+                    if func is None:
+                        raise AttributeError(f"function '{func_name}' not found")
+                    
+                    result = func(*mpfr_args)
+                    go_args = ", ".join(f'"{a}"' for a in str_args)
                 
                 # Hex float format for bit-perfect transfer
                 res_str = format(result, 'a')
-                go_args = ", ".join(f'"{a}"' for a in str_args)
                 
                 out.write(f'\t{{"{func_name}", []string{{{go_args}}}, "{res_str}"}},\n')
                 

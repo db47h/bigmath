@@ -15,14 +15,15 @@ import (
 )
 
 var fnMap = map[string]any{
-	"exp": bigmath.Exp,
-	"log": bigmath.Log,
-	"pow": bigmath.Pow,
+	"exp":      bigmath.Exp,
+	"log":      bigmath.Log,
+	"pow":      bigmath.Pow,
+	"const_pi": testPiConst,
 }
 
-// func testExp(z *big.Float, args ...big.Float) *big.Float {
-// 	return nil
-// }
+func testPiConst(z *big.Float) *big.Float {
+	return bigmath.Pi(z)
+}
 
 func TestBigMath(t *testing.T) {
 	// Create a big.Float with the same precision used in Python

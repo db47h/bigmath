@@ -3,15 +3,9 @@
 package bigmath
 
 import (
-	"math"
 	"math/big"
 	"math/bits"
 	"sync"
-)
-
-const (
-	maxExp = math.MaxInt32
-	minExp = math.MinInt32
 )
 
 // constProvider is an internal function type used to generate a mathematical
@@ -48,6 +42,7 @@ var (
 	sqrt2 = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })
 	ln2   = cache(func(prec uint) *big.Float { return computeLn(two, prec+bits.UintSize) })
 	ln10  = cache(func(prec uint) *big.Float { return Log(newFloat(prec), ten) })
+	pi    = cache(computePi)
 )
 
 // cache wraps a constProvider with thread-safe memoization.
