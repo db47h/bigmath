@@ -34,7 +34,10 @@ var (
 	zero = new(big.Float)
 	one  = new(big.Float).SetUint64(1)
 	two  = new(big.Float).SetUint64(2)
+	four = new(big.Float).SetUint64(4)
+	five = new(big.Float).SetUint64(5)
 	ten  = new(big.Float).SetUint64(10)
+	twoHundredThirtyNine = new(big.Float).SetUint64(239)
 
 	minusOne = new(big.Float).SetInt64(-1)
 
