@@ -4,7 +4,6 @@ package bigmath
 
 import (
 	"math/big"
-	"math/bits"
 )
 
 func isOdd(x *big.Float) bool {
@@ -147,9 +146,7 @@ func Pow(z, x, y *big.Float) *big.Float {
 
 	// General case: x^y = exp(y * ln(x))
 	// Working precision: add at least one word of guard bits.
-	workPrec := prec + bits.UintSize
-
-	l := Log(newFloat(workPrec), x)
+	l := Log(newFloat(prec+_W), x)
 	return Exp(z, l.Mul(l, y))
 }
 
@@ -160,7 +157,7 @@ func powInt(z, x *big.Float, n *big.Int) *big.Float {
 		prec = x.Prec()
 		z.SetPrec(prec)
 	}
-	workPrec := prec + bits.UintSize
+	workPrec := prec + _W
 
 	neg := n.Sign() < 0
 	absN := new(big.Int).Abs(n)
@@ -185,7 +182,7 @@ func powInt(z, x *big.Float, n *big.Int) *big.Float {
 	}
 
 	if neg {
-		res.Quo(one, res)
+		return z.Quo(one, res)
 	}
 
 	return z.Set(res)

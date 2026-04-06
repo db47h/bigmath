@@ -4,19 +4,18 @@ package bigmath
 
 import (
 	"math/big"
-	"math/bits"
 )
 
-// computeLn calculates ln(x) using the artanh series.
-// Optimized for constants where x is a small integer near 1.
-// prec is the desired precision for the result, however, the result is not
-// guaranteed to be correct in the last word of the mantissa.
-func computeLn(x *big.Float, prec uint) *big.Float {
+// computeLn calculates z = ln(x) using the artanh series using z's precision
+// and returns z. Optimized for constants where x is a small integer near 1. The
+// result is not guaranteed to be correct in the last word of the mantissa.
+func computeLn(z, x *big.Float) *big.Float {
+	prec := z.Prec()
 	// target = (x-1)/(x+1)
 	t0 := newFloat(prec).Sub(x, one)
 	t1 := newFloat(prec).Add(x, one)
 	term := newFloat(prec).Quo(t0, t1)
-	sum := newFloat(prec).Set(term)
+	z.Set(term)
 	v2 := newFloat(prec).Mul(term, term)
 
 	for i := uint64(1); ; i++ {
@@ -27,14 +26,14 @@ func computeLn(x *big.Float, prec uint) *big.Float {
 		// t0 = term / (2i + 1)
 		t0.Quo(term, t1.SetUint64(2*i+1))
 
-		if t0.Sign() == 0 || t0.MantExp(nil) < ULPExponent(sum) {
+		if t0.Sign() == 0 || t0.MantExp(nil) < ULPExponent(z) {
 			break
 		}
-		t0.Add(sum, t0)
-		sum, t0 = t0, sum
+		t0.Add(z, t0)
+		z, t0 = t0, z
 	}
 
-	return sum.SetMantExp(sum, 1)
+	return z.SetMantExp(z, 1)
 }
 
 func Log(z, x *big.Float) *big.Float {
@@ -51,11 +50,11 @@ func Log(z, x *big.Float) *big.Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
+		z.SetPrec(prec)
 	}
-	z.SetPrec(0).SetPrec(prec)
 
 	// Guard bits for intermediate calculations
-	prec += bits.UintSize
+	prec += _W
 
 	// 1. Primary Reduction: x = m * 2^exp
 	m := new(big.Float).Copy(x)
@@ -70,14 +69,14 @@ func Log(z, x *big.Float) *big.Float {
 
 	// 3. Compute ln(m) using the artanh series
 	// ln(m) = 2 * artanh((m-1)/(m+1))
-	res := computeLn(m, prec)
+	lnM := computeLn(newFloat(prec), m)
 
-	// 4. Combine: res = ln(m) + exp × ln(2)
+	// 4. Combine: ln(x) = ln(m) + exp × ln(2)
 	if exp != 0 {
-		m.SetPrec(0).SetInt64(int64(exp))
-		termExp := newFloat(prec).Mul(m, ln2(prec))
-		res.Add(res, termExp)
+		// FMA is cheap here since the internal precision will be prec+64
+		// and it will handle temps nicely.
+		return FMA(z, m.SetPrec(0).SetInt64(int64(exp)), ln2(prec), lnM)
 	}
 
-	return z.Set(res)
+	return z.Set(lnM)
 }

@@ -8,6 +8,9 @@ import (
 	"sync"
 )
 
+// word size for the mantissa of a big.Float (big.Word)
+const _W = bits.UintSize
+
 // constProvider is an internal function type used to generate a mathematical
 // constant at a specific precision.
 //
@@ -31,19 +34,18 @@ type constProvider func(prec uint) *big.Float
 // behavior in subsequent calculations across the entire program.
 var (
 	// static constants not managed by the cache
-	zero = new(big.Float)
-	one  = new(big.Float).SetUint64(1)
-	two  = new(big.Float).SetUint64(2)
-	four = new(big.Float).SetUint64(4)
-	five = new(big.Float).SetUint64(5)
-	ten  = new(big.Float).SetUint64(10)
+	zero                 = new(big.Float)
+	one                  = new(big.Float).SetUint64(1)
+	two                  = new(big.Float).SetUint64(2)
+	five                 = new(big.Float).SetUint64(5)
+	ten                  = new(big.Float).SetUint64(10)
 	twoHundredThirtyNine = new(big.Float).SetUint64(239)
 
 	minusOne = new(big.Float).SetInt64(-1)
 
 	// cached constants
 	sqrt2 = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })
-	ln2   = cache(func(prec uint) *big.Float { return computeLn(two, prec+bits.UintSize) })
+	ln2   = cache(func(prec uint) *big.Float { return computeLn(newFloat(prec+_W), two).SetPrec(prec) })
 	ln10  = cache(func(prec uint) *big.Float { return Log(newFloat(prec), ten) })
 	pi    = cache(computePi)
 )

@@ -123,16 +123,16 @@ func computePi(prec uint) *big.Float {
 
 	// 4*arctan(1/5)
 	atanCore(p1, five)
-	t.Mul(p1, four)
+	p1.SetMantExp(p1, 2)
 
 	// arctan(1/239)
 	atanCore(p2, twoHundredThirtyNine)
 
 	// pi/4 = 4*arctan(1/5) - arctan(1/239)
-	p1.Sub(t, p2)
+	t.Sub(p1, p2)
 
 	// pi = 4 * (pi/4)
-	return t.Mul(p1, four).SetPrec(prec)
+	return t.SetMantExp(t, 2).SetPrec(prec)
 }
 
 // Pi sets z to the rounded value of PI and returns z.

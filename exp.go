@@ -38,8 +38,7 @@ func Exp(z, x *big.Float) *big.Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		// reset/set z.prec
-		z.SetPrec(0).SetPrec(prec)
+		z.SetPrec(prec)
 	}
 
 	// The following is based on R. P. Brent, P. Zimmermann, Modern Computer
