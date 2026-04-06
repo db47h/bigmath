@@ -12,7 +12,7 @@ import (
 func atanCore(z, n *big.Float) *big.Float {
 	prec := z.Prec()
 	// Guard bits to ensure precision
-	workPrec := addPrec(prec, 4)
+	workPrec := prec + 4
 
 	// temps
 	t := newFloat(workPrec)
@@ -79,7 +79,7 @@ func Atan(z, x *big.Float) *big.Float {
 		z.SetPrec(prec)
 	}
 
-	prec = addPrec(prec, 4)
+	prec += 4
 
 	x = new(big.Float).SetPrec(prec).Copy(x)
 	var neg bool
@@ -115,7 +115,7 @@ func Atan(z, x *big.Float) *big.Float {
 
 // computePi computes PI using Machin's formula: PI/4 = 4*arctan(1/5) - arctan(1/239)
 func computePi(prec uint) *big.Float {
-	workPrec := addPrec(prec, 4)
+	workPrec := prec + 4
 
 	t := newFloat(workPrec)
 	p1 := newFloat(workPrec)
@@ -141,5 +141,5 @@ func Pi(z *big.Float) *big.Float {
 	if prec == 0 {
 		prec = 53
 	}
-	return z.Set(computePi(prec))
+	return z.Set(pi(prec))
 }

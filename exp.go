@@ -64,7 +64,7 @@ func Exp(z, x *big.Float) *big.Float {
 	// 1 ≤ k ≤ ceil(√MaxPrec)
 	k := int(math.Ceil(math.Sqrt(float64(prec))))
 	// Working precision (§4.4)
-	prec = addPrec(prec, uint(math.Log(float64(prec)))+1)
+	prec += uint(math.Log(float64(prec))) + 1
 	squarings := 0
 	if -k < exp {
 		// -46341 ≤ -k ≤ -1 < exp ≤ 31
@@ -73,9 +73,7 @@ func Exp(z, x *big.Float) *big.Float {
 		// 0 ≤ k-1 < exp (condition needed to undo argument reduction)
 		x.SetMantExp(x, -squarings)
 		// 2 bits of added precision per multiplication when undoing argument reduction.
-		// prec += 2 * uint(exp)
-		prec = addPrec(prec, uint(squarings))
-		prec = addPrec(prec, uint(squarings))
+		prec += 2 * uint(squarings)
 	}
 
 	// temp vars

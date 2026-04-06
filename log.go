@@ -4,6 +4,7 @@ package bigmath
 
 import (
 	"math/big"
+	"math/bits"
 )
 
 // computeLn calculates ln(x) using the artanh series.
@@ -54,7 +55,7 @@ func Log(z, x *big.Float) *big.Float {
 	z.SetPrec(0).SetPrec(prec)
 
 	// Guard bits for intermediate calculations
-	prec = addPrec(prec, 64)
+	prec += bits.UintSize
 
 	// 1. Primary Reduction: x = m * 2^exp
 	m := new(big.Float).Copy(x)

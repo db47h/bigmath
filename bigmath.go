@@ -29,15 +29,6 @@ func (err ErrNaN) Error() string {
 	return string(err)
 }
 
-// addPrec returns the prec+extra, capped at big.MaxPrec
-// uses checked math to prevent overflows.
-func addPrec(prec uint, extra uint) uint {
-	if extra > big.MaxPrec || prec > big.MaxPrec-extra {
-		return big.MaxPrec
-	}
-	return prec + extra
-}
-
 func newFloat(prec uint) *big.Float {
 	return new(big.Float).SetPrec(prec)
 }

@@ -147,13 +147,10 @@ func Pow(z, x, y *big.Float) *big.Float {
 
 	// General case: x^y = exp(y * ln(x))
 	// Working precision: add at least one word of guard bits.
-	workPrec := addPrec(prec, uint(bits.UintSize))
+	workPrec := prec + bits.UintSize
 
-	l := newFloat(workPrec)
-	Log(l, x)
-	l.Mul(l, y)
-
-	return Exp(z, l)
+	l := Log(newFloat(workPrec), x)
+	return Exp(z, l.Mul(l, y))
 }
 
 // powInt computes x^n using exponentiation by squaring.
@@ -163,12 +160,12 @@ func powInt(z, x *big.Float, n *big.Int) *big.Float {
 		prec = x.Prec()
 		z.SetPrec(prec)
 	}
-	workPrec := addPrec(prec, uint(bits.UintSize))
+	workPrec := prec + bits.UintSize
 
 	neg := n.Sign() < 0
 	absN := new(big.Int).Abs(n)
 
-	res := newFloat(workPrec).SetUint64(1)
+	res := newFloat(workPrec).Set(one)
 	temp := newFloat(workPrec)
 	base := newFloat(workPrec).Set(x)
 
