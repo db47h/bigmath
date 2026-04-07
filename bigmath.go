@@ -41,6 +41,7 @@ func ULPExponent(x *big.Float) int {
 // z may be an alias of x or y without causing any extra memory allocations.
 // temp is a scratch variable that will hold the temp result of the multiplication with added precision.
 // temp should not be an alias of any other argument.
+// Upon return, temp will contain the exact product x×y.
 func fma(z, x, y, t, temp *big.Float) *big.Float {
 	// Use full precision for the product. Mul computes the product with full
 	// precision before rounding. As a result, setting temp's precision to

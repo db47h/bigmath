@@ -17,7 +17,7 @@ func Pi(z *big.Float) *big.Float {
 
 // computePi computes PI using Machin's formula: PI/4 = 4*arctan(1/5) - arctan(1/239)
 func computePi(prec uint) *big.Float {
-	workPrec := prec + _W
+	workPrec := prec + 4
 
 	t := newFloat(workPrec)
 	p1 := newFloat(workPrec)

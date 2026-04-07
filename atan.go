@@ -3,6 +3,7 @@
 package bigmath
 
 import (
+	"math"
 	"math/big"
 )
 
@@ -15,7 +16,8 @@ func atanCore(z, n *big.Float) *big.Float {
 	workPrec := prec + _W
 
 	// temps
-	t := newFloat(workPrec)
+	t0 := newFloat(workPrec)
+	t1 := newFloat(workPrec)
 	t2 := newFloat(workPrec)
 
 	// term = 1/n
@@ -25,28 +27,29 @@ func atanCore(z, n *big.Float) *big.Float {
 	sum := newFloat(workPrec).Set(term)
 
 	// v = 1/n^2
-	v := newFloat(workPrec).Mul(n, n)
-	v.Quo(one, v)
+	t0.Mul(n, n)
+	v := new(big.Float).Quo(one, t0)
 
 	for i := uint64(1); ; i++ {
 		// term = (term * v * (2i-1)) / (2i+1)
-		t.Mul(term, v)
+		t0.Mul(term, v)
 
-		t2.SetUint64(2*i - 1)
-		t.Mul(t, t2)
+		t1.SetUint64(2*i - 1)
+		t2.Mul(t0, t1)
 
-		t2.SetUint64(2*i + 1)
-		term.Quo(t, t2)
+		t1.SetUint64(2*i + 1)
+		term.Quo(t2, t1)
 
 		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
 			break
 		}
 
 		if i%2 != 0 {
-			sum.Sub(sum, term)
+			t0.Sub(sum, term)
 		} else {
-			sum.Add(sum, term)
+			t0.Add(sum, term)
 		}
+		sum, t0 = t0, sum
 	}
 	return z.Set(sum)
 }
@@ -58,27 +61,28 @@ func atanCore(z, n *big.Float) *big.Float {
 //	Atan(±0) = ±0
 //	Atan(±Inf) = ±π/2
 func Atan(z, x *big.Float) *big.Float {
-	if x.IsInf() {
-		Pi(z)
-		z.SetMantExp(z, -1)
-		if x.Signbit() {
-			z.Neg(z)
-		}
-		return z.SetPrec(z.Prec()) // Ensure rounded to precision
-	}
-	if x.Sign() == 0 {
-		return z.Set(zero)
-	}
-
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
 		z.SetPrec(prec)
 	}
 
-	workPrec := prec + _W
+	if x.IsInf() {
+		z.Set(pi(z.Prec()))
+		z.SetMantExp(z, -1)
+		if x.Signbit() {
+			z.Neg(z)
+		}
+		return z
+	}
 
-	xVal := new(big.Float).SetPrec(workPrec).Copy(x)
+	if x.Sign() == 0 {
+		return z.Set(zero)
+	}
+
+	workPrec := prec + 4
+
+	xVal := newFloat(workPrec).Copy(x)
 	var neg bool
 	if xVal.Signbit() {
 		neg = true
@@ -87,14 +91,18 @@ func Atan(z, x *big.Float) *big.Float {
 
 	// Reduction
 	nReductions := 0
-	limit := new(big.Float).SetFloat64(0.1)
-	for xVal.Cmp(limit) > 0 {
+	t0 := new(big.Float)
+	t1 := new(big.Float)
+	// reduction threshold: reduce until x < 2^(-√(prec)/4)
+	// with a minimum of 2^-2 (x <= 0.25) to ensure convergence
+	u := max(int(math.Sqrt(float64(prec)))/4, 2) - 1
+	for xVal.MantExp(nil) > -u {
+		workPrec += 1
 		// x = x / (1 + sqrt(1+x^2))
-		t := newFloat(workPrec).Mul(xVal, xVal)
-		t.Add(t, one)
-		t.Sqrt(t)
-		t.Add(t, one)
-		xVal.Quo(xVal, t)
+		t0 = FMA(t0.SetPrec(workPrec), xVal, xVal, one)
+		t1 = t1.SetPrec(workPrec).Sqrt(t0)
+		t0.Add(t1, one)
+		xVal.SetPrec(workPrec).Quo(xVal, t0)
 		nReductions++
 	}
 
@@ -111,7 +119,7 @@ func Atan(z, x *big.Float) *big.Float {
 	if neg {
 		z.Neg(z)
 	}
-	return z.SetPrec(prec)
+	return z
 }
 
 // Hypot sets z to sqrt(x*x + y*y) and returns z.
@@ -147,7 +155,7 @@ func Hypot(z, x, y *big.Float) *big.Float {
 	FMA(t, x, x, t2)
 	t.Sqrt(t)
 
-	return z.Set(t).SetPrec(prec)
+	return z.Set(t)
 }
 
 // Atan2 sets z to the arc tangent of y/x, using the signs of the
@@ -178,9 +186,9 @@ func Atan2(z, y, x *big.Float) *big.Float {
 			if y.Signbit() {
 				z.Neg(z)
 			}
-			return z.SetPrec(prec)
+			return z
 		}
-		return z.Set(y).SetPrec(prec)
+		return z.Set(y)
 	}
 
 	if x.Sign() == 0 {
@@ -189,7 +197,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		if y.Signbit() {
 			z.Neg(z)
 		}
-		return z.SetPrec(prec)
+		return z
 	}
 
 	if x.IsInf() {
@@ -199,10 +207,10 @@ func Atan2(z, y, x *big.Float) *big.Float {
 			if y.Signbit() {
 				z.Neg(z)
 			}
-			return z.SetPrec(prec)
+			return z
 		}
 		// Atan2(y, +Inf) = 0
-		return z.Set(zero).SetPrec(prec)
+		return z.Set(zero)
 	}
 
 	if y.IsInf() {
@@ -212,7 +220,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		if y.Signbit() {
 			z.Neg(z)
 		}
-		return z.SetPrec(prec)
+		return z
 	}
 
 	// Atan2(y, x) = Atan(y/x) + quadrant adjustment
@@ -230,5 +238,5 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		}
 	}
 
-	return z.SetPrec(prec)
+	return z
 }
