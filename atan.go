@@ -94,8 +94,8 @@ func Atan(z, x *big.Float) *big.Float {
 	t0 := new(big.Float)
 	t1 := new(big.Float)
 	// reduction threshold: reduce until x < 2^(-√(prec)/4)
-	// with a minimum of 2^-2 (x <= 0.25) to ensure convergence
-	u := max(int(math.Sqrt(float64(prec)))/4, 2) - 1
+	// with a minimum of 2^-2 (x < 0.25) to ensure convergence
+	u := max(int(math.Sqrt(float64(prec)))/4, 2)
 	for xVal.MantExp(nil) > -u {
 		workPrec += 1
 		// x = x / (1 + sqrt(1+x^2))
