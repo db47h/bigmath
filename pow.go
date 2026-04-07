@@ -146,8 +146,10 @@ func Pow(z, x, y *big.Float) *big.Float {
 
 	// General case: x^y = exp(y * ln(x))
 	// Working precision: add at least one word of guard bits.
-	l := Log(newFloat(prec+_W), x)
-	return Exp(z, l.Mul(l, y))
+	prec += _W
+	l := Log(newFloat(prec), x)
+	t := newFloat(prec).Mul(l, y)
+	return z.Set(Exp(l, t))
 }
 
 // powInt computes x^n using exponentiation by squaring.
