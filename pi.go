@@ -17,22 +17,22 @@ func Pi(z *big.Float) *big.Float {
 
 // computePi computes PI using Machin's formula: PI/4 = 4*arctan(1/5) - arctan(1/239)
 func computePi(prec uint) *big.Float {
-	workPrec := prec + 4
+	workPrec := prec + _W
 
-	t := newFloat(workPrec)
 	p1 := newFloat(workPrec)
 	p2 := newFloat(workPrec)
 
 	// 4*arctan(1/5)
-	atanCore(p1, five)
+	// Use the optimized atanReciprocal for reciprocal integers.
+	atanReciprocal(p1, 5)
 	p1.SetMantExp(p1, 2)
 
 	// arctan(1/239)
-	atanCore(p2, twoHundredThirtyNine)
+	atanReciprocal(p2, 239)
 
 	// pi/4 = 4*arctan(1/5) - arctan(1/239)
-	t.Sub(p1, p2)
+	res := newFloat(workPrec).Sub(p1, p2)
 
 	// pi = 4 * (pi/4)
-	return t.SetMantExp(t, 2).SetPrec(prec)
+	return res.SetMantExp(res, 2).SetPrec(prec)
 }

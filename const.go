@@ -34,14 +34,11 @@ type constProvider func(prec uint) *big.Float
 // behavior in subsequent calculations across the entire program.
 var (
 	// static constants not managed by the cache
-	zero                 = new(big.Float)
-	one                  = new(big.Float).SetUint64(1)
-	two                  = new(big.Float).SetUint64(2)
-	five                 = new(big.Float).SetUint64(5)
-	ten                  = new(big.Float).SetUint64(10)
-	twoHundredThirtyNine = new(big.Float).SetUint64(239)
-
 	minusOne = new(big.Float).SetInt64(-1)
+	zero     = new(big.Float)
+	one      = new(big.Float).SetUint64(1)
+	two      = new(big.Float).SetUint64(2)
+	ten      = new(big.Float).SetUint64(10)
 
 	// cached constants
 	sqrt2 = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })

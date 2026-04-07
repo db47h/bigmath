@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-//go:generate python testdata/gen_go_tests.py testdata/data.txt -o data_test.go -p 2048
+//go:generate python testdata/gen_go_tests.py testdata/data.txt -o data_test.go -p 10240
 
 package bigmath_test
 
@@ -19,6 +19,7 @@ var fnMap = map[string]any{
 	"log":      bigmath.Log,
 	"pow":      bigmath.Pow,
 	"atan":     bigmath.Atan,
+	"atan2":    bigmath.Atan2,
 	"const_pi": testPiConst,
 }
 

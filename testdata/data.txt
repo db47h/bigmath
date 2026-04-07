@@ -61,3 +61,13 @@ atan -2
 atan inf
 atan -inf
 atan 27e36
+
+# atan2
+atan2 2 3
+atan2 2 -3
+atan2 -2 -3
+atan2 -2 3
+atan2 2 0
+atan2 -2 0
+atan2 0 3
+atan2 0 -3
