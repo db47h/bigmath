@@ -124,6 +124,88 @@ func (z *Complex) Quo(x, y *Complex) *Complex {
 	return z
 }
 
+// Neg sets z to -x and returns z.
+func (z *Complex) Neg(x *Complex) *Complex {
+	z.Real.Neg(&x.Real)
+	z.Imag.Neg(&x.Imag)
+	return z
+}
+
+// Conj sets z to the complex conjugate of x and returns z.
+func (z *Complex) Conj(x *Complex) *Complex {
+	z.Real.Copy(&x.Real)
+	z.Imag.Neg(&x.Imag)
+	return z
+}
+
+// Abs sets res to the rounded value of |x| and returns res.
+func (z *Complex) Abs(res *big.Float, x *Complex) *big.Float {
+	return Hypot(res, &x.Real, &x.Imag)
+}
+
+// Arg sets res to the rounded value of arg(x) and returns res.
+func (z *Complex) Arg(res *big.Float, x *Complex) *big.Float {
+	return Atan2(res, &x.Imag, &x.Real)
+}
+
+// Log sets z to the rounded value of ln(x) and returns z.
+func (z *Complex) Log(x *Complex) *Complex {
+	// check for aliasing
+	if z == x {
+		x = new(Complex).Copy(x)
+	}
+
+	prec := resultPrec(x, x)
+	if z.Real.Prec() == 0 {
+		z.Real.SetPrec(prec)
+	}
+	if z.Imag.Prec() == 0 {
+		z.Imag.SetPrec(prec)
+	}
+
+	// ln(x+iy) = ln|x+iy| + i*arg(x+iy)
+	// ln|x+iy| = 0.5 * ln(x^2 + y^2)
+	// We use Abs and then real Log to avoid precision loss.
+	t := newFloat(prec + _W)
+	x.Abs(t, x)
+	Log(&z.Real, t)
+
+	x.Arg(&z.Imag, x)
+
+	return z
+}
+
+// Atan sets z to the rounded value of arctan(x) and returns z.
+func (z *Complex) Atan(x *Complex) *Complex {
+	// atan(z) = (i/2) * ln((1-iz)/(1+iz))
+	// let w = (1-iz)/(1+iz)
+	// atan(z) = (i/2) * Log(w)
+
+	// check for aliasing
+	if z == x {
+		x = new(Complex).Copy(x)
+	}
+
+	prec := resultPrec(x, x)
+	workPrec := prec + _W
+	oneC := &Complex{Real: *one, Imag: *zero}
+	iz := &Complex{Real: *newFloat(workPrec).Neg(&x.Imag), Imag: *newFloat(workPrec).Copy(&x.Real)}
+
+	// num = 1 - iz
+	num := new(Complex).Sub(oneC, iz)
+	// den = 1 + iz
+	den := new(Complex).Add(oneC, iz)
+
+	w := new(Complex).Quo(num, den)
+	lw := new(Complex).Log(w)
+
+	// z = (i/2) * lw = (-lw.Imag/2) + i*(lw.Real/2)
+	z.Real.SetMantExp(&lw.Imag, -1).Neg(&z.Real)
+	z.Imag.SetMantExp(&lw.Real, -1)
+
+	return z
+}
+
 // Equals checks if x and y are equal.
 func (x *Complex) Equals(y *Complex) bool {
 	return x.Real.Cmp(&y.Real) == 0 && x.Imag.Cmp(&y.Imag) == 0
