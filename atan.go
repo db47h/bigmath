@@ -13,7 +13,7 @@ import (
 func atanCore(z, n *big.Float) *big.Float {
 	prec := z.Prec()
 	// Guard bits to ensure precision
-	workPrec := prec + _W
+	workPrec := prec + 2*_W
 
 	// temps
 	t0 := newFloat(workPrec)
@@ -80,9 +80,15 @@ func Atan(z, x *big.Float) *big.Float {
 		return z.Set(zero)
 	}
 
-	workPrec := prec + 4
+	// u is the reduction threshold where we'll reduce x until x < 2^(-√(prec)/4)
+	// with a minimum of 2^-2 (x < 0.25) to ensure convergence.
+	u := max(int(math.Sqrt(float64(prec)))/4, 2)
+	// We need 8 bits of added precision plus one bit per reduction step
+	// with at least one more reduction step for x.exp > 1
+	extraPrec := 8 + max(0, min(x.MantExp(nil), 2)+u)
+	workPrec := prec + uint(extraPrec)
 
-	xVal := newFloat(workPrec).Copy(x)
+	xVal := newFloat(workPrec).Set(x)
 	var neg bool
 	if xVal.Signbit() {
 		neg = true
@@ -91,35 +97,31 @@ func Atan(z, x *big.Float) *big.Float {
 
 	// Reduction
 	nReductions := 0
-	t0 := new(big.Float)
-	t1 := new(big.Float)
-	// reduction threshold: reduce until x < 2^(-√(prec)/4)
-	// with a minimum of 2^-2 (x < 0.25) to ensure convergence
-	u := max(int(math.Sqrt(float64(prec)))/4, 2)
+	t0 := newFloat(workPrec)
+	t1 := newFloat(workPrec)
 	for xVal.MantExp(nil) > -u {
-		workPrec += 1
 		// x = x / (1 + sqrt(1+x^2))
-		t0 = FMA(t0.SetPrec(workPrec), xVal, xVal, one)
-		t1 = t1.SetPrec(workPrec).Sqrt(t0)
+		FMA(t0, xVal, xVal, one)
+		t1.Sqrt(t0)
 		t0.Add(t1, one)
-		xVal.SetPrec(workPrec).Quo(xVal, t0)
+		xVal.Quo(xVal, t0)
 		nReductions++
 	}
 
 	// Now x is small, use atanCore(1/n) where n = 1/x
-	n := newFloat(workPrec).Quo(one, xVal)
-	atanCore(z, n)
+	t0.Quo(one, xVal)
+	atanCore(t1, t0)
 
 	// Undo the double angle reductions: Atan(x) = 2^n * Atan(x_reduced)
 	// z is calculated at workPrec, we scale it then round to prec.
 	if nReductions > 0 {
-		z.SetMantExp(z, nReductions)
+		t1.SetMantExp(t1, nReductions)
 	}
 
 	if neg {
-		z.Neg(z)
+		t1.Neg(t1)
 	}
-	return z
+	return z.Set(t1)
 }
 
 // Hypot sets z to sqrt(x*x + y*y) and returns z.

@@ -103,13 +103,3 @@ func TestPowErrNaN(t *testing.T) {
 		})
 	}
 }
-
-func TestSmall(t *testing.T) {
-	x := new(big.Float).SetFloat64(0.1)
-	e := x.MantExp(x)
-	t.Logf("%v %v", x, e)
-	x = new(big.Float).SetFloat64(0.5)
-	x.SetMantExp(x, -2)
-	e = x.MantExp(nil)
-	t.Logf("%v %v", x, e)
-}
