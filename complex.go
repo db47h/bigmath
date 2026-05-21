@@ -3,7 +3,6 @@
 package bigmath
 
 import (
-	"math"
 	"math/big"
 )
 
@@ -233,8 +232,6 @@ func (x *Complex) IsZero() bool {
 }
 
 // Exp sets z to e^x and returns z.
-// Uses float64-precision sin/cos for the imaginary part.
-// TODO: use big.Float trig for full precision.
 func (z *Complex) Exp(x *Complex) *Complex {
 	if z == x {
 		x = new(Complex).Copy(x)
@@ -251,11 +248,11 @@ func (z *Complex) Exp(x *Complex) *Complex {
 	var expA big.Float
 	Exp(&expA, &x.Real)
 
-	b64, _ := x.Imag.Float64()
-	s, c := math.Sincos(b64)
+	var s, c big.Float
+	Sincos(&s, &c, &x.Imag)
 
-	z.Real.Mul(&expA, new(big.Float).SetFloat64(c))
-	z.Imag.Mul(&expA, new(big.Float).SetFloat64(s))
+	z.Real.Mul(&expA, &c)
+	z.Imag.Mul(&expA, &s)
 
 	return z
 }

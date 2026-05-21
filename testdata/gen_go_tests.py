@@ -7,6 +7,11 @@ import argparse
 import gmpy2
 import builtins
 
+# gmpy2 functions that return tuples map to multiple Go test entries.
+TUPLE_FUNCS = {
+    "sin_cos": [("sin", 0), ("cos", 1)],
+}
+
 def generate_go_tests(input_file, output_file, precision):
     
     ctx = gmpy2.get_context()
@@ -73,8 +78,18 @@ var data = []testData{{
                     if func is None:
                         raise AttributeError(f"function '{func_name}' not found")
                     
-                    result = func(*mpfr_args)
                     go_args = ", ".join(f'"{a}"' for a in str_args)
+                    result = func(*mpfr_args)
+                    if isinstance(result, tuple):
+                        # Decompose multi-return functions into individual entries.
+                        # e.g., sin_cos(x) → sin, cos entries with Go function names.
+                        components = TUPLE_FUNCS.get(func_name)
+                        if components is None:
+                            raise ValueError(f"tuple result from '{func_name}' but no TUPLE_FUNCS mapping")
+                        for go_name, idx in components:
+                            comp_str = format(result[idx], 'a')
+                            out.write(f'\t{{"{go_name}", []string{{{go_args}}}, "{comp_str}"}},\n')
+                        continue
                 
                 # Hex float format for bit-perfect transfer
                 res_str = format(result, 'a')

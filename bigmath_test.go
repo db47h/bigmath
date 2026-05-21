@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-//go:generate python testdata/gen_go_tests.py testdata/data.txt -o data_test.go -p 10240
+//go:generate python testdata/gen_go_tests.py testdata/data.txt -o data_test.go -p 128
 
 package bigmath_test
 
@@ -21,6 +21,8 @@ var fnMap = map[string]any{
 	"atan":     bigmath.Atan,
 	"atan2":    bigmath.Atan2,
 	"const_pi": testPiConst,
+	"sin":      bigmath.Sin,
+	"cos":      bigmath.Cos,
 }
 
 func testPiConst(z *big.Float) *big.Float {

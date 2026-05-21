@@ -75,3 +75,15 @@ atan2 inf inf
 atan2 -inf inf
 atan2 inf -inf
 atan2 -inf -inf
+
+# sin_cos (generates both sin and cos test entries)
+sin_cos 0
+sin_cos 0.5
+sin_cos 1
+sin_cos 1.5707963267948966
+sin_cos 3.141592653589793
+sin_cos 6.283185307179586
+sin_cos -0.5
+sin_cos -1
+sin_cos 10
+sin_cos 100

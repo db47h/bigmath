@@ -241,13 +241,17 @@ func Atan2(z, y, x *big.Float) *big.Float {
 
 	if x.IsInf() || y.IsInf() {
 		if x.IsInf() && y.IsInf() {
-			Pi(z)
-			z.SetMantExp(z, -2) // π/4
 			if x.Signbit() {
-				p := newFloat(z.Prec() + _W)
+				prec := z.Prec() + _W
+				p := newFloat(prec)
+				q := newFloat(prec)
 				Pi(p)
-				p.Sub(p, z)
-				z.Set(p)
+				Pi(q)
+				q.SetMantExp(q, -2) // π/4 at same precision as p
+				z.Sub(p, q)
+			} else {
+				Pi(z)
+				z.SetMantExp(z, -2) // π/4
 			}
 			if y.Signbit() {
 				z.Neg(z)
