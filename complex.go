@@ -3,6 +3,7 @@
 package bigmath
 
 import (
+	"math"
 	"math/big"
 )
 
@@ -148,7 +149,17 @@ func (z *Complex) Arg(res *big.Float, x *Complex) *big.Float {
 	return Atan2(res, &x.Imag, &x.Real)
 }
 
-// Log sets z to the rounded value of ln(x) and returns z.
+// Log sets z to the principal logarithm of x and returns z.
+//
+// The branch cut is along the negative real axis. The imaginary part of
+// the result lies in the interval [-π, π].
+//
+// Special cases:
+//
+//	Log(0) = -Inf + i·0
+//	Log(+Inf + i·y) = +Inf + i·0
+//	Log(-Inf + i·y) = +Inf + i·π for finite y
+//	Log(x + i·±Inf) = +Inf + i·π/2 for finite x
 func (z *Complex) Log(x *Complex) *Complex {
 	// check for aliasing
 	if z == x {
@@ -219,4 +230,32 @@ func (x *Complex) IsReal() bool {
 // IsZero checks if the complex number is zero.
 func (x *Complex) IsZero() bool {
 	return x.Real.Sign() == 0 && x.Imag.Sign() == 0
+}
+
+// Exp sets z to e^x and returns z.
+// Uses float64-precision sin/cos for the imaginary part.
+// TODO: use big.Float trig for full precision.
+func (z *Complex) Exp(x *Complex) *Complex {
+	if z == x {
+		x = new(Complex).Copy(x)
+	}
+
+	prec := resultPrec(x, x)
+	if z.Real.Prec() == 0 {
+		z.Real.SetPrec(prec)
+	}
+	if z.Imag.Prec() == 0 {
+		z.Imag.SetPrec(prec)
+	}
+
+	var expA big.Float
+	Exp(&expA, &x.Real)
+
+	b64, _ := x.Imag.Float64()
+	s, c := math.Sincos(b64)
+
+	z.Real.Mul(&expA, new(big.Float).SetFloat64(c))
+	z.Imag.Mul(&expA, new(big.Float).SetFloat64(s))
+
+	return z
 }

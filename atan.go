@@ -204,10 +204,14 @@ func Hypot(z, x, y *big.Float) *big.Float {
 //	Atan2(-0, x<0) = -π
 //	Atan2(y>0, 0) = +π/2
 //	Atan2(y<0, 0) = -π/2
-//	Atan2(+Inf, x) = +π/2
-//	Atan2(-Inf, x) = -π/2
+//	Atan2(+Inf, +Inf) = +π/4
+//	Atan2(-Inf, +Inf) = -π/4
+//	Atan2(+Inf, -Inf) = +3π/4
+//	Atan2(-Inf, -Inf) = -3π/4
 //	Atan2(y, +Inf) = 0
 //	Atan2(y, -Inf) = ±π
+//	Atan2(+Inf, x) = +π/2
+//	Atan2(-Inf, x) = -π/2
 func Atan2(z, y, x *big.Float) *big.Float {
 	prec := z.Prec()
 	if prec == 0 {
@@ -235,7 +239,31 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		return z
 	}
 
-	if x.IsInf() {
+	if x.IsInf() || y.IsInf() {
+		if x.IsInf() && y.IsInf() {
+			Pi(z)
+			z.SetMantExp(z, -2) // π/4
+			if x.Signbit() {
+				p := newFloat(z.Prec() + _W)
+				Pi(p)
+				p.Sub(p, z)
+				z.Set(p)
+			}
+			if y.Signbit() {
+				z.Neg(z)
+			}
+			return z
+		}
+		if y.IsInf() {
+			// Atan2(±Inf, x) = ±π/2
+			Pi(z)
+			z.SetMantExp(z, -1)
+			if y.Signbit() {
+				z.Neg(z)
+			}
+			return z
+		}
+		// x is Inf, y is finite
 		if x.Signbit() {
 			// Atan2(y, -Inf) = ±π
 			Pi(z)
@@ -246,16 +274,6 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		}
 		// Atan2(y, +Inf) = 0
 		return z.Set(zero)
-	}
-
-	if y.IsInf() {
-		// Atan2(±Inf, x) = ±π/2
-		Pi(z)
-		z.SetMantExp(z, -1)
-		if y.Signbit() {
-			z.Neg(z)
-		}
-		return z
 	}
 
 	// Atan2(y, x) = Atan(y/x) + quadrant adjustment

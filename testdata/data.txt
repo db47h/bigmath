@@ -71,3 +71,7 @@ atan2 2 0
 atan2 -2 0
 atan2 0 3
 atan2 0 -3
+atan2 inf inf
+atan2 -inf inf
+atan2 inf -inf
+atan2 -inf -inf
