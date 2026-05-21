@@ -87,3 +87,71 @@ sin_cos -0.5
 sin_cos -1
 sin_cos 10
 sin_cos 100
+
+# hyperbolic
+sinh 0
+sinh 1
+sinh 2
+sinh 10
+sinh -1
+sinh -2
+sinh -10
+sinh inf
+sinh -inf
+sinh 1e-5
+sinh -1e-5
+
+cosh 0
+cosh 1
+cosh 2
+cosh 10
+cosh -1
+cosh -2
+cosh -10
+cosh inf
+
+tanh 0
+tanh 1
+tanh 2
+tanh 10
+tanh -1
+tanh -2
+tanh -10
+tanh inf
+tanh -inf
+
+asinh 0
+asinh 1
+asinh 2
+asinh 10
+asinh -1
+asinh -2
+asinh -10
+asinh inf
+asinh -inf
+
+acosh 1
+acosh 2
+acosh 10
+acosh 100
+acosh inf
+
+atanh 0
+atanh 0.25
+atanh 0.5
+atanh 0.9
+atanh -0.25
+atanh -0.5
+atanh -0.9
+
+sinh_cosh 0
+sinh_cosh 0.5
+sinh_cosh -0.5
+sinh_cosh 1
+sinh_cosh -1
+sinh_cosh 10
+sinh_cosh -10
+sinh_cosh 100
+sinh_cosh -100
+sinh_cosh 1e-5
+sinh_cosh -1e-5

@@ -10,6 +10,7 @@ import builtins
 # gmpy2 functions that return tuples map to multiple Go test entries.
 TUPLE_FUNCS = {
     "sin_cos": [("sin", 0), ("cos", 1)],
+    "sinh_cosh": [("sinh", 0), ("cosh", 1)],
 }
 
 def generate_go_tests(input_file, output_file, precision):

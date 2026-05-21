@@ -23,6 +23,12 @@ var fnMap = map[string]any{
 	"const_pi": testPiConst,
 	"sin":      bigmath.Sin,
 	"cos":      bigmath.Cos,
+	"sinh":     bigmath.Sinh,
+	"cosh":     bigmath.Cosh,
+	"tanh":     bigmath.Tanh,
+	"asinh":    bigmath.Asinh,
+	"acosh":    bigmath.Acosh,
+	"atanh":    bigmath.Atanh,
 }
 
 func testPiConst(z *big.Float) *big.Float {

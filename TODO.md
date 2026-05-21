@@ -5,6 +5,7 @@
 - **`Complex.Log`**: Uses real `Log` + `Arg` (Atan2). Branch cut and special cases documented.
 - **`Complex.Exp`**: Fixed — uses big.Float `Sincos` (full precision). `"math"` import removed from complex.go.
 - **`trig.go`**: `Sin`, `Cos`, `Sincos` implemented. Taylor series on [0, π/2] with reduction modulo 2π. Tested via `sin_cos` in test data pipeline (decomposed into `sin`/`cos` entries).
+- **`hyperbolic.go`**: `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Asinh`, `Acosh`, `Atanh` implemented. Tested via generated data. SinhCosh reuses Exp call for |x|≥1, Taylor shared loop for |x|<1. Guard-bit expansion for Acosh/Atanh near domain boundaries. Sinh uses Taylor for |x|<1 (no cancellation).
 - **`trig.go` review needed**: `workPrec = z.Prec() + 2*_W` is a simplified guard-bit heuristic. Should be revised to follow the proportional/profiled approach used in atan.go (`atanExtraBits`) or exp.go (`prec * 0.15` + fixed guard) for better precision-to-performance trade-off across all precision ranges.
 
 ## Phase 2: Expand Complex Public API
@@ -13,8 +14,8 @@
 
 | Method | Formula |
 |--------|---------|
-| `(z *Complex) Sin(x *Complex)` | sin(a+bi) = sin(a)cosh(b) + i·cos(a)sinh(b) |
-| `(z *Complex) Cos(x *Complex)` | cos(a+bi) = cos(a)cosh(b) − i·sin(a)sinh(b) |
+| `(z *Complex) Sin(x *Complex)` | sin(a+bi) = sin(a)cosh(b) + i·cos(a)sinh(b) — **ready** (Sinh/Cosh implemented) |
+| `(z *Complex) Cos(x *Complex)` | cos(a+bi) = cos(a)cosh(b) − i·sin(a)sinh(b) — **ready** |
 | `(z *Complex) Tan(x *Complex)` | sin(z) / cos(z) |
 
 ### Hyperbolic (via complex Exp)
