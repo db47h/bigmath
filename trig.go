@@ -14,15 +14,15 @@ import (
 
 // reducePi2 reduces x modulo 2π and maps the result to [0, π/2).
 // It returns the quadrant (0–3) of the original reduced value.
-// r may alias x. r's precision determines the target precision of the result.
-func reducePi2(r, x *big.Float) int {
+// z may alias x. z's precision determines the target precision of the result.
+func reducePi2(z, x *big.Float) int {
 	if x.Sign() == 0 {
 		return 0
 	}
 
-	targetPrec := r.Prec()
+	prec := z.Prec()
 
-	xAbs := newFloat(targetPrec).Set(x)
+	xAbs := newFloat(prec).Set(x)
 	if xAbs.Signbit() {
 		xAbs.Neg(xAbs)
 	}
@@ -32,47 +32,51 @@ func reducePi2(r, x *big.Float) int {
 	if xExp > 4 {
 		guard = uint(xExp-2) + _W
 	}
-	workPrec := targetPrec + guard
+	workPrec := prec + guard
 
 	twoPi := newFloat(workPrec).Set(pi(workPrec))
 	twoPi.SetMantExp(twoPi, 1)
 
-	nFloat := newFloat(workPrec).Quo(xAbs, twoPi)
+	t0 := newFloat(workPrec).Quo(xAbs, twoPi)
 	nInt := new(big.Int)
-	nFloat.Int(nInt)
+	t0.Int(nInt)
 
-	nFloat.SetInt(nInt)
-	rTmp := newFloat(workPrec).Sub(xAbs, nFloat.Mul(nFloat, twoPi))
+	t0.SetInt(nInt)
+	t1 := newFloat(workPrec).Mul(t0, twoPi)
+	rTmp := newFloat(workPrec).Sub(xAbs, t1)
 
 	if rTmp.Sign() < 0 {
-		rTmp.Add(rTmp, twoPi)
+		t0.Add(rTmp, twoPi)
+		t0, rTmp = rTmp, t0
 	} else if rTmp.Cmp(twoPi) == 0 {
 		rTmp.Set(zero)
 	}
 
-	pWork := newFloat(workPrec).Set(pi(workPrec))
-	halfPi := newFloat(workPrec).SetMantExp(pWork, -1)
-	pVal := newFloat(workPrec).SetMantExp(halfPi, 1)
+	pVal := pi(workPrec)
+	halfPi := newFloat(workPrec).SetMantExp(pVal, -1)
 
 	quad := 0
 	switch {
 	case rTmp.Cmp(halfPi) < 0:
 	case rTmp.Cmp(pVal) < 0:
 		quad = 1
-		rTmp.Sub(pVal, rTmp)
+		t0.Sub(pVal, rTmp)
+		t0, rTmp = rTmp, t0
 	default:
-		threeHalfPi := newFloat(workPrec).Add(pVal, halfPi)
-		if rTmp.Cmp(threeHalfPi) < 0 {
+		t0.Add(pVal, halfPi) // 3π/2
+		if rTmp.Cmp(t0) < 0 {
 			quad = 2
-			rTmp.Sub(rTmp, pVal)
+			t0.Sub(rTmp, pVal)
+			t0, rTmp = rTmp, t0
 		} else {
 			quad = 3
-			twoPiHF := newFloat(workPrec).SetMantExp(pVal, 1)
-			rTmp.Sub(twoPiHF, rTmp)
+			t1.SetMantExp(pVal, 1)
+			t0.Sub(t1, rTmp)
+			t0, rTmp = rTmp, t0
 		}
 	}
 
-	r.Set(rTmp)
+	z.Set(rTmp)
 	return quad
 }
 
@@ -91,7 +95,7 @@ func sinCore(z, x *big.Float) *big.Float {
 
 	for i := uint64(1); ; i++ {
 		t0.Mul(term, v)
-		t1.SetUint64(2*i * (2*i + 1))
+		t1.SetUint64(2 * i * (2*i + 1))
 		term.Quo(t0, t1)
 
 		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
