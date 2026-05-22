@@ -118,13 +118,13 @@ func Sinh(z, x *big.Float) *big.Float {
 	ep := Exp(newFloat(workPrec), xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
-	t0 := newFloat(workPrec).Sub(ep, em)
-	t0.SetMantExp(t0, -1)
+	ep.Sub(ep, em)
+	ep.SetMantExp(ep, -1)
 
 	if neg {
-		t0.Neg(t0)
+		ep.Neg(ep)
 	}
-	return z.Set(t0)
+	return z.Set(ep)
 }
 
 // Cosh sets z to the hyperbolic cosine of x and returns z.
@@ -157,10 +157,10 @@ func Cosh(z, x *big.Float) *big.Float {
 	ep := Exp(newFloat(workPrec), xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
-	t0 := newFloat(workPrec).Add(ep, em)
-	t0.SetMantExp(t0, -1)
+	ep.Add(ep, em)
+	ep.SetMantExp(ep, -1)
 
-	return z.Set(t0)
+	return z.Set(ep)
 }
 
 // SinhCosh sets zs to sinh(x) and zc to cosh(x) and returns both.
@@ -206,16 +206,14 @@ func SinhCosh(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	ep := Exp(newFloat(workPrec), xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
-	s := newFloat(workPrec).Sub(ep, em)
-	s.SetMantExp(s, -1)
-	c := newFloat(workPrec).Add(ep, em)
-	c.SetMantExp(c, -1)
+	zs.Sub(ep, em)
+	zs.SetMantExp(zs, -1)
+	zc.Add(ep, em)
+	zc.SetMantExp(zc, -1)
 
 	if neg {
-		s.Neg(s)
+		zs.Neg(zs)
 	}
-	zs.Set(s)
-	zc.Set(c)
 	return zs, zc
 }
 
@@ -290,8 +288,9 @@ func Asinh(z, x *big.Float) *big.Float {
 
 	x2 := newFloat(workPrec).Mul(xVal, xVal)
 	if x2.IsInf() {
-		t := Log(newFloat(workPrec), xVal)
-		ln2 := Log(newFloat(workPrec), newFloat(workPrec).SetUint64(2))
+		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
+		t := Log(x2, xVal)
+		ln2 := Log(newFloat(workPrec), two)
 		t.Add(t, ln2)
 		if neg {
 			t.Neg(t)
@@ -299,14 +298,14 @@ func Asinh(z, x *big.Float) *big.Float {
 		return z.Set(t)
 	}
 
-	t0 := newFloat(workPrec).Add(x2, one)
-	t0.Sqrt(t0)
-	t0.Add(xVal, t0)
-	Log(t0, t0)
+	x2.Add(x2, one)
+	x2.Sqrt(x2)
+	x2.Add(xVal, x2)
+	Log(x2, x2)
 	if neg {
-		t0.Neg(t0)
+		x2.Neg(x2)
 	}
-	return z.Set(t0)
+	return z.Set(x2)
 }
 
 // acoshGuard computes the working precision needed for acosh(x) near x=1,
@@ -376,7 +375,7 @@ func Acosh(z, x *big.Float) *big.Float {
 func atanhGuard(x *big.Float, prec uint) uint {
 	// Work with |x| to always check 1-|x|.
 	xAbs := newFloat(prec + 2*_W).Abs(x)
-	oneMinus := newFloat(prec + 2*_W).Sub(one, xAbs)
+	oneMinus := newFloat(prec+2*_W).Sub(one, xAbs)
 	subExp := oneMinus.MantExp(nil)
 	if -subExp <= 2 {
 		return prec + 2*_W
