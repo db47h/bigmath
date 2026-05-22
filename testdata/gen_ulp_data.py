@@ -57,7 +57,7 @@ def generate_test_points(prec, base_seed=42):
     points = []
 
     # Helper to add a point
-    def add_point(x_val):
+    def add_point(x_val, name=""):
         """Compute all reference values for a given x and append the test point."""
         # Ensure x_val is mpfr for format('a') compatibility
         if not isinstance(x_val, gmpy2.mpfr):
@@ -71,6 +71,7 @@ def generate_test_points(prec, base_seed=42):
         cosh_2x_ref = gmpy2.cosh(2 * x_val)
 
         points.append({
+            "name": name,
             "x": format(x_val, 'a'),
             "sin_ref": format(sin_ref, 'a'),
             "cos_ref": format(cos_ref, 'a'),
@@ -84,56 +85,56 @@ def generate_test_points(prec, base_seed=42):
     # Unit circle key points (as multiples of π)
     pi_val = gmpy2.const_pi()
     trig_key_points = [
-        0,
-        pi_val / 6,
-        pi_val / 4,
-        pi_val / 3,
-        pi_val / 2,
-        2 * pi_val / 3,
-        3 * pi_val / 4,
-        5 * pi_val / 6,
-        pi_val,
-        3 * pi_val / 2,
-        2 * pi_val,
-        -pi_val / 2,
-        -pi_val,
-        -2 * pi_val,
+        (0, "0"),
+        (pi_val / 6, "π/6"),
+        (pi_val / 4, "π/4"),
+        (pi_val / 3, "π/3"),
+        (pi_val / 2, "π/2"),
+        (2 * pi_val / 3, "2π/3"),
+        (3 * pi_val / 4, "3π/4"),
+        (5 * pi_val / 6, "5π/6"),
+        (pi_val, "π"),
+        (3 * pi_val / 2, "3π/2"),
+        (2 * pi_val, "2π"),
+        (-pi_val / 2, "-π/2"),
+        (-pi_val, "-π"),
+        (-2 * pi_val, "-2π"),
     ]
-    for x in trig_key_points:
-        add_point(x)
+    for x, name in trig_key_points:
+        add_point(x, name)
 
     # Small-to-moderate values
-    for x in [1e-10, 1e-5, 0.5, 1.0, 2.0, 10.0]:
-        add_point(gmpy2.mpfr(str(x)))
+    for x in ["1e-10", "1e-5", "0.5", "1.0", "2.0", "10.0"]:
+        add_point(gmpy2.mpfr(x), x)
 
     # Large values (stress reducePi2)
-    for x in [100, 1e5, 1e10, 1e20]:
-        add_point(gmpy2.mpfr(str(x)))
+    for x in ["100", "1e5", "1e10", "1e20"]:
+        add_point(gmpy2.mpfr(x), x)
 
     # Negative small-to-moderate
-    for x in [-0.5, -1.0, -2.0, -10.0, -100, -1e5, -1e10, -1e20]:
-        add_point(gmpy2.mpfr(str(x)))
+    for x in ["-0.5", "-1.0", "-2.0", "-10.0", "-100", "-1e5", "-1e10", "-1e20"]:
+        add_point(gmpy2.mpfr(x), x)
 
     # Random trigonometric test points in [-2π, 2π]
-    for _ in range(10):
+    for i in range(10):
         x = rng.uniform(-2 * math.pi, 2 * math.pi)
-        add_point(gmpy2.mpfr(str(x)))
+        add_point(gmpy2.mpfr(str(x)), f"rand_trig_{i}")
 
     # --- Hyperbolic test points ---
     # Systematic hyperbolic test points
-    for x in [0, 0.5, 1.0, 2.0, 5.0, 10.0]:
-        add_point(gmpy2.mpfr(str(x)))
-    for x in [-0.5, -1.0, -2.0, -5.0, -10.0]:
-        add_point(gmpy2.mpfr(str(x)))
+    for x in ["0", "0.5", "1.0", "2.0", "5.0", "10.0"]:
+        add_point(gmpy2.mpfr(x), x)
+    for x in ["-0.5", "-1.0", "-2.0", "-5.0", "-10.0"]:
+        add_point(gmpy2.mpfr(x), x)
 
     # Small hyperbolic test points
-    for x in [1e-10, 1e-5, -1e-10, -1e-5]:
-        add_point(gmpy2.mpfr(str(x)))
+    for x in ["1e-10", "1e-5", "-1e-10", "-1e-5"]:
+        add_point(gmpy2.mpfr(x), x)
 
     # Random hyperbolic test points in [-10, 10]
-    for _ in range(10):
+    for i in range(10):
         x = rng.uniform(-10, 10)
-        add_point(gmpy2.mpfr(str(x)))
+        add_point(gmpy2.mpfr(str(x)), f"rand_hyp_{i}")
 
     # Remove duplicate x values (same hex representation)
     seen = set()

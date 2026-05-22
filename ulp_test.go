@@ -14,6 +14,7 @@ import (
 
 // ulpPoint represents a single test point with all reference values.
 type ulpPoint struct {
+	Name      string `json:"name"`
 	X         string `json:"x"`
 	SinRef    string `json:"sin_ref"`
 	CosRef    string `json:"cos_ref"`
@@ -127,7 +128,7 @@ func TestULPErrorDirect(t *testing.T) {
 
 			maxSin, maxCos, maxSinh, maxCosh := 0.0, 0.0, 0.0, 0.0
 
-			for i, pt := range data.Points {
+			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 				refSin := parseHexFloat(pt.SinRef, prec)
 				refCos := parseHexFloat(pt.CosRef, prec)
@@ -142,7 +143,7 @@ func TestULPErrorDirect(t *testing.T) {
 					maxSin = err
 				}
 				if err > maxULP && !isSpecial(refSin) {
-					t.Logf("point %d (x=%s): Sin ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): Sin ULP error=%g", pt.Name, pt.X, err)
 				}
 
 				// Test Cos
@@ -152,7 +153,7 @@ func TestULPErrorDirect(t *testing.T) {
 					maxCos = err
 				}
 				if err > maxULP && !isSpecial(refCos) {
-					t.Logf("point %d (x=%s): Cos ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): Cos ULP error=%g", pt.Name, pt.X, err)
 				}
 
 				// Test Sinh
@@ -162,7 +163,7 @@ func TestULPErrorDirect(t *testing.T) {
 					maxSinh = err
 				}
 				if err > maxULP && !isSpecial(refSinh) {
-					t.Logf("point %d (x=%s): Sinh ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): Sinh ULP error=%g", pt.Name, pt.X, err)
 				}
 
 				// Test Cosh
@@ -172,7 +173,7 @@ func TestULPErrorDirect(t *testing.T) {
 					maxCosh = err
 				}
 				if err > maxULP && !isSpecial(refCosh) {
-					t.Logf("point %d (x=%s): Cosh ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): Cosh ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
 
@@ -256,7 +257,7 @@ func TestSinCosSquared(t *testing.T) {
 			maxErr := 0.0
 			oneRef := new(big.Float).SetPrec(prec).SetUint64(1)
 
-			for i, pt := range data.Points {
+			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
 				s := new(big.Float).SetPrec(prec)
@@ -278,7 +279,7 @@ func TestSinCosSquared(t *testing.T) {
 					maxErr = err
 				}
 				if err > maxULP {
-					t.Logf("point %d (x=%s): sin²+cos² ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): sin²+cos² ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
 
@@ -307,7 +308,7 @@ func TestSinTripleAngle(t *testing.T) {
 			three := new(big.Float).SetPrec(prec).SetUint64(3)
 			four := new(big.Float).SetPrec(prec).SetUint64(4)
 
-			for i, pt := range data.Points {
+			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
 				// LHS: sin(3x)
@@ -337,7 +338,7 @@ func TestSinTripleAngle(t *testing.T) {
 					maxErr = err
 				}
 				if err > maxULP {
-					t.Logf("point %d (x=%s): sin(3x) identity ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): sin(3x) identity ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
 
@@ -365,7 +366,7 @@ func TestSinhCoshIdentity(t *testing.T) {
 			maxErr := 0.0
 			two := new(big.Float).SetPrec(prec).SetUint64(2)
 
-			for i, pt := range data.Points {
+			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
 				// LHS: sinh²(x) + cosh²(x)
@@ -392,7 +393,7 @@ func TestSinhCoshIdentity(t *testing.T) {
 					maxErr = err
 				}
 				if err > maxULP {
-					t.Logf("point %d (x=%s): sinh²+cosh² identity ULP error=%g", i, pt.X, err)
+					t.Logf("point %s (x=%s): sinh²+cosh² identity ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
 
