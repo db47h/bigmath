@@ -53,17 +53,19 @@ func reducePi2(z, x *big.Float) int {
 	}
 
 	pVal := pi(workPrec)
-	halfPi := newFloat(workPrec).SetMantExp(pVal, -1)
+	// t1 is free after Sub(xAbs, t1) above; reuse as π/2.
+	// In the default/else branch below, t1 is overwritten to 2π.
+	t1.SetMantExp(pVal, -1)
 
 	quad := 0
 	switch {
-	case rTmp.Cmp(halfPi) < 0:
+	case rTmp.Cmp(t1) < 0:
 	case rTmp.Cmp(pVal) < 0:
 		quad = 1
 		t0.Sub(pVal, rTmp)
 		t0, rTmp = rTmp, t0
 	default:
-		t0.Add(pVal, halfPi) // 3π/2
+		t0.Add(pVal, t1) // pVal + π/2 = 3π/2
 		if rTmp.Cmp(t0) < 0 {
 			quad = 2
 			t0.Sub(rTmp, pVal)
@@ -222,10 +224,10 @@ func Sin(z, x *big.Float) *big.Float {
 		xVal.Neg(xVal)
 	}
 
-	r := newFloat(workPrec)
-	quad := reducePi2(r, xVal)
+	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
+	quad := reducePi2(xVal, xVal)
 
-	sinCore(z, r)
+	sinCore(z, xVal)
 
 	if quad >= 2 {
 		z.Neg(z)
@@ -264,10 +266,10 @@ func Cos(z, x *big.Float) *big.Float {
 		xVal.Neg(xVal)
 	}
 
-	r := newFloat(workPrec)
-	quad := reducePi2(r, xVal)
+	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
+	quad := reducePi2(xVal, xVal)
 
-	cosCore(z, r)
+	cosCore(z, xVal)
 
 	if quad == 1 || quad == 2 {
 		z.Neg(z)
@@ -309,10 +311,10 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 		xVal.Neg(xVal)
 	}
 
-	r := newFloat(workPrec)
-	quad := reducePi2(r, xVal)
+	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
+	quad := reducePi2(xVal, xVal)
 
-	sincosCore(zs, zc, r)
+	sincosCore(zs, zc, xVal)
 
 	if quad >= 2 {
 		zs.Neg(zs)
