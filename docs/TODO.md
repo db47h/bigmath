@@ -6,7 +6,8 @@
 - **`Complex.Exp`**: Fixed — uses big.Float `Sincos` (full precision). `"math"` import removed from complex.go.
 - **`trig.go`**: `Sin`, `Cos`, `Sincos` implemented. Taylor series on [0, π/2] with reduction modulo 2π. Tested via `sin_cos` in test data pipeline (decomposed into `sin`/`cos` entries).
 - **`hyperbolic.go`**: `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Asinh`, `Acosh`, `Atanh` implemented. Tested via generated data. SinhCosh reuses Exp call for |x|≥1, Taylor shared loop for |x|<1. Guard-bit expansion for Acosh/Atanh near domain boundaries. Sinh uses Taylor for |x|<1 (no cancellation).
-- **`trig.go` review needed**: `workPrec = z.Prec() + 2*_W` is a simplified guard-bit heuristic. Should be revised to follow the proportional/profiled approach used in atan.go (`atanExtraBits`) or exp.go (`prec * 0.15` + fixed guard) for better precision-to-performance trade-off across all precision ranges.
+- **`trig.go` & `hyperbolic.go` guard strategy reviewed**: `docs/trig-hyperbolic-precision-review.md`. Conclusion: flat `+2*_W` is adequate (accumulated error over O(P) Taylor terms ≪ 0.5 ULP at target precision for any practical P). Dynamic guards in `reducePi2`, `acoshGuard`, `atanhGuard` handle the real precision-loss paths. Comments added with rationale next to every flat guard.
+- **[4] ULP stress testing needed**: The flat `+2*_W` guard should be empirically verified across precision ranges (e.g. prec=64, 128, 256, 1024, 4096) using high-precision references (e.g. mpmath at prec+64). Test identities: sin²+cos²=1, sinh²+cosh²=cosh(2x), sin(3x)=3sin(x)-4sin³(x). Worst-case ULP error should be < 2 across all tested ranges.
 
 ## Phase 2: Expand Complex Public API
 

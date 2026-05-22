@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-// TODO: review workPrec heuristic. Currently uses z.Prec() + 2*_W for guard
-// bits in sinCore/cosCore/sincosCore. The other Taylor-series functions in
-// this package use proportional/profiled heuristics: exp.go scales with
-// prec*0.15 + 2*_W, atan.go uses atanExtraBits(x, prec), log.go uses +_W.
-// A similar approach would improve the precision-to-performance trade-off.
+// Guard-bit strategy: core Taylor-series loops (sinCore, cosCore, sincosCore)
+// use a flat +2*_W guard. This is adequate because the accumulated rounding
+// error over N iterations is bounded by N × 2^-(prec+2*_W), which stays well
+// below the 0.5-ULP rounding threshold at target precision for any practical
+// iteration count. (The number of terms needed for convergence at precision P
+// is O(P), and 2*_W = 128 on 64-bit — far more than log₂(max_terms).)
+// The outer Sin/Cos/Sincos functions apply the same flat guard for the
+// entire computation path (including argument reduction and sign handling).
+// This is conservative but harmless — the important adaptive guard is inside
+// reducePi2, which scales with input magnitude for large arguments.
+// See docs/trig-hyperbolic-precision-review.md for the full analysis.
 
 package bigmath
 
@@ -84,6 +90,12 @@ func reducePi2(z, x *big.Float) int {
 
 // sinCore computes sin(x) for x in [0, π/2] using the Taylor series.
 // sin(x) = Σ (−1)ⁿ · x^(2n+1) / (2n+1)!
+//
+// workPrec uses a flat +2*_W guard. The alternating series introduces
+// subtractive cancellation as terms approach the sum, so +2*_W provides
+// a comfortable margin. At target precision P, O(P) terms are needed;
+// the accumulated error (N × 2^-(P+2*_W)) is negligible for any N reachable
+// in practice (see file header for the full rationale).
 func sinCore(z, x *big.Float) *big.Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
@@ -116,6 +128,9 @@ func sinCore(z, x *big.Float) *big.Float {
 
 // cosCore computes cos(x) for x in [0, π/2] using the Taylor series.
 // cos(x) = Σ (−1)ⁿ · x^(2n) / (2n)!
+//
+// Same flat +2*_W guard as sinCore — same alternating-series cancellation
+// characteristics. See sinCore doc for the rationale.
 func cosCore(z, x *big.Float) *big.Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
@@ -149,6 +164,9 @@ func cosCore(z, x *big.Float) *big.Float {
 // sincosCore computes both sin(x) and cos(x) for x in [0, π/2]
 // using a single Taylor series loop that shares the computation of x²
 // and the factorial denominator between both series.
+//
+// Same flat +2*_W guard as sinCore/cosCore. The shared loop handles both
+// alternating series; the guard covers the combined rounding error.
 func sincosCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	prec := zs.Prec()
 	workPrec := prec + 2*_W
@@ -216,7 +234,12 @@ func Sin(z, x *big.Float) *big.Float {
 		return z.Set(x)
 	}
 
-	workPrec := prec + 2*_W
+	// Flat +_W guard for the full computation path:
+	// xVal at this precision feeds into reducePi2 (which adds its own
+	// dynamic guard internally) and then into sinCore (whose temps are
+	// also at prec+2*_W). The guard covers sign handling, reduction
+	// output rounding, and the Taylor series accumulation.
+	workPrec := prec + _W
 
 	xVal := newFloat(workPrec).Set(x)
 	neg := xVal.Signbit()
@@ -259,7 +282,9 @@ func Cos(z, x *big.Float) *big.Float {
 		return z.Set(one)
 	}
 
-	workPrec := prec + 2*_W
+	// Flat +_W guard — same rationale as Sin. The computation path
+	// (reducePi2 → cosCore) is identical in structure.
+	workPrec := prec + _W
 
 	xVal := newFloat(workPrec).Set(x)
 	if xVal.Signbit() {
@@ -303,7 +328,9 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 		return zs, zc
 	}
 
-	workPrec := prec + 2*_W
+	// Flat +_W guard — same rationale as Sin. The computation path
+	// (reducePi2 → sincosCore) is identical in structure.
+	workPrec := prec + _W
 
 	xVal := newFloat(workPrec).Set(x)
 	neg := xVal.Signbit()

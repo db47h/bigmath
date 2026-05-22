@@ -8,6 +8,11 @@ import (
 
 // sinhCore computes sinh(x) for x in [0, 1] using the Taylor series.
 // sinh(x) = x + x³/3! + x⁵/5! + x⁷/7! + ...
+//
+// workPrec uses a flat +2*_W guard. Unlike sinCore, this series has no
+// alternating signs (all terms are positive), so there is no subtractive
+// cancellation. A smaller guard (+_W) would likely suffice, but +2*_W is
+// harmless — the performance difference is negligible at any precision.
 func sinhCore(z, x *big.Float) *big.Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
@@ -37,6 +42,9 @@ func sinhCore(z, x *big.Float) *big.Float {
 // sinhcoshCore computes both sinh(x) and cosh(x) for x in [0, 1]
 // using a single Taylor series loop that shares the computation of x²
 // and the factorial denominator between both series.
+//
+// Same flat +2*_W guard as sinhCore. Both series are all-positive (no
+// alternating signs), so the guard is conservative but adequate.
 func sinhcoshCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	prec := zs.Prec()
 	workPrec := prec + 2*_W
@@ -98,6 +106,10 @@ func Sinh(z, x *big.Float) *big.Float {
 		return z.Set(x)
 	}
 
+	// Flat +2*_W guard for the full computation path. For |x|<1 the Taylor
+	// series sinhCore uses +2*_W internally; for |x|≥1 the Exp call brings
+	// its own proportional guard. The outer guard covers sign and branch
+	// handling around both paths.
 	workPrec := prec + 2*_W
 
 	xVal := newFloat(workPrec).Set(x)
@@ -147,6 +159,8 @@ func Cosh(z, x *big.Float) *big.Float {
 		return z.Set(one)
 	}
 
+	// Flat +2*_W guard. Always uses Exp internally (no Taylor path), so
+	// Exp's own proportional guard plus this outer margin covers it.
 	workPrec := prec + 2*_W
 
 	xVal := newFloat(workPrec).Set(x)
@@ -190,6 +204,8 @@ func SinhCosh(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 		return zs, zc
 	}
 
+	// Flat +2*_W guard. Dispatches to sinhcoshCore (|x|<1) or shared Exp
+	// (|x|≥1); in both paths the internal temps use matching precision.
 	workPrec := prec + 2*_W
 
 	xVal := newFloat(workPrec).Set(x)
@@ -241,6 +257,8 @@ func Tanh(z, x *big.Float) *big.Float {
 		return z
 	}
 
+	// Flat +2*_W guard. Delegates to SinhCosh internally, which in turn
+	// provides sufficient precision for both sinh and cosh paths.
 	workPrec := prec + 2*_W
 
 	s := newFloat(workPrec)
@@ -278,6 +296,9 @@ func Asinh(z, x *big.Float) *big.Float {
 		return z.SetInf(x.Signbit())
 	}
 
+	// Flat +2*_W guard. The computation involves a sqrt, an add, and a Log
+	// call (which brings its own +_W guard internally). The outer margin
+	// covers intermediate rounding in sqrt and addition.
 	workPrec := prec + 2*_W
 
 	xVal := newFloat(workPrec).Set(x)
