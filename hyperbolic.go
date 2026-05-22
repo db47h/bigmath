@@ -344,10 +344,7 @@ func acoshGuard(x *big.Float, prec uint) uint {
 	if -subExp <= 2 {
 		return prec + 2*_W
 	}
-	need := prec + uint(-subExp) + 3*_W
-	if need < workPrec {
-		need = workPrec
-	}
+	need := max(prec+uint(-subExp)+3*_W, workPrec)
 	return need
 }
 
@@ -401,10 +398,7 @@ func atanhGuard(x *big.Float, prec uint) uint {
 	if -subExp <= 2 {
 		return prec + 2*_W
 	}
-	need := prec + uint(-subExp) + 3*_W
-	if need < prec+2*_W {
-		need = prec + 2*_W
-	}
+	need := max(prec+uint(-subExp)+3*_W, prec+2*_W)
 	return need
 }
 
