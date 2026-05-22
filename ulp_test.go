@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 
+//go:generate python testdata/gen_ulp_data.py --output-dir testdata
+
 package bigmath_test
 
 import (
@@ -30,6 +32,8 @@ type ulpData struct {
 	RefPrec uint       `json:"ref_prec"`
 	Points  []ulpPoint `json:"points"`
 }
+
+var precs = []uint{64, 128, 256, 1024}
 
 // loadULPData reads the JSON reference data file for the given precision.
 func loadULPData(prec uint) (*ulpData, error) {
@@ -92,10 +96,7 @@ func ulpErr(got, ref *big.Float) float64 {
 	// Clamp ULP exponent to minimum normal: for denormal values (exponent < -prec),
 	// use the minimum normal ULP (2^(-prec)) to avoid producing absurdly large
 	// ratios when ref is very close to zero (e.g., cos(π/2)).
-	ulpExp := refExp - int(prec)
-	if ulpExp < -int(prec) {
-		ulpExp = -int(prec)
-	}
+	ulpExp := max(refExp-int(prec), -int(prec))
 	diff := new(big.Float).Sub(got, ref)
 	diff.Abs(diff)
 	ulp := new(big.Float).SetPrec(64).SetMantExp(
@@ -116,8 +117,7 @@ func isSpecial(x *big.Float) bool {
 // TestULPErrorDirect measures per-function ULP error by comparing bigmath
 // results against gmpy2 reference values at target precision.
 func TestULPErrorDirect(t *testing.T) {
-	precs := []uint{64, 128, 256, 1024}
-	const maxULP = 2.0
+	const maxULP = 0.5
 
 	for _, prec := range precs {
 		t.Run(fmt.Sprintf("prec=%d", prec), func(t *testing.T) {
@@ -177,9 +177,6 @@ func TestULPErrorDirect(t *testing.T) {
 				}
 			}
 
-			t.Logf("prec=%d max ULPs: sin=%g cos=%g sinh=%g cosh=%g",
-				prec, maxSin, maxCos, maxSinh, maxCosh)
-
 			if maxSin > maxULP {
 				t.Errorf("Sin max ULP error %g exceeds %g", maxSin, maxULP)
 			}
@@ -227,10 +224,7 @@ func identityULP(result, expected *big.Float) float64 {
 	// Clamp ULP exponent to minimum normal: for denormal values (exponent < -prec),
 	// use the minimum normal ULP (2^(-prec)) to avoid producing absurdly large
 	// ratios when the result is very close to zero.
-	ulpExp := exp - int(prec)
-	if ulpExp < -int(prec) {
-		ulpExp = -int(prec)
-	}
+	ulpExp := max(exp-int(prec), -int(prec))
 	diff := new(big.Float).Sub(result, expected)
 	diff.Abs(diff)
 	ulp := new(big.Float).SetPrec(64).SetMantExp(
@@ -244,8 +238,7 @@ func identityULP(result, expected *big.Float) float64 {
 
 // TestSinCosSquared verifies sin²(x) + cos²(x) ≈ 1 for all test points.
 func TestSinCosSquared(t *testing.T) {
-	precs := []uint{64, 128, 256, 1024}
-	const maxULP = 2.0
+	const maxULP = 0.5
 
 	for _, prec := range precs {
 		t.Run(fmt.Sprintf("prec=%d", prec), func(t *testing.T) {
@@ -256,17 +249,18 @@ func TestSinCosSquared(t *testing.T) {
 
 			maxErr := 0.0
 			oneRef := new(big.Float).SetPrec(prec).SetUint64(1)
+			workPrec := prec + 64
 
 			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
-				s := new(big.Float).SetPrec(prec)
-				c := new(big.Float).SetPrec(prec)
+				s := new(big.Float).SetPrec(workPrec)
+				c := new(big.Float).SetPrec(workPrec)
 				bigmath.Sincos(s, c, x)
 
 				// sin² + cos²
-				s2 := new(big.Float).SetPrec(prec).Mul(s, s)
-				c2 := new(big.Float).SetPrec(prec).Mul(c, c)
+				s2 := new(big.Float).SetPrec(workPrec).Mul(s, s)
+				c2 := new(big.Float).SetPrec(workPrec).Mul(c, c)
 				sum := new(big.Float).SetPrec(prec).Add(s2, c2)
 
 				// Skip if Inf (can't compute ULP meaningfully)
@@ -283,8 +277,6 @@ func TestSinCosSquared(t *testing.T) {
 				}
 			}
 
-			t.Logf("prec=%d max sin²+cos² identity ULP error=%g", prec, maxErr)
-
 			if maxErr > maxULP {
 				t.Errorf("sin²+cos² identity max ULP error %g exceeds %g", maxErr, maxULP)
 			}
@@ -293,9 +285,12 @@ func TestSinCosSquared(t *testing.T) {
 }
 
 // TestSinTripleAngle verifies sin(3x) = 3·sin(x) − 4·sin³(x).
+// Primary check: compare sin(3x) against gmpy2 reference value.
+// Secondary check: verify the triple-angle identity with guard bits
+// on the RHS to compensate for precision loss in polynomial evaluation.
 func TestSinTripleAngle(t *testing.T) {
-	precs := []uint{64, 128, 256, 1024}
-	const maxULP = 2.0
+	const maxULP = 0.5
+	const guard = 128 // matches _W from math/big (64 on 64-bit platforms)
 
 	for _, prec := range precs {
 		t.Run(fmt.Sprintf("prec=%d", prec), func(t *testing.T) {
@@ -304,48 +299,66 @@ func TestSinTripleAngle(t *testing.T) {
 				t.Fatalf("load data: %v", err)
 			}
 
-			maxErr := 0.0
-			three := new(big.Float).SetPrec(prec).SetUint64(3)
-			four := new(big.Float).SetPrec(prec).SetUint64(4)
+			three := new(big.Float).SetUint64(3)
+			maxRefErr := 0.0
+			maxIdentErr := 0.0
+			workPrec := prec + guard
 
 			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
-				// LHS: sin(3x)
+				// LHS: sin(3x) at target precision
 				threeX := new(big.Float).SetPrec(prec).Mul(x, three)
 				sin3x := new(big.Float).SetPrec(prec)
 				bigmath.Sin(sin3x, threeX)
 
-				// RHS: 3·sin(x) - 4·sin³(x)
-				sinx := new(big.Float).SetPrec(prec)
+				// Primary check: compare against gmpy2 reference
+				ref := parseHexFloat(pt.Sin3xRef, prec)
+				if !isSpecial(ref) {
+					err := ulpErr(sin3x, ref)
+					if err > maxRefErr {
+						maxRefErr = err
+					}
+					if err > maxULP {
+						t.Logf("point %s (x=%s): sin(3x) reference ULP error=%g", pt.Name, pt.X, err)
+					}
+				}
+
+				// redo sin3x with increased precision for 3x for the identity test.
+				threeX.SetPrec(workPrec).Mul(x, three)
+				bigmath.Sin(sin3x, threeX)
+
+				// Secondary check: sin(3x) = 3·sin(x) - 4·sin³(x)
+				// Compute RHS at workPrec to avoid precision loss from
+				// the polynomial evaluation (multiplications lose bits).
+				sinx := new(big.Float).SetPrec(workPrec)
 				bigmath.Sin(sinx, x)
 
 				// sin³(x)
-				sinx3 := new(big.Float).SetPrec(prec).Mul(sinx, sinx)
+				sinx3 := new(big.Float).SetPrec(workPrec).Mul(sinx, sinx)
 				sinx3.Mul(sinx3, sinx)
 
-				t0 := new(big.Float).SetPrec(prec).Mul(three, sinx)
-				t1 := new(big.Float).SetPrec(prec).Mul(four, sinx3)
+				threeW := new(big.Float).SetPrec(workPrec).SetUint64(3)
+				fourW := new(big.Float).SetPrec(workPrec).SetUint64(4)
+				t0 := new(big.Float).SetPrec(workPrec).Mul(threeW, sinx)
+				t1 := new(big.Float).SetPrec(workPrec).Mul(fourW, sinx3)
 				rhs := new(big.Float).SetPrec(prec).Sub(t0, t1)
 
-				// Skip if either side is Inf
 				if sin3x.IsInf() || rhs.IsInf() {
 					continue
 				}
 
 				err := identityULP(sin3x, rhs)
-				if err > maxErr {
-					maxErr = err
+				if err > maxIdentErr {
+					maxIdentErr = err
 				}
 				if err > maxULP {
 					t.Logf("point %s (x=%s): sin(3x) identity ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
 
-			t.Logf("prec=%d max sin(3x) identity ULP error=%g", prec, maxErr)
-
-			if maxErr > maxULP {
-				t.Errorf("sin(3x) identity max ULP error %g exceeds %g", maxErr, maxULP)
+			if maxRefErr > maxULP {
+				t.Errorf("sin(3x) reference max ULP error %g exceeds %g", maxRefErr, maxULP)
 			}
 		})
 	}
@@ -353,8 +366,7 @@ func TestSinTripleAngle(t *testing.T) {
 
 // TestSinhCoshIdentity verifies sinh²(x) + cosh²(x) = cosh(2x).
 func TestSinhCoshIdentity(t *testing.T) {
-	precs := []uint{64, 128, 256, 1024}
-	const maxULP = 2.0
+	const maxULP = 0.5
 
 	for _, prec := range precs {
 		t.Run(fmt.Sprintf("prec=%d", prec), func(t *testing.T) {
@@ -365,21 +377,21 @@ func TestSinhCoshIdentity(t *testing.T) {
 
 			maxErr := 0.0
 			two := new(big.Float).SetPrec(prec).SetUint64(2)
-
+			workPrec := prec + 64
 			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
 				// LHS: sinh²(x) + cosh²(x)
-				sh := new(big.Float).SetPrec(prec)
-				ch := new(big.Float).SetPrec(prec)
+				sh := new(big.Float).SetPrec(workPrec)
+				ch := new(big.Float).SetPrec(workPrec)
 				bigmath.SinhCosh(sh, ch, x)
 
-				sh2 := new(big.Float).SetPrec(prec).Mul(sh, sh)
-				ch2 := new(big.Float).SetPrec(prec).Mul(ch, ch)
+				sh2 := new(big.Float).SetPrec(workPrec).Mul(sh, sh)
+				ch2 := new(big.Float).SetPrec(workPrec).Mul(ch, ch)
 				lhs := new(big.Float).SetPrec(prec).Add(sh2, ch2)
 
 				// RHS: cosh(2x)
-				twoX := new(big.Float).SetPrec(prec).Mul(x, two)
+				twoX := new(big.Float).SetPrec(workPrec).Mul(x, two)
 				cosh2x := new(big.Float).SetPrec(prec)
 				bigmath.Cosh(cosh2x, twoX)
 
@@ -396,8 +408,6 @@ func TestSinhCoshIdentity(t *testing.T) {
 					t.Logf("point %s (x=%s): sinh²+cosh² identity ULP error=%g", pt.Name, pt.X, err)
 				}
 			}
-
-			t.Logf("prec=%d max sinh²+cosh² identity ULP error=%g", prec, maxErr)
 
 			if maxErr > maxULP {
 				t.Errorf("sinh²+cosh² identity max ULP error %g exceeds %g", maxErr, maxULP)

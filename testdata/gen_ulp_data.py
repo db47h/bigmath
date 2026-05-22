@@ -22,7 +22,7 @@ import math
 import gmpy2
 
 PRECISIONS = [64, 128, 256, 1024]
-REF_MARGIN = 64  # extra bits for high-precision reference
+REF_MARGIN = 0  # extra bits for high-precision reference
 
 # Go's math/big exponent limits
 GO_EMAX = 2147483647

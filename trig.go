@@ -34,11 +34,10 @@ func reducePi2(z, x *big.Float) int {
 	}
 
 	xExp := xAbs.MantExp(nil)
-	guard := uint(0)
-	if xExp > 4 {
-		guard = uint(xExp-2) + _W
+	workPrec := prec + _W
+	if xExp > 0 {
+		workPrec += uint(xExp)
 	}
-	workPrec := prec + guard
 
 	twoPi := newFloat(workPrec).Set(pi(workPrec))
 	twoPi.SetMantExp(twoPi, 1)
