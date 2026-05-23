@@ -1,96 +1,60 @@
-# Workspace Plan
+# Workspace Plan — Remaining Work
 
-## Status
+> Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
+> This file tracks only what's still pending.
 
-- **`Complex.Log`**: Uses real `Log` + `Arg` (Atan2). Branch cut and special cases documented.
-- **`Complex.Exp`**: Fixed — uses big.Float `Sincos` (full precision). `"math"` import removed from complex.go.
-- **`trig.go`**: `Sin`, `Cos`, `Sincos` implemented. Taylor series on [0, π/2] with reduction modulo 2π. Tested via `sin_cos` in test data pipeline (decomposed into `sin`/`cos` entries).
-- **`hyperbolic.go`**: `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Asinh`, `Acosh`, `Atanh` implemented. Tested via generated data. SinhCosh reuses Exp call for |x|≥1, Taylor shared loop for |x|<1. Guard-bit expansion for Acosh/Atanh near domain boundaries. Sinh uses Taylor for |x|<1 (no cancellation).
-- **`trig.go` & `hyperbolic.go` guard strategy reviewed**: `docs/trig-hyperbolic-precision-review.md`. Conclusion: flat `+2*_W` is adequate (accumulated error over O(P) Taylor terms ≪ 0.5 ULP at target precision for any practical P). Dynamic guards in `reducePi2`, `acoshGuard`, `atanhGuard` handle the real precision-loss paths. Comments added with rationale next to every flat guard.
-- **[4] ULP stress testing — DONE**: Verified across prec=64, 128, 256, 1024. All tests pass at `maxULP=0.5` (including a one-off test at 10240 bits of precision).
-- **Test data generation fixed**: `REF_MARGIN` changed from 64 to 0 so that `x` is parsed at the same precision in both Go and gmpy2.
-- **`reducePi2` guard calculation fixed**: Simplified to `workPrec = prec + _W + xExp` (when `xExp>0`), avoiding under-guarding for large inputs.
-- **All identity tests rewritten** with guard bits (`prec+64` or `prec+128`) on polynomial evaluations to prevent precision loss in multiplications.
-- **1024-bit precision added** to test suite.
-- **Payne-Hanek argument reduction implemented**: Replaced the old precision-mismatched `reducePi2` (which compared x at target_prec against π at workPrec) with an approach that multiplies x by precomputed `2/π`, extracts the integer part via precision clamping (`SetPrec(E)+ToZero`), and computes the remainder via `fma(x, n, π/2)`. Eliminates the precision mismatch that caused Cos(3π/2) divergence.
-- **`halfPi` and `twoOverPi` constants added** (const.go) as cached globals for the new reduction.
-- **Sin/Cos/Sincos dispatch fixed**: Now select sinCore/cosCore based on quadrant (previously always used the same core, only correct for quadrant 0).
+## Remaining Gaps
 
-## Known Bugs & Discrepancies
+### Complex.Exp — Overflow/Underflow & Periodic Imag Wrapping
 
-### ✅ Cos(3π/2) 256-bit: Go vs gmpy2 — RESOLVED
+`Complex.Exp` (line 150 of `complex.go`) computes `expA := Exp(..., &x.Real)` then `s, c := Sincos(..., &x.Imag)`. Missing:
 
-The Payne-Hanek fix resolved the systematic precision mismatch in `reducePi2`.
+- **Overflow of e^a**: When `x.Real` is huge (e.g., 1e6), real `Exp` returns +Inf but the complex result should be `±Inf ± ∞i` (both parts infinite).
+- **Periodic wrapping of imag**: `Sincos` on a huge imaginary part must reduce modulo 2π, which loses precision for very large `|x.Imag|`.
 
-| Precision | Before (bits matching gmpy2) | After (bits matching gmpy2) |
-|-----------|-----|-----|
-| **64-bit** | Diverged (~60 bits) | **Exact match** |
-| **128-bit** | Diverged at bit 63 | **Exact match** |
-| **256-bit** | Diverged at bit 63 | ~138 bits match |
+### Branch Cut Documentation on Complex Inverse Functions
 
-The remaining 256-bit divergence (~118 low bits) is within normal algorithm:
-Go uses a Taylor series on [0, π/2) while gmpy2 uses MPFR (correctly-rounded
-MPFR_SIN_MPN). The ULP test passes at `maxULP=0.5` across all precisions.
+`Complex.Log` documents its branch cut (negative real axis). The following complex methods lack branch cut / special-case doc comments:
 
-**Root cause:** `reducePi2` constructed `xAbs` at `z.Prec()` (= target_prec + _W)
-but computed π values at `workPrec` (= target_prec + _W + xExp). The comparison
-`xAbs.Cmp(multiple_of_π/2)` then evaluated differently-rounded π values against
-each other, giving a wrong quadrant and reduced argument. The Payne-Hanek
-approach avoids this entirely by never comparing x against π at different
-precisions — it directly computes `n = ⌊x·2/π⌋` from x and a single `2/π` at
-dynamic workPrec, then uses `fma` for the remainder.
+| Method | File line | Missing |
+|--------|-----------|---------|
+| `Complex.Asin` | 281 | Branch cut, special cases |
+| `Complex.Acos` | 308 | Branch cut, special cases |
+| `Complex.Atan` | 146 | Special cases (branch cut: imaginary axis beyond ±i) |
+| `Complex.Asinh` | 336 | Branch cut, special cases |
+| `Complex.Acosh` | 354 | Branch cut, special cases |
+| `Complex.Atanh` | 372 | Branch cut, special cases |
 
-## Phase 2: Expand Complex Public API
+Standard branch cuts follow `math/cmplx` conventions:
+- `Asin`: two cuts on the real axis, outside [-1, +1]
+- `Acos`: two cuts on the real axis, outside [-1, +1]
+- `Atan`: two cuts on the imaginary axis, outside [-i, +i]
+- `Asinh`: two cuts on the imaginary axis, outside [-i, +i]
+- `Acosh`: a cut on the real axis, x < 1
+- `Atanh`: two cuts on the real axis, outside [-1, +1]
 
-### Trigonometric (via Euler / exp + trig identities)
+### Edge-Case Tests for Complex Functions
 
-| Method | Formula |
-|--------|---------|
-| `(z *Complex) Sin(x *Complex)` | sin(a+bi) = sin(a)cosh(b) + i·cos(a)sinh(b) — **ready** (Sinh/Cosh implemented) |
-| `(z *Complex) Cos(x *Complex)` | cos(a+bi) = cos(a)cosh(b) − i·sin(a)sinh(b) — **ready** |
-| `(z *Complex) Tan(x *Complex)` | sin(z) / cos(z) |
+Current complex test coverage (`TestComplex_AgainstStd`) tests a single input `(0.5, 0.7)` at 53-bit. Missing:
 
-### Hyperbolic (via complex Exp)
+- **Inputs**: ±0, ±Inf for all complex functions
+- **Large exponents**: e.g., `Sin(1e20+0i)`, `Exp(1e6+0i)`
+- **Values near branch cuts**: e.g., `Log(-1+εi)`, `Asin(2+0i)`, `Atan(0+1.001i)`
+- **Parameterized tests at higher precisions** (128-bit, 256-bit) against `math/cmplx`
 
-| Method | Formula |
-|--------|---------|
-| `(z *Complex) Sinh(x *Complex)` | (e^z − e^(−z)) / 2 |
-| `(z *Complex) Cosh(x *Complex)` | (e^z + e^(−z)) / 2 |
-| `(z *Complex) Tanh(x *Complex)` | sinh(z) / cosh(z) |
+### Real Tan — Large-Input Precision
 
-### Inverse Trigonometric / Hyperbolic (via Complex.Log)
+`Tan` at huge inputs loses precision through the `reducePi2` → `Quo(sin, cos)` path. The flat `+_W` guard may be insufficient for large `x` where `reducePi2` itself adds dynamic guards but `Tan` doesn't expand its own guard to match. No reported failures, but worth profiling.
 
-| Method | Formula |
-|--------|---------|
-| `(z *Complex) Asin(x *Complex)` | −i · ln(i·z + √(1−z²)) |
-| `(z *Complex) Acos(x *Complex)` | −i · ln(z + i·√(1−z²)) |
-| `(z *Complex) Atan(x *Complex)` | (i/2) · ln((1−iz)/(1+iz)) — **already implemented** |
-| `(z *Complex) Asinh(x *Complex)` | ln(z + √(1+z²)) |
-| `(z *Complex) Acosh(x *Complex)` | ln(z + √(z−1)·√(z+1)) |
-| `(z *Complex) Atanh(x *Complex)` | ½ · ln((1+z)/(1−z)) |
+### Documentation
 
-### Power / Root
+- **Complex.Exp**: no doc comment with special cases (unlike real `Exp` which has one).
 
-| Method | Formula |
-|--------|---------|
-| `(z *Complex) Pow(x, y *Complex)` | exp(y · log(x)) |
-| `(z *Complex) Sqrt(x *Complex)` | via De Moivre or exp(½ · log(x)) |
+## Priority
 
-### Utility
-
-| Method | Notes |
-|--------|-------|
-| `(x *Complex) String() string` | `"(a+bi)"` format |
-| `(x *Complex) Format(f fmt.State, verb rune)` | fmt.Formatter support |
-
-## Phase 3: Branch Cuts & Edge Cases
-
-- `Complex.Log`: branch cut documented. Special cases (0, ±∞) handled via `Atan2` fix.
-- `Complex.Exp`: handle overflow/underflow of e^a, periodic wrapping of imag.
-- All inverse trig functions have standard branch cuts — document them.
-
-## Testing
-
-- `complex_test.go`: add parameterized tests using `math/cmplx` as reference at moderate precision (e.g., prec=128).
-- Edge cases: ±0, ±Inf, large exponents, values near branch cuts.
-- Can reuse pattern from `data_test.go` / `bigmath_test.go` if generated test data infrastructure exists.
+| Task | Effort | Impact |
+|------|--------|--------|
+| Branch cut doc comments | Small | Surface-level completeness |
+| Complex.Exp overflow/underflow | Small | Correctness for extreme values |
+| Edge-case complex tests | Medium | Test robustness |
+| Real Tan guard profiling | Small (research only) | Future-proofing |
