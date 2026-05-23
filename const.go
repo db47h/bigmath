@@ -41,10 +41,12 @@ var (
 	ten      = new(big.Float).SetUint64(10)
 
 	// cached constants
-	sqrt2 = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })
-	ln2   = cache(func(prec uint) *big.Float { return computeLn(newFloat(prec+_W), two).SetPrec(prec) })
-	ln10  = cache(func(prec uint) *big.Float { return Log(newFloat(prec), ten) })
-	pi    = cache(computePi)
+	sqrt2     = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })
+	ln2       = cache(func(prec uint) *big.Float { return computeLn(newFloat(prec+_W), two).SetPrec(prec) })
+	ln10      = cache(func(prec uint) *big.Float { return Log(newFloat(prec), ten) })
+	pi        = cache(computePi)
+	halfPi    = cache(func(prec uint) *big.Float { return newFloat(prec).SetMantExp(pi(prec), -1) })
+	twoOverPi = cache(func(prec uint) *big.Float { return newFloat(prec).Quo(two, pi(prec)) })
 )
 
 // cache wraps a constProvider with thread-safe memoization.

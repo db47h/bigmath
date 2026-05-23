@@ -21,6 +21,7 @@ import (
 // reducePi2 reduces x modulo 2π and maps the result to [0, π/2).
 // It returns the quadrant (0–3) of the original reduced value.
 // z may alias x. z's precision determines the target precision of the result.
+// x must be non-negative; panics otherwise.
 func reducePi2(z, x *big.Float) int {
 	if x.Sign() == 0 {
 		return 0
@@ -30,7 +31,7 @@ func reducePi2(z, x *big.Float) int {
 
 	xAbs := newFloat(prec).Set(x)
 	if xAbs.Signbit() {
-		xAbs.Neg(xAbs)
+		panic("reducePi2: x must be >= 0")
 	}
 
 	xExp := xAbs.MantExp(nil)
@@ -39,55 +40,57 @@ func reducePi2(z, x *big.Float) int {
 		workPrec += uint(xExp)
 	}
 
-	twoPi := newFloat(workPrec).Set(pi(workPrec))
-	twoPi.SetMantExp(twoPi, 1)
+	// t0 = xAbs * (2/π)
+	t0 := newFloat(workPrec).Mul(xAbs, twoOverPi(workPrec))
 
-	t0 := newFloat(workPrec).Quo(xAbs, twoPi)
-	nInt := new(big.Int)
-	t0.Int(nInt)
+	// Get the number of bits required to represent the integer part
+	E := t0.MantExp(nil)
+	t1 := newFloat(workPrec)
+	var quadrant int
 
-	t0.SetInt(nInt)
-	t1 := newFloat(workPrec).Mul(t0, twoPi)
-	rTmp := newFloat(workPrec).Sub(xAbs, t1)
-
-	if rTmp.Sign() < 0 {
-		t0.Add(rTmp, twoPi)
-		t0, rTmp = rTmp, t0
-	} else if rTmp.Cmp(twoPi) == 0 {
-		rTmp.Set(zero)
+	if E <= 0 {
+		// x * (2/π) < 1, so the integer part n = 0
+		z.Set(xAbs)
+		return 0
 	}
 
-	pVal := pi(workPrec)
-	// t1 is free after Sub(xAbs, t1) above; reuse as π/2.
-	// In the default/else branch below, t1 is overwritten to 2π.
-	t1.SetMantExp(pVal, -1)
+	// 1. Truncate t0 to an exact integer (Floor)
+	// By setting the precision exactly to the exponent with ToZero rounding,
+	// we keep all integer bits and drop all fractional bits in place.
+	t0.SetMode(big.ToZero)
+	t0.SetPrec(uint(E))
 
-	quad := 0
-	switch {
-	case rTmp.Cmp(t1) < 0:
-	case rTmp.Cmp(pVal) < 0:
-		quad = 1
-		t0.Sub(pVal, rTmp)
-		t0, rTmp = rTmp, t0
-	default:
-		t0.Add(pVal, t1) // pVal + π/2 = 3π/2
-		if rTmp.Cmp(t0) < 0 {
-			quad = 2
-			t0.Sub(rTmp, pVal)
-			t0, rTmp = rTmp, t0
-		} else {
-			quad = 3
-			t1.SetMantExp(pVal, 1)
-			t0.Sub(t1, rTmp)
-			t0, rTmp = rTmp, t0
-		}
+	// 2. Fast Modulo 4
+	if E <= 2 {
+		// E is 1 or 2, so the integer is <= 3. Modulo 4 is just the number itself.
+		q64, _ := t0.Int64()
+		quadrant = int(q64)
+	} else {
+		// Create a copy rounded to E-2 bits. This keeps bits down to the 2^2 (4) place,
+		// effectively dropping the lowest 2 bits (equivalent to calculating t0 - (t0 % 4)).
+		t1.SetPrec(uint(E - 2)).SetMode(big.ToZero).Set(t0)
+
+		// The difference is exactly the modulo 4 remainder (0, 1, 2, or 3).
+		rem := newFloat(workPrec).Sub(t0, t1)
+		q64, _ := rem.Int64()
+		quadrant = int(q64)
+
+		// reset t1
+		t1.SetMode(0).SetPrec(0).SetPrec(workPrec)
 	}
+
+	// -x + n * π/2
+	xAbs.Neg(xAbs)
+	rTmp := fma(newFloat(workPrec), t0, halfPi(workPrec), xAbs, t1)
+
+	// x - n * π/2
+	rTmp.Neg(rTmp)
 
 	z.Set(rTmp)
-	return quad
+	return quadrant
 }
 
-// sinCore computes sin(x) for x in [0, π/2] using the Taylor series.
+// sinCore computes sin(x) for x in [0, π/2) using the Taylor series.
 // sin(x) = Σ (−1)ⁿ · x^(2n+1) / (2n+1)!
 //
 // workPrec uses a flat +2*_W guard. The alternating series introduces
@@ -125,7 +128,7 @@ func sinCore(z, x *big.Float) *big.Float {
 	return z.Set(sum)
 }
 
-// cosCore computes cos(x) for x in [0, π/2] using the Taylor series.
+// cosCore computes cos(x) for x in [0, π/2) using the Taylor series.
 // cos(x) = Σ (−1)ⁿ · x^(2n) / (2n)!
 //
 // Same flat +2*_W guard as sinCore — same alternating-series cancellation
@@ -160,7 +163,7 @@ func cosCore(z, x *big.Float) *big.Float {
 	return z.Set(sum)
 }
 
-// sincosCore computes both sin(x) and cos(x) for x in [0, π/2]
+// sincosCore computes both sin(x) and cos(x) for x in [0, π/2)
 // using a single Taylor series loop that shares the computation of x²
 // and the factorial denominator between both series.
 //
@@ -205,12 +208,7 @@ func sincosCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 		cosSum, t1 = t1, cosSum
 	}
 
-	// Handle zs == zc aliasing: copy to temps before Set
-	s := newFloat(prec).Set(sinSum)
-	c := newFloat(prec).Set(cosSum)
-	zs.Set(s)
-	zc.Set(c)
-	return zs, zc
+	return zs.Set(sinSum), zc.Set(cosSum)
 }
 
 // Sin sets z to the sine of x and returns z.
@@ -249,7 +247,11 @@ func Sin(z, x *big.Float) *big.Float {
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
 	quad := reducePi2(xVal, xVal)
 
-	sinCore(z, xVal)
+	if quad == 0 || quad == 2 {
+		sinCore(z, xVal)
+	} else {
+		cosCore(z, xVal)
+	}
 
 	if quad >= 2 {
 		z.Neg(z)
@@ -293,7 +295,11 @@ func Cos(z, x *big.Float) *big.Float {
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
 	quad := reducePi2(xVal, xVal)
 
-	cosCore(z, xVal)
+	if quad == 0 || quad == 2 {
+		cosCore(z, xVal)
+	} else {
+		sinCore(z, xVal)
+	}
 
 	if quad == 1 || quad == 2 {
 		z.Neg(z)
@@ -341,7 +347,9 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	quad := reducePi2(xVal, xVal)
 
 	sincosCore(zs, zc, xVal)
-
+	if quad == 1 || quad == 3 {
+		zs, zc = zc, zs
+	}
 	if quad >= 2 {
 		zs.Neg(zs)
 	}
