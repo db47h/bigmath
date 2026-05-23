@@ -185,12 +185,9 @@ func Hypot(z, x, y *big.Float) *big.Float {
 	workPrec := prec + _W
 
 	// Use FMA for better precision: sqrt(x*x + y*y)
-	t := newFloat(workPrec)
-	t2 := newFloat(workPrec).Mul(y, y)
-	FMA(t, x, x, t2)
-	t.Sqrt(t)
+	t := FMA(newFloat(workPrec), x, x, newFloat(2*y.Prec()).Mul(y, y))
 
-	return z.Set(t)
+	return z.Sqrt(t)
 }
 
 // Atan2 sets z to the arc tangent of y/x, using the signs of the
@@ -219,10 +216,12 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		z.SetPrec(prec)
 	}
 
+	// check y.sign first so that if y == z, we don't lose the sign when setting z = π
+	yNeg := y.Signbit()
 	if y.Sign() == 0 {
 		if x.Signbit() {
 			Pi(z)
-			if y.Signbit() {
+			if yNeg {
 				z.Neg(z)
 			}
 			return z
@@ -233,7 +232,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 	if x.Sign() == 0 {
 		Pi(z)
 		z.SetMantExp(z, -1)
-		if y.Signbit() {
+		if yNeg {
 			z.Neg(z)
 		}
 		return z
@@ -253,7 +252,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 				Pi(z)
 				z.SetMantExp(z, -2) // π/4
 			}
-			if y.Signbit() {
+			if yNeg {
 				z.Neg(z)
 			}
 			return z
@@ -262,7 +261,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 			// Atan2(±Inf, x) = ±π/2
 			Pi(z)
 			z.SetMantExp(z, -1)
-			if y.Signbit() {
+			if yNeg {
 				z.Neg(z)
 			}
 			return z
@@ -271,7 +270,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 		if x.Signbit() {
 			// Atan2(y, -Inf) = ±π
 			Pi(z)
-			if y.Signbit() {
+			if yNeg {
 				z.Neg(z)
 			}
 			return z
@@ -287,7 +286,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 
 	if x.Signbit() {
 		p := pi(workPrec)
-		if y.Signbit() {
+		if yNeg {
 			q.Sub(res, p)
 		} else {
 			q.Add(res, p)

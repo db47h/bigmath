@@ -106,7 +106,7 @@ func TestComplex_AgainstStd(t *testing.T) {
 			gotIm, _ := got.Imag.Float64()
 
 			if cmplx.Abs(complex(gotRe, gotIm)-want) > 1e-15 {
-				t.Errorf("%s failed: got %v+%vi, want %v", tt.name, gotRe, gotIm, want)
+				t.Errorf("%s failed: got %v, want %v", tt.name, got, want)
 			}
 		})
 	}

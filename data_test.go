@@ -19,6 +19,7 @@ var data = []testData{
 	{"exp", []string{"-inf"}, "0x0p+0"},
 	{"exp", []string{"744261117"}, "0x6.285bf30b8f44d0a9d74f21bb67d682ep+1073741820"},
 	{"exp", []string{"-744261117"}, "0x2.993041ad20736b0d3598216889b53c1cp-1073741824"},
+	{"log", []string{"0"}, "-inf"},
 	{"log", []string{"2"}, "0xb.17217f7d1cf79abc9e3b39803f2f6afp-4"},
 	{"log", []string{"1"}, "0x0p+0"},
 	{"log", []string{"1e-100"}, "-0xe.6422daa5aa78ce3ce27aea3fc69bfep+4"},

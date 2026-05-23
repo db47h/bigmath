@@ -39,7 +39,7 @@ func computeLn(z, x *big.Float) *big.Float {
 func Log(z, x *big.Float) *big.Float {
 	if x.Sign() <= 0 {
 		if x.Sign() == 0 {
-			return z.SetInf(true).Neg(z) // ln(0) = -Inf
+			return z.SetInf(true) // ln(0) = -Inf
 		}
 		panic(ErrNaN("logarithm of negative number"))
 	}
