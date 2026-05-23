@@ -37,21 +37,27 @@ func ULPExponent(x *big.Float) int {
 	return x.MantExp(nil) - int(x.Prec())
 }
 
-// fma sets z to x * y + t and returns z.
+// fma implements fused multiply-add: z = x*y + t with a single rounding.
 //
-// z may be an alias of x or y without causing any extra memory allocations.
+// big.Float.Mul always computes the full mantissa product (O(n×m) words)
+// before rounding to the target precision. By sizing temp at
+// x.Prec() + y.Prec(), we capture the full product without intermediate
+// rounding. Then z.Add rounds once to z.Prec(). Result: one rounding
+// for the entire x*y + t expression — genuine FMA semantics.
 //
-// temp is a scratch variable that will hold the result of x×y with full
-// precision upon return of the function.
+// The sum-of-precisions temp size is NOT wasteful. The full product would
+// have been computed internally by Mul regardless; sizing temp this way
+// just preserves it. Shrinking temp would introduce intermediate rounding
+// and break the FMA guarantee.
 //
-// temp must not be an alias of any other argument.
+// z may alias x or y without extra allocations.
+// temp receives the full-precision product and must NOT alias any argument.
 func fma(z, x, y, t, temp *big.Float) *big.Float {
-	// Use full precision for the product. Mul computes the product with full
-	// precision before rounding. As a result, setting temp's precision to
-	// x.prec + z.prec does not cause any extra allocations, even if
-	// x.MinPrec() < x.Prec().
-	// Since z's precision may change and z could be an alias for x or y, set
-	//  temp's precision early.
+	// Size temp to hold the full product: Mul computes the full mantissa
+	// product internally, so setting temp's precision to x.Prec() + y.Prec()
+	// prevents it from rounding the product away. SetPrec(0) first to
+	// free any previous mantissa, ensuring a fresh allocation of the
+	// correct size.
 	temp.SetPrec(0).SetPrec(x.Prec() + y.Prec())
 
 	if z.Prec() == 0 {
@@ -60,8 +66,12 @@ func fma(z, x, y, t, temp *big.Float) *big.Float {
 	return z.Add(temp.Mul(x, y), t)
 }
 
-// FMA sets z to x * y + t and returns z.
-// The operation is performed with extra precision to minimize rounding errors.
+// FMA sets z to x*y + t with a single rounding (fused multiply-add) and
+// returns z. The product x*y is computed without intermediate rounding,
+// then added to t and rounded once to z's precision.
+//
+// This provides genuine FMA semantics: one rounding for the entire
+// expression, not two. See fma for the implementation details.
 func FMA(z, x, y, t *big.Float) *big.Float {
 	return fma(z, x, y, t, new(big.Float))
 }

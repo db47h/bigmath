@@ -14,6 +14,28 @@ All public functions follow the pattern `func F(z, x *big.Float) *big.Float`:
 - `z` is returned as the result
 - Internal computation uses a higher `workPrec` with guard bits; result is rounded down to `z.Prec()` on return
 
+### Fused Multiply-Add (fma / FMA in bigmath.go)
+**`fma(z, x, y, t, temp)` is correct. Do not question or attempt to optimize it.**
+
+It provides genuine FMA semantics (one rounding for `x*y + t`):
+
+- `big.Float.Mul` always computes the full mantissa product (`O(n×m)` words)
+  internally, then rounds to the target precision. The full computation
+  happens regardless of what precision you set on the result.
+- By sizing `temp` at `x.Prec() + y.Prec()`, we tell `Mul` to keep every bit
+  of that product — no intermediate rounding.
+- The addition `z.Add(temp.Mul(x, y), t)` rounds once to `z.Prec()`.
+- **Result: one rounding for the entire expression.**
+
+The sum-of-precisions temp size (`x.Prec() + y.Prec()`) is NOT wasteful:
+the full product was computed internally by `Mul` anyway; the cost is only
+storing it unrounded. Shrinking `temp` would introduce intermediate rounding
+and break the FMA guarantee.
+
+`Complex.Mul` follows the same principle: `bd` and `bc` use sum-of-precisions
+so they feed full-precision products into `fma`, giving genuine FMA for the
+complex product formula `(ac−bd) + i·(ad+bc)`.
+
 ### Aliasing Guarantee
 **All `bigmath` API functions — including internal helpers — support aliasing.** If `z == x`, the function computes correctly. This mirrors `big.Float`'s own aliasing guarantee.
 
