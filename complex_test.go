@@ -4,6 +4,7 @@ package bigmath_test
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"math/cmplx"
 	"testing"
@@ -112,19 +113,135 @@ func TestComplex_AgainstStd(t *testing.T) {
 	}
 }
 
+func mkFloat(prec uint, v float64) *big.Float {
+	if v > 1e300 && !math.IsInf(v, 0) {
+		panic("overflow")
+	}
+	if math.IsInf(v, 1) {
+		return new(big.Float).SetPrec(prec).SetInf(false)
+	}
+	if math.IsInf(v, -1) {
+		return new(big.Float).SetPrec(prec).SetInf(true)
+	}
+	return new(big.Float).SetPrec(prec).SetFloat64(v)
+}
+
+func mkComplex(prec uint, re, im float64) *bigmath.Complex {
+	c := &bigmath.Complex{}
+	c.Real.SetPrec(prec).Set(mkFloat(prec, re))
+	c.Imag.SetPrec(prec).Set(mkFloat(prec, im))
+	return c
+}
+
 func TestComplex_Format(t *testing.T) {
-	c := newComplex(1.23, -4.56, 64)
-	got := fmt.Sprintf("%.2f", c)
-	want := "1.23-4.56i"
-	if got != want {
-		t.Errorf("Format failed: got %q, want %q", got, want)
+	prec := uint(64)
+
+	type testCase struct {
+		name   string
+		re, im float64
+		format string
+		want   string
 	}
 
-	c2 := newComplex(1.23, 4.56, 64)
-	got2 := fmt.Sprintf("%.2f", c2)
-	want2 := "1.23+4.56i"
-	if got2 != want2 {
-		t.Errorf("Format failed: got %q, want %q", got2, want2)
+	// full grid: real × imag = {-Inf, -5, 0, 3, +Inf}
+	reVals := []struct {
+		v     float64
+		label string
+	}{
+		{math.Inf(-1), "-Inf"},
+		{-5, "neg"},
+		{0, "zero"},
+		{3, "pos"},
+		{math.Inf(1), "+Inf"},
+	}
+	imVals := []struct {
+		v     float64
+		label string
+	}{
+		{math.Inf(-1), "-Inf"},
+		{-7, "neg"},
+		{0, "zero"},
+		{4, "pos"},
+		{math.Inf(1), "+Inf"},
+	}
+
+	// expected formats for %v (computed manually)
+	// real row -> re\im col
+	expectedGrid := [5][5]string{
+		// im: -Inf      neg      zero    pos       +Inf
+		{"-∞-∞i", "-∞-7i", "-∞", "-∞+4i", "-∞+∞i"}, // re: -Inf
+		{"-5-∞i", "-5-7i", "-5", "-5+4i", "-5+∞i"}, // re: -5
+		{"-∞i", "-7i", "0", "4i", "+∞i"},           // re: 0
+		{"3-∞i", "3-7i", "3", "3+4i", "3+∞i"},      // re: 3
+		{"+∞-∞i", "+∞-7i", "+∞", "+∞+4i", "+∞+∞i"}, // re: +Inf
+	}
+
+	var tests []testCase
+	for ri, rv := range reVals {
+		for ii, iv := range imVals {
+			name := rv.label + "_" + iv.label
+			tests = append(tests, testCase{
+				name: name,
+				re:   rv.v,
+				im:   iv.v,
+				want: expectedGrid[ri][ii],
+			})
+		}
+	}
+
+	// Special cases from user specification
+	specialCases := []testCase{
+		// User-provided examples
+		{name: "neg2", re: -2, im: 0, want: "-2"},
+		{name: "pos54", re: 54, im: 0, want: "54"},
+		{name: "only_imag_42", re: 0, im: 42, want: "42i"},
+		{name: "only_imag_neg1", re: 0, im: -1, want: "-i"},
+		{name: "only_imag_1", re: 0, im: 1, want: "i"},
+		{name: "pos1_pos1", re: 1, im: 1, want: "1+i"},
+		{name: "pos1_neg1", re: 1, im: -1, want: "1-i"},
+		{name: "pos1_pos2", re: 1, im: 2, want: "1+2i"},
+		{name: "pos1_neg2", re: 1, im: -2, want: "1-2i"},
+
+		// More boundary cases
+		{name: "neg1_zero", re: -1, im: 0, want: "-1"},
+		{name: "neg1_pos1", re: -1, im: 1, want: "-1+i"},
+		{name: "neg1_neg1", re: -1, im: -1, want: "-1-i"},
+		{name: "pos2_pos1", re: 2, im: 1, want: "2+i"},
+		{name: "neg2_pos1", re: -2, im: 1, want: "-2+i"},
+		{name: "neg2_neg1", re: -2, im: -1, want: "-2-i"},
+		{name: "zero_neg2", re: 0, im: -2, want: "-2i"},
+
+		// User-specified inf formatting examples
+		{name: "inf_plus_3i", re: math.Inf(1), im: 3, want: "+∞+3i"},
+		{name: "1_plus_inf_i", re: 1, im: math.Inf(1), want: "1+∞i"},
+	}
+	tests = append(tests, specialCases...)
+
+	// %.2f format tests (legacy format test)
+	f2Tests := []testCase{
+		{name: "fmt_2f_neg_imag", re: 1.23, im: -4.56, format: "%.2f", want: "1.23-4.56i"},
+		{name: "fmt_2f_pos_imag", re: 1.23, im: 4.56, format: "%.2f", want: "1.23+4.56i"},
+		{name: "fmt_2f_only_imag", re: 0, im: 4.56, format: "%.2f", want: "4.56i"},
+		{name: "fmt_2f_only_real", re: 1.23, im: 0, format: "%.2f", want: "1.23"},
+		{name: "fmt_2f_neg_imag_only", re: 0, im: -4.56, format: "%.2f", want: "-4.56i"},
+		{name: "fmt_2f_one_imag", re: 1, im: 1, format: "%.2f", want: "1.00+i"},
+		{name: "fmt_2f_neg_one_imag", re: 1, im: -1, format: "%.2f", want: "1.00-i"},
+	}
+	tests = append(tests, f2Tests...)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := mkComplex(prec, tt.re, tt.im)
+			var got string
+			if tt.format != "" {
+				got = fmt.Sprintf(tt.format, c)
+			} else {
+				got = fmt.Sprint(c)
+			}
+			if got != tt.want {
+				t.Errorf("Format(%s,%v,%v): got %q, want %q", tt.format, tt.re, tt.im, got, tt.want)
+			}
+		})
 	}
 }
 

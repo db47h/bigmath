@@ -413,14 +413,66 @@ func (x *Complex) String() string {
 	return fmt.Sprint(x)
 }
 
-func (x *Complex) Format(s fmt.State, verb rune) {
-	x.Real.Format(s, verb)
-	if x.Imag.Sign() != 0 {
-		if x.Imag.Sign() > 0 {
-			fmt.Fprintf(s, "+")
+// formatFloat writes f to s, replacing "Inf" with "∞" for readability.
+// If addSign is true, positive infinity is printed as "+∞".
+func formatFloat(s fmt.State, verb rune, f *big.Float, addSign bool) {
+	if f.IsInf() {
+		if f.Signbit() {
+			fmt.Fprint(s, "-∞")
+		} else if addSign {
+			fmt.Fprint(s, "+∞")
+		} else {
+			fmt.Fprint(s, "∞")
 		}
-		x.Imag.Format(s, verb)
+		return
+	}
+	f.Format(s, verb)
+}
+
+// formatImag writes the imaginary part f to s, replacing "Inf" with "∞".
+// When reZero is true and f is +Inf, the value is printed as "+∞i".
+func formatImag(s fmt.State, verb rune, f *big.Float, reZero bool) {
+	if f.IsInf() {
+		if f.Signbit() {
+			fmt.Fprint(s, "-∞i")
+		} else if reZero {
+			fmt.Fprint(s, "+∞i")
+		} else {
+			fmt.Fprint(s, "∞i")
+		}
+		return
+	}
+	f.Format(s, verb)
+	fmt.Fprint(s, "i")
+}
+
+func (x *Complex) Format(s fmt.State, verb rune) {
+	reZero := x.Real.Sign() == 0
+	imZero := x.Imag.Sign() == 0
+
+	if reZero && imZero {
+		formatFloat(s, verb, &x.Real, false)
+		return
+	}
+
+	if !reZero {
+		formatFloat(s, verb, &x.Real, true)
+	}
+
+	if imZero {
+		return
+	}
+
+	if !reZero && !x.Imag.Signbit() {
+		fmt.Fprint(s, "+")
+	}
+
+	if x.Imag.Cmp(one) == 0 {
 		fmt.Fprint(s, "i")
+	} else if x.Imag.Cmp(minusOne) == 0 {
+		fmt.Fprint(s, "-i")
+	} else {
+		formatImag(s, verb, &x.Imag, reZero)
 	}
 }
 
