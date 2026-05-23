@@ -29,6 +29,9 @@ var fnMap = map[string]any{
 	"asinh":    bigmath.Asinh,
 	"acosh":    bigmath.Acosh,
 	"atanh":    bigmath.Atanh,
+	"asin":     bigmath.Asin,
+	"acos":     bigmath.Acos,
+	"tan":      bigmath.Tan,
 }
 
 func testPiConst(z *big.Float) *big.Float {

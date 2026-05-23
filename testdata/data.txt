@@ -155,3 +155,39 @@ sinh_cosh 100
 sinh_cosh -100
 sinh_cosh 1e-5
 sinh_cosh -1e-5
+
+# asin
+asin 0
+asin 0.5
+asin 1
+asin -0.5
+asin -1
+asin 0.25
+asin -0.25
+asin 0.9
+asin -0.9
+
+# acos
+acos 0
+acos 0.5
+acos 1
+acos -0.5
+acos -1
+acos 0.25
+acos -0.25
+acos 0.9
+acos -0.9
+
+# tan
+tan 0
+tan 0.5
+tan 1
+tan -0.5
+tan -1
+tan 10
+tan 100
+
+# additional edge cases
+asin 0.9999999999999999
+acos 0.9999999999999999
+tan 0.7853981633974483
