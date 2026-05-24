@@ -9,7 +9,7 @@ import (
 
 var oneC = &Complex{Real: *one}
 
-// Complex represents a complex number with real and imaginary parts as *big.Float.
+// Complex represents a complex number with real and imaginary parts as big.Float.
 type Complex struct {
 	Real big.Float
 	Imag big.Float
@@ -142,7 +142,16 @@ func (z *Complex) Log(x *Complex) *Complex {
 	return z
 }
 
-// Atan sets z to the rounded value of arctan(x) and returns z.
+// Atan sets z to the inverse tangent of x and returns z.
+//
+// Formula: atan(x) = (i/2) · ln((1−ix)/(1+ix))
+//
+// The branch cut is along the imaginary axis, outside the interval [-i, +i].
+// The real part of the result lies in the interval [-π/2, π/2].
+//
+// Special cases:
+//
+//	Atan(0 + i·0) = 0 + i·0
 func (z *Complex) Atan(x *Complex) *Complex {
 	// atan(z) = (i/2) * ln((1-iz)/(1+iz))
 	// let w = (1-iz)/(1+iz)
@@ -294,6 +303,13 @@ func (z *Complex) Tanh(x *Complex) *Complex {
 // Asin sets z to the inverse sine of x and returns z.
 //
 // Formula: asin(x) = −i · ln(i·x + √(1−x²))
+//
+// The branch cut is along the real axis, outside the interval [-1, +1].
+// The real part of the result lies in the interval [-π/2, π/2].
+//
+// Special cases:
+//
+//	Asin(0 + i·0) = 0 + i·0
 func (z *Complex) Asin(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
@@ -321,6 +337,13 @@ func (z *Complex) Asin(x *Complex) *Complex {
 // Acos sets z to the inverse cosine of x and returns z.
 //
 // Formula: acos(x) = −i · ln(x + i·√(1−x²))
+//
+// The branch cut is along the real axis, outside the interval [-1, +1].
+// The real part of the result lies in the interval [0, π].
+//
+// Special cases:
+//
+//	Acos(0 + i·0) = π/2 + i·0
 func (z *Complex) Acos(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
@@ -349,6 +372,13 @@ func (z *Complex) Acos(x *Complex) *Complex {
 // Asinh sets z to the inverse hyperbolic sine of x and returns z.
 //
 // Formula: asinh(x) = ln(x + √(x²+1))
+//
+// The branch cut is along the imaginary axis, outside the interval [-i, +i].
+// The imaginary part of the result lies in the interval [-π/2, π/2].
+//
+// Special cases:
+//
+//	Asinh(0 + i·0) = 0 + i·0
 func (z *Complex) Asinh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
@@ -367,6 +397,13 @@ func (z *Complex) Asinh(x *Complex) *Complex {
 // Acosh sets z to the inverse hyperbolic cosine of x and returns z.
 //
 // Formula: acosh(x) = ln(x + √(x−1)·√(x+1))
+//
+// The branch cut is along the real axis, for x < 1.
+// The imaginary part of the result lies in the interval [0, π].
+//
+// Special cases:
+//
+//	Acosh(0 + i·0) = 0 + i·π/2
 func (z *Complex) Acosh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
@@ -385,6 +422,13 @@ func (z *Complex) Acosh(x *Complex) *Complex {
 // Atanh sets z to the inverse hyperbolic tangent of x and returns z.
 //
 // Formula: atanh(x) = ½ · ln((1+x)/(1−x))
+//
+// The branch cut is along the real axis, outside the interval [-1, +1].
+// The imaginary part of the result lies in the interval [-π/2, π/2].
+//
+// Special cases:
+//
+//	Atanh(0 + i·0) = 0 + i·0
 func (z *Complex) Atanh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 

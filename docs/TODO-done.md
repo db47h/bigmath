@@ -63,12 +63,12 @@ All methods implemented and supporting `z == x` aliasing:
 | **`Sinh`** | sinh(a)cos(b) + i·cosh(a)sin(b) |
 | **`Cosh`** | cosh(a)cos(b) + i·sinh(a)sin(b) |
 | **`Tanh`** | sinh(z) / cosh(z) via Quo |
-| **`Asin`** | −i·ln(i·z + √(1−z²)) |
-| **`Acos`** | −i·ln(z + i·√(1−z²)) |
-| **`Atan`** | (i/2)·ln((1−iz)/(1+iz)) — all special cases documented |
-| **`Asinh`** | ln(z + √(1+z²)) |
-| **`Acosh`** | ln(z + √(z−1)·√(z+1)) |
-| **`Atanh`** | ½·ln((1+z)/(1−z)) |
+| **`Asin`** | −i·ln(i·z + √(1−z²)) — branch cut along real axis, outside [-1, +1]. Special case (0) doc'd. |
+| **`Acos`** | −i·ln(z + i·√(1−z²)) — branch cut along real axis, outside [-1, +1]. Special case (0) doc'd. |
+| **`Atan`** | (i/2)·ln((1−iz)/(1+iz)) — branch cut along imaginary axis, outside [-i, +i]. All special cases doc'd. |
+| **`Asinh`** | ln(z + √(1+z²)) — branch cut along imaginary axis, outside [-i, +i]. Special case (0) doc'd. |
+| **`Acosh`** | ln(z + √(z−1)·√(z+1)) — branch cut along real axis, x < 1. Special case (0) doc'd. |
+| **`Atanh`** | ½·ln((1+z)/(1−z)) — branch cut along real axis, outside [-1, +1]. Special case (0) doc'd. |
 | **`Sqrt`** | exp(½·log(x)) |
 | **`Pow`** | exp(y·log(x)) |
 
@@ -107,7 +107,7 @@ All methods implemented and supporting `z == x` aliasing:
 - **`docs/Payne-Hanek.md`** — Payne-Hanek argument reduction technique write-up.
 - **`docs/trig-hyperbolic-precision-review.md`** — guard-bit precision strategy review with analysis and conclusion.
 - **Code doc comments** on all exported functions with special cases listed.
-- Branch cut documented on `Complex.Log`.
+- Branch cuts documented on `Complex.Log` and all six complex inverse functions (Asin, Acos, Atan, Asinh, Acosh, Atanh).
 
 ## Configuration / Infrastructure
 
