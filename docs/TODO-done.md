@@ -56,7 +56,7 @@ All methods implemented and supporting `z == x` aliasing:
 | Method | Formula |
 |--------|---------|
 | **`Log`** | ½·ln(x²+y²) + i·Arg(x,y) — branch cut along negative real axis. Special cases (0, ±∞) documented. |
-| **`Exp`** | e^a·cos(b) + i·e^a·sin(b) via real `Exp` + `Sincos` |
+| **`Exp`** | e^a·cos(b) + i·e^a·sin(b) via real `Exp` + `Sincos`. Overflow: when real `Exp` returns +Inf, sets both parts to +Inf. Infinite imag: panics with `ErrNaN`. Underflow to 0 handled by existing multiply. Doc comment with special cases added. |
 | **`Sin`** | sin(a)cosh(b) + i·cos(a)sinh(b) |
 | **`Cos`** | cos(a)cosh(b) − i·sin(a)sinh(b) |
 | **`Tan`** | sin(z) / cos(z) via Quo |
@@ -94,6 +94,7 @@ All methods implemented and supporting `z == x` aliasing:
 | **Complex identity tests** | `sin²(z)+cos²(z)=1` at 256-bit. |
 | **Complex vs math/cmplx** | All 13 complex functions tested against Go stdlib at 53-bit for input `(0.5, 0.7)`. |
 | **Complex Format** | Full 5×5 grid of reals×imags spanning {−∞, neg, 0, pos, +∞} plus 20+ special cases (`0`, `i`, `-i`, `1+i`, `1-i`, `+∞+3i`, etc.) and `%.2f` formatting. |
+| **Complex.Exp edge cases** | `TestComplex_Exp_EdgeCases`: 18 tests covering large real (±1e10, ±Inf) overflow/underflow, ±Inf imag panic, normal comparison vs `cmplx.Exp`, and large finite imag (1e6, 1e20) at 256-bit. |
 | **Complex aliasing** | `Sin(z)`, `Mul(z,z)`, `Quo(z,z)` — all pass with `z==x`. |
 | **Error handling** | `Log(-1)` etc. panic with `ErrNaN`. |
 | **Test data generation fixed** | `REF_MARGIN` changed from 64 to 0 so `x` is parsed at the same precision in Go and gmpy2. |

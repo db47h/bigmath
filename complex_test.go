@@ -245,6 +245,241 @@ func TestComplex_Format(t *testing.T) {
 	}
 }
 
+func TestComplex_Exp_EdgeCases(t *testing.T) {
+	prec := uint(53)
+
+	t.Run("large positive real triggers overflow", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 1e10, 0)
+		got := z.Exp(x)
+		if !got.Real.IsInf() || got.Real.Signbit() {
+			t.Errorf("Real: expected +Inf, got %v", &got.Real)
+		}
+		if !got.Imag.IsInf() || got.Imag.Signbit() {
+			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("large positive real with imag triggers overflow", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 1e10, 1)
+		got := z.Exp(x)
+		if !got.Real.IsInf() || got.Real.Signbit() {
+			t.Errorf("Real: expected +Inf, got %v", &got.Real)
+		}
+		if !got.Imag.IsInf() || got.Imag.Signbit() {
+			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("large negative real triggers underflow", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, -1e10, 0)
+		got := z.Exp(x)
+		if got.Real.Sign() != 0 {
+			t.Errorf("Real: expected 0, got %v", &got.Real)
+		}
+		if got.Imag.Sign() != 0 {
+			t.Errorf("Imag: expected 0, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("large negative real with imag triggers underflow", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, -1e10, 1.5)
+		got := z.Exp(x)
+		if got.Real.Sign() != 0 {
+			t.Errorf("Real: expected 0, got %v", &got.Real)
+		}
+		if got.Imag.Sign() != 0 {
+			t.Errorf("Imag: expected 0, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("real +Inf", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(1), 0)
+		got := z.Exp(x)
+		if !got.Real.IsInf() || got.Real.Signbit() {
+			t.Errorf("Real: expected +Inf, got %v", &got.Real)
+		}
+		if !got.Imag.IsInf() || got.Imag.Signbit() {
+			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("real +Inf with imag", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(1), 2)
+		got := z.Exp(x)
+		if !got.Real.IsInf() || got.Real.Signbit() {
+			t.Errorf("Real: expected +Inf, got %v", &got.Real)
+		}
+		if !got.Imag.IsInf() || got.Imag.Signbit() {
+			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("real -Inf", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(-1), 0)
+		got := z.Exp(x)
+		if got.Real.Sign() != 0 {
+			t.Errorf("Real: expected 0, got %v", &got.Real)
+		}
+		if got.Imag.Sign() != 0 {
+			t.Errorf("Imag: expected 0, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("real -Inf with imag", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(-1), 1.5)
+		got := z.Exp(x)
+		if got.Real.Sign() != 0 {
+			t.Errorf("Real: expected 0, got %v", &got.Real)
+		}
+		if got.Imag.Sign() != 0 {
+			t.Errorf("Imag: expected 0, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("both Inf", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(1), math.Inf(1))
+		got := z.Exp(x)
+		// real +Inf triggers overflow early return before imag Inf check
+		if !got.Real.IsInf() || got.Real.Signbit() {
+			t.Errorf("Real: expected +Inf, got %v", &got.Real)
+		}
+		if !got.Imag.IsInf() || got.Imag.Signbit() {
+			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
+		}
+	})
+
+	t.Run("zero", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0, 0)
+		got := z.Exp(x)
+		// e^0 = 1
+		float64RE, _ := got.Real.Float64()
+		float64IM, _ := got.Imag.Float64()
+		want := cmplx.Exp(complex(0, 0))
+		if cmplx.Abs(complex(float64RE, float64IM)-want) > 1e-15 {
+			t.Errorf("Exp(0): got %v, want %v", got, want)
+		}
+	})
+
+	t.Run("normal point", func(t *testing.T) {
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0.5, 0.7)
+		got := z.Exp(x)
+		float64RE, _ := got.Real.Float64()
+		float64IM, _ := got.Imag.Float64()
+		want := cmplx.Exp(complex(0.5, 0.7))
+		if cmplx.Abs(complex(float64RE, float64IM)-want) > 1e-15 {
+			t.Errorf("Exp(0.5+0.7i): got %v, want %v", got, want)
+		}
+	})
+
+	// --- Panic tests for infinite imaginary part ---
+	t.Run("imag +Inf panics", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("expected panic, got none")
+			} else if _, ok := r.(bigmath.ErrNaN); !ok {
+				t.Errorf("expected ErrNaN panic, got %T(%v)", r, r)
+			}
+		}()
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0, math.Inf(1))
+		z.Exp(x)
+	})
+
+	t.Run("imag -Inf panics", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("expected panic, got none")
+			} else if _, ok := r.(bigmath.ErrNaN); !ok {
+				t.Errorf("expected ErrNaN panic, got %T(%v)", r, r)
+			}
+		}()
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0, math.Inf(-1))
+		z.Exp(x)
+	})
+
+	t.Run("real + imag +Inf panics", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("expected panic, got none")
+			} else if _, ok := r.(bigmath.ErrNaN); !ok {
+				t.Errorf("expected ErrNaN panic, got %T(%v)", r, r)
+			}
+		}()
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 1, math.Inf(1))
+		z.Exp(x)
+	})
+
+	t.Run("real -Inf + imag +Inf panics", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("expected panic, got none")
+			} else if _, ok := r.(bigmath.ErrNaN); !ok {
+				t.Errorf("expected ErrNaN panic, got %T(%v)", r, r)
+			}
+		}()
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, math.Inf(-1), math.Inf(1))
+		z.Exp(x)
+	})
+
+	// --- 256-bit sanity tests for large finite imaginary ---
+	t.Run("large imag 1e6 at 256-bit", func(t *testing.T) {
+		prec := uint(256)
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0, 1e6)
+		got := z.Exp(x)
+		if got.Real.IsInf() {
+			t.Errorf("Real: expected finite, got Inf")
+		}
+		if got.Imag.IsInf() {
+			t.Errorf("Imag: expected finite, got Inf")
+		}
+	})
+
+	t.Run("large imag 1e20 at 256-bit", func(t *testing.T) {
+		prec := uint(256)
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 0, 1e20)
+		got := z.Exp(x)
+		if got.Real.IsInf() {
+			t.Errorf("Real: expected finite, got Inf")
+		}
+		if got.Imag.IsInf() {
+			t.Errorf("Imag: expected finite, got Inf")
+		}
+	})
+
+	t.Run("medium real + large imag at 256-bit", func(t *testing.T) {
+		prec := uint(256)
+		z := newComplex(0, 0, prec)
+		x := mkComplex(prec, 1, 1e6)
+		got := z.Exp(x)
+		if got.Real.IsInf() {
+			t.Errorf("Real: expected finite, got Inf")
+		}
+		if got.Imag.IsInf() {
+			t.Errorf("Imag: expected finite, got Inf")
+		}
+	})
+}
+
 func TestComplex_Aliasing(t *testing.T) {
 	prec := uint(64)
 	x := newComplex(1, 2, prec)

@@ -5,13 +5,6 @@
 
 ## Remaining Gaps
 
-### Complex.Exp — Overflow/Underflow & Periodic Imag Wrapping
-
-`Complex.Exp` (line 150 of `complex.go`) computes `expA := Exp(..., &x.Real)` then `s, c := Sincos(..., &x.Imag)`. Missing:
-
-- **Overflow of e^a**: When `x.Real` is huge (e.g., 1e6), real `Exp` returns +Inf but the complex result should be `±Inf ± ∞i` (both parts infinite).
-- **Periodic wrapping of imag**: `Sincos` on a huge imaginary part must reduce modulo 2π, which loses precision for very large `|x.Imag|`.
-
 ### Branch Cut Documentation on Complex Inverse Functions
 
 `Complex.Log` documents its branch cut (negative real axis). The following complex methods lack branch cut / special-case doc comments:
@@ -38,7 +31,7 @@ Standard branch cuts follow `math/cmplx` conventions:
 Current complex test coverage (`TestComplex_AgainstStd`) tests a single input `(0.5, 0.7)` at 53-bit. Missing:
 
 - **Inputs**: ±0, ±Inf for all complex functions
-- **Large exponents**: e.g., `Sin(1e20+0i)`, `Exp(1e6+0i)`
+- **Large exponents**: e.g., `Sin(1e20+0i)`
 - **Values near branch cuts**: e.g., `Log(-1+εi)`, `Asin(2+0i)`, `Atan(0+1.001i)`
 - **Parameterized tests at higher precisions** (128-bit, 256-bit) against `math/cmplx`
 
@@ -48,13 +41,12 @@ Current complex test coverage (`TestComplex_AgainstStd`) tests a single input `(
 
 ### Documentation
 
-- **Complex.Exp**: no doc comment with special cases (unlike real `Exp` which has one).
+No remaining gaps.
 
 ## Priority
 
 | Task | Effort | Impact |
 |------|--------|--------|
 | Branch cut doc comments | Small | Surface-level completeness |
-| Complex.Exp overflow/underflow | Small | Correctness for extreme values |
 | Edge-case complex tests | Medium | Test robustness |
 | Real Tan guard profiling | Small (research only) | Future-proofing |

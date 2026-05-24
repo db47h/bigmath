@@ -181,11 +181,27 @@ func (x *Complex) IsZero() bool {
 	return x.Real.Sign() == 0 && x.Imag.Sign() == 0
 }
 
-// Exp sets z to e^x and returns z.
+// Exp sets z to e^x, the base-e exponential of x, and returns z.
+//
+// Special cases are:
+//
+//	Exp(+Inf + i·y) = +Inf + i·+Inf  (for any finite y)
+//	Exp(-Inf + i·y) = 0               (exact underflow, for finite y)
+//	Exp(x + i·±Inf) = panic           (infinite imaginary part)
 func (z *Complex) Exp(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	expA := Exp(newFloat(workPrec), &x.Real)
+	if expA.IsInf() {
+		z.Real.SetInf(false)
+		z.Imag.SetInf(false)
+		return z
+	}
+
+	if x.Imag.IsInf() {
+		panic(ErrNaN("complex exponential of infinite imaginary part"))
+	}
+
 	s, c := Sincos(newFloat(workPrec), newFloat(workPrec), &x.Imag)
 
 	z.Real.Mul(expA, c)
