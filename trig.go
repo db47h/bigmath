@@ -348,7 +348,7 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 
 	sincosCore(zs, zc, xVal)
 	if quad == 1 || quad == 3 {
-		zs, zc = zc, zs
+		*zs, *zc = *zc, *zs
 	}
 	if quad >= 2 {
 		zs.Neg(zs)
@@ -359,6 +359,5 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	if neg {
 		zs.Neg(zs)
 	}
-
 	return zs, zc
 }

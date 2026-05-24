@@ -8,12 +8,6 @@ import argparse
 import gmpy2
 import builtins
 
-# gmpy2 functions that return tuples map to multiple Go test entries.
-TUPLE_FUNCS = {
-    "sin_cos": [("sin", 0), ("cos", 1)],
-    "sinh_cosh": [("sinh", 0), ("cosh", 1)],
-}
-
 
 def format_or_nan(val):
     """Format an mpfr value as hex float string.
@@ -73,27 +67,25 @@ def generate_json_tests(input_file, output_file, precision):
                     raise AttributeError(f"function '{func_name}' not found")
                 result = func(*mpfr_args)
 
-            # Handle tuple results (sin_cos, sinh_cos)
+            # Handle tuple results (sin_cos, sinh_cosh)
             if isinstance(result, tuple):
-                components = TUPLE_FUNCS.get(func_name)
-                if components is None:
-                    raise ValueError(f"tuple result from '{func_name}' but no TUPLE_FUNCS mapping")
-                for go_name, idx in components:
-                    entry = {"fn": go_name, "args": str_args}
-                    hex_val, is_nan = format_or_nan(result[idx])
-                    if is_nan or is_panic:
-                        entry["panics"] = True
-                        if is_nan:
-                            entry["reason"] = f"gmpy2 returned NaN for component {idx}"
-                        if is_panic and not is_nan:
-                            print(
-                                f"Warning: {func_name} {str_args} tagged !panic "
-                                f"but gmpy2 did not produce NaN",
-                                file=sys.stderr,
-                            )
-                    else:
-                        entry["res"] = hex_val
-                    cases.append(entry)
+                entry = {"fn": func_name, "args": str_args}
+                hex_val0, nan0 = format_or_nan(result[0])
+                hex_val1, nan1 = format_or_nan(result[1])
+                if nan0 or nan1 or is_panic:
+                    entry["panics"] = True
+                    if nan0 or nan1:
+                        entry["reason"] = "gmpy2 returned NaN"
+                    if is_panic and not (nan0 or nan1):
+                        print(
+                            f"Warning: {func_name} {str_args} tagged !panic "
+                            f"but gmpy2 did not produce NaN",
+                            file=sys.stderr,
+                        )
+                else:
+                    entry["res"] = hex_val0
+                    entry["res2"] = hex_val1
+                cases.append(entry)
                 continue
 
             # Single result

@@ -215,7 +215,11 @@ func SinhCosh(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 	}
 
 	if xVal.Cmp(one) < 0 {
-		return sinhcoshCore(zs, zc, xVal)
+		sinhcoshCore(zs, zc, xVal)
+		if neg {
+			zs.Neg(zs)
+		}
+		return zs, zc
 	}
 
 	// |x| >= 1: share the Exp call between sinh and cosh.

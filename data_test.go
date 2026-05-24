@@ -21,6 +21,7 @@ type floatTestCase struct {
 	Fn     string   `json:"fn"`
 	Args   []string `json:"args"`
 	Res    string   `json:"res,omitempty"`
+	Res2   string   `json:"res2,omitempty"`
 	Panics bool     `json:"panics,omitempty"`
 	Reason string   `json:"reason,omitempty"`
 }
@@ -56,38 +57,50 @@ func parseHex(s string, prec uint) *big.Float {
 
 // fnMap maps function names to actual bigmath functions.
 var fnMap = map[string]any{
-	"exp":      bigmath.Exp,
-	"log":      bigmath.Log,
-	"pow":      bigmath.Pow,
-	"atan":     bigmath.Atan,
-	"atan2":    bigmath.Atan2,
-	"const_pi": testPiConst,
-	"sin":      bigmath.Sin,
-	"cos":      bigmath.Cos,
-	"sinh":     bigmath.Sinh,
-	"cosh":     bigmath.Cosh,
-	"tanh":     bigmath.Tanh,
-	"asinh":    bigmath.Asinh,
-	"acosh":    bigmath.Acosh,
-	"atanh":    bigmath.Atanh,
-	"asin":     bigmath.Asin,
-	"acos":     bigmath.Acos,
-	"tan":      bigmath.Tan,
+	"exp":       bigmath.Exp,
+	"log":       bigmath.Log,
+	"pow":       bigmath.Pow,
+	"atan":      bigmath.Atan,
+	"atan2":     bigmath.Atan2,
+	"const_pi":  testPiConst,
+	"sin":       bigmath.Sin,
+	"cos":       bigmath.Cos,
+	"sin_cos":   bigmath.Sincos,
+	"sinh":      bigmath.Sinh,
+	"cosh":      bigmath.Cosh,
+	"sinh_cosh": bigmath.SinhCosh,
+	"tanh":      bigmath.Tanh,
+	"asinh":     bigmath.Asinh,
+	"acosh":     bigmath.Acosh,
+	"atanh":     bigmath.Atanh,
+	"asin":      bigmath.Asin,
+	"acos":      bigmath.Acos,
+	"tan":       bigmath.Tan,
 }
 
 func testPiConst(z *big.Float) *big.Float {
 	return bigmath.Pi(z)
 }
 
-// buildReflectArgs prepares the reflect.Value arguments for a function call.
-// First arg is the result *big.Float, remaining args are parsed from strings.
-func buildReflectArgs(got *big.Float, strArgs []string, prec uint) []reflect.Value {
-	args := []reflect.Value{reflect.ValueOf(got)}
+// makeReflectArgs builds a reflect.Value slice for calling fn.
+// gots contains one *big.Float per result pointer (1 for single-result,
+// 2 for tuple). strArgs are parsed at prec and appended after the results.
+func makeReflectArgs(gots []*big.Float, strArgs []string, prec uint) []reflect.Value {
+	args := make([]reflect.Value, len(gots))
+	for i, g := range gots {
+		args[i] = reflect.ValueOf(g)
+	}
 	for _, arg := range strArgs {
 		x := parseHex(arg, prec)
 		args = append(args, reflect.ValueOf(x))
 	}
 	return args
+}
+
+// buildReflectArgs prepares the reflect.Value arguments for a single-result function call.
+// First arg is the result *big.Float, remaining args are parsed from strings.
+func buildReflectArgs(got *big.Float, strArgs []string, prec uint) []reflect.Value {
+	return makeReflectArgs([]*big.Float{got}, strArgs, prec)
 }
 
 // TestFloatData runs golden comparison tests.
@@ -109,15 +122,34 @@ func TestFloatData(t *testing.T) {
 				t.Fatalf("unknown function %v", d.Fn)
 			}
 
-			// Build reflect args
-			args := buildReflectArgs(got, d.Args, data.Prec)
-			reflect.ValueOf(fn).Call(args)
+			if d.Res2 != "" {
+				// Tuple function: two results
+				got1 := new(big.Float).SetPrec(data.Prec)
+				got2 := new(big.Float).SetPrec(data.Prec)
+				args := makeReflectArgs([]*big.Float{got1, got2}, d.Args, data.Prec)
+				reflect.ValueOf(fn).Call(args)
 
-			// Parse expected result
-			want := parseHex(d.Res, data.Prec)
-			if got.Cmp(want) != 0 {
-				t.Fatalf("%s(%v): got %s, want %s",
-					d.Fn, d.Args, got.Text('x', -1), want.Text('x', -1))
+				want1 := parseHex(d.Res, data.Prec)
+				if got1.Cmp(want1) != 0 {
+					t.Fatalf("%s(%v)[0]: got %s, want %s",
+						d.Fn, d.Args, got1.Text('x', -1), want1.Text('x', -1))
+				}
+				want2 := parseHex(d.Res2, data.Prec)
+				if got2.Cmp(want2) != 0 {
+					t.Fatalf("%s(%v)[1]: got %s, want %s",
+						d.Fn, d.Args, got2.Text('x', -1), want2.Text('x', -1))
+				}
+			} else {
+				// Single-result function (existing logic)
+				args := buildReflectArgs(got, d.Args, data.Prec)
+				reflect.ValueOf(fn).Call(args)
+
+				// Parse expected result
+				want := parseHex(d.Res, data.Prec)
+				if got.Cmp(want) != 0 {
+					t.Fatalf("%s(%v): got %s, want %s",
+						d.Fn, d.Args, got.Text('x', -1), want.Text('x', -1))
+				}
 			}
 		})
 	}
@@ -154,9 +186,16 @@ func TestFloatPanics(t *testing.T) {
 					d.Fn, d.Args, r, r)
 			}()
 
-			got := new(big.Float).SetPrec(data.Prec)
-			args := buildReflectArgs(got, d.Args, data.Prec)
-			reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
+			if d.Res2 != "" {
+				got1 := new(big.Float).SetPrec(data.Prec)
+				got2 := new(big.Float).SetPrec(data.Prec)
+				args := makeReflectArgs([]*big.Float{got1, got2}, d.Args, data.Prec)
+				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
+			} else {
+				got := new(big.Float).SetPrec(data.Prec)
+				args := buildReflectArgs(got, d.Args, data.Prec)
+				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
+			}
 		})
 	}
 }

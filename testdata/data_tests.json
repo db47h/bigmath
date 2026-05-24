@@ -537,144 +537,84 @@
       "res": "-0x2.5b2f8fe6643a469e4e5327a282945674p+0"
     },
     {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "0"
       ],
-      "res": "0x0p+0"
+      "res": "0x0p+0",
+      "res2": "0x1p+0"
     },
     {
-      "fn": "cos",
-      "args": [
-        "0"
-      ],
-      "res": "0x1p+0"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "0.5"
       ],
-      "res": "0x7.abba1d12c17bfa1d92f0d93f60ded998p-4"
+      "res": "0x7.abba1d12c17bfa1d92f0d93f60ded998p-4",
+      "res2": "0xe.0a94032dbea7cedbddd9da2fafad985p-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "0.5"
-      ],
-      "res": "0xe.0a94032dbea7cedbddd9da2fafad985p-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "1"
       ],
-      "res": "0xd.76aa47848677020c6e9e909c50f3c33p-4"
+      "res": "0xd.76aa47848677020c6e9e909c50f3c33p-4",
+      "res2": "0x8.a51407da8345c91c2466d976871bd2ap-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "1"
-      ],
-      "res": "0x8.a51407da8345c91c2466d976871bd2ap-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "1.5707963267948966"
       ],
-      "res": "0xf.fffffffffffffffffffffffffff0a32p-4"
+      "res": "0xf.fffffffffffffffffffffffffff0a32p-4",
+      "res2": "0x1.62c159569d54c8745e52049c11145e0ep-56"
     },
     {
-      "fn": "cos",
-      "args": [
-        "1.5707963267948966"
-      ],
-      "res": "0x1.62c159569d54c8745e52049c11145e0ep-56"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "3.141592653589793"
       ],
-      "res": "0x1.12edbfe997f87a69d7ca409381edc0d8p-52"
+      "res": "0x1.12edbfe997f87a69d7ca409381edc0d8p-52",
+      "res2": "-0xf.fffffffffffffffffffffffff6c5f1ap-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "3.141592653589793"
-      ],
-      "res": "-0xf.fffffffffffffffffffffffff6c5f1ap-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "6.283185307179586"
       ],
-      "res": "-0x2.25db7fd32ff0f4d3af948127029e6b1p-52"
+      "res": "-0x2.25db7fd32ff0f4d3af948127029e6b1p-52",
+      "res2": "0xf.ffffffffffffffffffffffffdb17c69p-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "6.283185307179586"
-      ],
-      "res": "0xf.ffffffffffffffffffffffffdb17c69p-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "-0.5"
       ],
-      "res": "-0x7.abba1d12c17bfa1d92f0d93f60ded998p-4"
+      "res": "-0x7.abba1d12c17bfa1d92f0d93f60ded998p-4",
+      "res2": "0xe.0a94032dbea7cedbddd9da2fafad985p-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "-0.5"
-      ],
-      "res": "0xe.0a94032dbea7cedbddd9da2fafad985p-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "-1"
       ],
-      "res": "-0xd.76aa47848677020c6e9e909c50f3c33p-4"
+      "res": "-0xd.76aa47848677020c6e9e909c50f3c33p-4",
+      "res2": "0x8.a51407da8345c91c2466d976871bd2ap-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "-1"
-      ],
-      "res": "0x8.a51407da8345c91c2466d976871bd2ap-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "10"
       ],
-      "res": "-0x8.b44f7af9a7a92ce7fb22be024e20009p-4"
+      "res": "-0x8.b44f7af9a7a92ce7fb22be024e20009p-4",
+      "res2": "-0xd.6cd64486358f904f7e2a0b9994e4c3cp-4"
     },
     {
-      "fn": "cos",
-      "args": [
-        "10"
-      ],
-      "res": "-0xd.6cd64486358f904f7e2a0b9994e4c3cp-4"
-    },
-    {
-      "fn": "sin",
+      "fn": "sin_cos",
       "args": [
         "100"
       ],
-      "res": "-0x8.1a12dbc626dc03847b0aae841f590e3p-4"
-    },
-    {
-      "fn": "cos",
-      "args": [
-        "100"
-      ],
-      "res": "0xd.cc0edfb32fefb1fa19b9b30bd020aecp-4"
+      "res": "-0x8.1a12dbc626dc03847b0aae841f590e3p-4",
+      "res2": "0xd.cc0edfb32fefb1fa19b9b30bd020aecp-4"
     },
     {
       "fn": "sinh",
@@ -1034,158 +974,92 @@
       "res": "-inf"
     },
     {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "0"
       ],
-      "res": "0x0p+0"
+      "res": "0x0p+0",
+      "res2": "0x1p+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "0"
-      ],
-      "res": "0x1p+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "0.5"
       ],
-      "res": "0x8.566807f31dcb651abc4abb0d7331125p-4"
+      "res": "0x8.566807f31dcb651abc4abb0d7331125p-4",
+      "res2": "0x1.20ac1862ae8d0645823a4f060800e88cp+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "0.5"
-      ],
-      "res": "0x1.20ac1862ae8d0645823a4f060800e88cp+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "-0.5"
       ],
-      "res": "-0x8.566807f31dcb651abc4abb0d7331125p-4"
+      "res": "-0x8.566807f31dcb651abc4abb0d7331125p-4",
+      "res2": "0x1.20ac1862ae8d0645823a4f060800e88cp+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "-0.5"
-      ],
-      "res": "0x1.20ac1862ae8d0645823a4f060800e88cp+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "1"
       ],
-      "res": "0x1.2cd9fc44eb9825a80249487f064ffd5cp+0"
+      "res": "0x1.2cd9fc44eb9825a80249487f064ffd5cp+0",
+      "res2": "0x1.8b07551d9f5504c2bd28100196a4f66ap+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "1"
-      ],
-      "res": "0x1.8b07551d9f5504c2bd28100196a4f66ap+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "-1"
       ],
-      "res": "-0x1.2cd9fc44eb9825a80249487f064ffd5cp+0"
+      "res": "-0x1.2cd9fc44eb9825a80249487f064ffd5cp+0",
+      "res2": "0x1.8b07551d9f5504c2bd28100196a4f66ap+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "-1"
-      ],
-      "res": "0x1.8b07551d9f5504c2bd28100196a4f66ap+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "10"
       ],
-      "res": "0x2.b053b9dad3323e7c80b6e4527df440dcp+12"
+      "res": "0x2.b053b9dad3323e7c80b6e4527df440dcp+12",
+      "res2": "0x2.b053ba0a6e25a94579ec1d08c6dee20cp+12"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "10"
-      ],
-      "res": "0x2.b053ba0a6e25a94579ec1d08c6dee20cp+12"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "-10"
       ],
-      "res": "-0x2.b053b9dad3323e7c80b6e4527df440dcp+12"
+      "res": "-0x2.b053b9dad3323e7c80b6e4527df440dcp+12",
+      "res2": "0x2.b053ba0a6e25a94579ec1d08c6dee20cp+12"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "-10"
-      ],
-      "res": "0x2.b053ba0a6e25a94579ec1d08c6dee20cp+12"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "100"
       ],
-      "res": "0x9.a4a54d8b8dfa566112849991214329ap+140"
+      "res": "0x9.a4a54d8b8dfa566112849991214329ap+140",
+      "res2": "0x9.a4a54d8b8dfa566112849991214329ap+140"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "100"
-      ],
-      "res": "0x9.a4a54d8b8dfa566112849991214329ap+140"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "-100"
       ],
-      "res": "-0x9.a4a54d8b8dfa566112849991214329ap+140"
+      "res": "-0x9.a4a54d8b8dfa566112849991214329ap+140",
+      "res2": "0x9.a4a54d8b8dfa566112849991214329ap+140"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "-100"
-      ],
-      "res": "0x9.a4a54d8b8dfa566112849991214329ap+140"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "1e-5"
       ],
-      "res": "0xa.7c5ac472749f937aa4aea9b013cac4bp-20"
+      "res": "0xa.7c5ac472749f937aa4aea9b013cac4bp-20",
+      "res2": "0x1.0000000036f9bfb3b1732d860ee98a1cp+0"
     },
     {
-      "fn": "cosh",
-      "args": [
-        "1e-5"
-      ],
-      "res": "0x1.0000000036f9bfb3b1732d860ee98a1cp+0"
-    },
-    {
-      "fn": "sinh",
+      "fn": "sinh_cosh",
       "args": [
         "-1e-5"
       ],
-      "res": "-0xa.7c5ac472749f937aa4aea9b013cac4bp-20"
-    },
-    {
-      "fn": "cosh",
-      "args": [
-        "-1e-5"
-      ],
-      "res": "0x1.0000000036f9bfb3b1732d860ee98a1cp+0"
+      "res": "-0xa.7c5ac472749f937aa4aea9b013cac4bp-20",
+      "res2": "0x1.0000000036f9bfb3b1732d860ee98a1cp+0"
     },
     {
       "fn": "sin",
