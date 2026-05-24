@@ -19,6 +19,9 @@ log 1
 log 1e-100
 log 1e100
 log 1.0000000000000001
+log -1           !panic
+log -10          !panic
+log -inf         !panic
 
 # pow
 pow 2 3
@@ -37,6 +40,8 @@ pow -1 2
 pow -1 3
 pow -2 2
 pow -2 3
+pow -2 0.5       !panic
+pow -1 1.5       !panic
 pow 2 1.5
 pow 10 1.5
 pow 2 10
@@ -156,6 +161,12 @@ sinh_cosh 100
 sinh_cosh -100
 sinh_cosh 1e-5
 sinh_cosh -1e-5
+sin inf          !panic
+sin -inf         !panic
+cos inf          !panic
+cos -inf         !panic
+tan inf          !panic
+tan -inf         !panic
 
 # asin
 asin 0
@@ -192,3 +203,16 @@ tan 100
 asin 0.9999999999999999
 acos 0.9999999999999999
 tan 0.7853981633974483
+
+# Additional NaN panic cases from the source code
+asin 1.5         !panic
+asin -1.5        !panic
+acos 1.5         !panic
+acos -1.5        !panic
+atanh 2          !panic
+atanh -2         !panic
+acosh 0.5        !panic
+acosh 0          !panic
+# gmp returns +/-inf for these
+atanh 1          !panic
+atanh -1         !panic
