@@ -149,6 +149,9 @@ atanh 0.9
 atanh -0.25
 atanh -0.5
 atanh -0.9
+# gmp returns +/-inf for these
+atanh 1
+atanh -1
 
 sinh_cosh 0
 sinh_cosh 0.5
@@ -213,6 +216,3 @@ atanh 2          !panic
 atanh -2         !panic
 acosh 0.5        !panic
 acosh 0          !panic
-# gmp returns +/-inf for these
-atanh 1          !panic
-atanh -1         !panic

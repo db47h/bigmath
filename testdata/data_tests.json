@@ -1020,6 +1020,20 @@
       "res": "-0x1.78e360604b32c72007a971372909a85ap+0"
     },
     {
+      "fn": "atanh",
+      "args": [
+        "1"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "atanh",
+      "args": [
+        "-1"
+      ],
+      "res": "-inf"
+    },
+    {
       "fn": "sinh",
       "args": [
         "0"
@@ -1448,20 +1462,6 @@
       ],
       "panics": true,
       "reason": "gmpy2 returned NaN"
-    },
-    {
-      "fn": "atanh",
-      "args": [
-        "1"
-      ],
-      "panics": true
-    },
-    {
-      "fn": "atanh",
-      "args": [
-        "-1"
-      ],
-      "panics": true
     },
     {
       "fn": "atanh",

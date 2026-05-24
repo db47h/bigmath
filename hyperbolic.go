@@ -407,7 +407,8 @@ func atanhGuard(x *big.Float, prec uint) uint {
 // Special cases:
 //
 //	Atanh(±0) = ±0
-//	Atanh(|x| = 1) = panic(ErrNaN)
+//	Atanh(1) = +Inf
+//	Atanh(-1) = -Inf
 //	Atanh(|x| > 1) = panic(ErrNaN)
 func Atanh(z, x *big.Float) *big.Float {
 	prec := z.Prec()
@@ -421,9 +422,15 @@ func Atanh(z, x *big.Float) *big.Float {
 	}
 
 	// Domain check: |x| < 1
+	// |x| == 1: atanh diverges to ±∞
+	// |x| > 1: mathematically undefined for real atanh
 	xAbs := newFloat(prec).Abs(x)
-	if xAbs.Cmp(one) >= 0 {
-		panic(ErrNaN("atanh of |x| >= 1"))
+	switch xAbs.Cmp(one) {
+	case 0:
+		// atanh(1) = +Inf, atanh(-1) = -Inf
+		return z.SetInf(x.Signbit())
+	case 1:
+		panic(ErrNaN("atanh of |x| > 1"))
 	}
 
 	workPrec := atanhGuard(x, prec)
