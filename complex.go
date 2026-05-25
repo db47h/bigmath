@@ -44,9 +44,6 @@ func (z *Complex) Sub(x, y *Complex) *Complex {
 // If z's precision is 0, it is changed to the larger of x's or y's precision
 // before the operation.
 func (z *Complex) Mul(x, y *Complex) *Complex {
-	if (x.Real.Sign() == 0 && y.Real.IsInf()) || (x.Imag.Sign() == 0 && y.Imag.IsInf()) {
-		// Define result as ±Inf according to sign rules, avoid panic.
-	}
 	workPrec := z.setPrec2(x, y) + _W
 
 	temp := new(big.Float) // temp for fma. prec will be handled by fma()
@@ -197,17 +194,22 @@ func (x *Complex) IsZero() bool {
 //
 // Special cases are:
 //
+//	Exp(-Inf + i·y) = 0                         (negative infinite real part)
 //	Exp(x + i·±Inf) = panic                     (infinite imaginary part)
 //	Exp(x + i·0)    = Exp(x)                    (for any x)
-//	Exp(-Inf + i·y) = 0                         (exact underflow, for finite y)
 //	Exp(+Inf + i·y) = +Inf·(cos(y) + i·sin(y))  (for any finite y)
 func (z *Complex) Exp(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	if x.Imag.IsInf() {
+		if x.Real.IsInf() && x.Real.Signbit() {
+			// -Inf + i·±Inf, continuity with Exp(-Inf + i·y) with y finite.
+			z.Real.Set(zero)
+			z.Imag.Set(zero)
+			return z
+		}
 		panic(ErrNaN("complex exponential of infinite imaginary part"))
 	}
-
 	expA := Exp(newFloat(workPrec), &x.Real)
 	if x.Imag.Sign() == 0 {
 		z.Real.Set(expA)

@@ -392,20 +392,6 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 		z.Exp(x)
 	})
 
-	t.Run("real -Inf + imag +Inf panics", func(t *testing.T) {
-		defer func() {
-			r := recover()
-			if r == nil {
-				t.Error("expected panic, got none")
-			} else if _, ok := r.(bigmath.ErrNaN); !ok {
-				t.Errorf("expected ErrNaN panic, got %T(%v)", r, r)
-			}
-		}()
-		z := newComplex(0, 0, prec)
-		x := newComplex(math.Inf(-1), math.Inf(1), prec)
-		z.Exp(x)
-	})
-
 	// --- 256-bit sanity tests for large finite imaginary ---
 	t.Run("large imag 1e6 at 256-bit", func(t *testing.T) {
 		prec := uint(256)
