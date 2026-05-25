@@ -1,0 +1,139 @@
+# Complex data-driven golden test data
+# Format: <func_name> <re1> <im1> [<re2> <im2> ...] [!panic]
+# Comments start with #
+
+# Arithmetic
+add 0 0 0 0
+add 1 2 3 4
+add -1 0 0 1
+sub 0 0 0 0
+sub 5 3 2 1
+mul 0 0 0 0
+mul 1 2 3 4
+mul 2 0 3 0
+quo 1 0 1 0
+quo 1 2 3 4
+neg 0 0
+neg 1 -2
+conj 0 0
+conj 1 -2
+
+# Transcendental functions - sin
+sin 0 0
+sin 0.5 0.7
+sin -0.5 -0.7
+sin 1 0
+sin 0 1
+sin 1e-10 1e-10
+sin inf 0          !panic
+sin -inf 0         !panic
+
+# cos
+cos 0 0
+cos 0.5 0.7
+cos 1 0
+cos 0 1
+cos 1e-10 1e-10
+cos inf 0          !panic
+cos -inf 0         !panic
+
+# tan
+tan 0 0
+tan 0.5 0.7
+tan 1 0
+tan 0 1
+
+# exp
+exp 0 0
+exp 0.5 0.7
+exp 1 0
+exp -1 0
+exp inf 0
+exp -inf 0
+exp -inf inf
+exp 0 inf          !panic
+exp 0 -inf         !panic
+
+# log (branch cut on negative real axis)
+log 1 0
+log 2 0
+log 0.5 0
+log 0 0
+# WARNING: gmpy2 returns NaN for log(-1,0) but Go Complex.Log may not panic
+log -1 0
+log -10 0
+
+# sqrt
+sqrt 0 0
+sqrt 1 0
+sqrt 4 0
+sqrt -1 0
+sqrt 1e-10 1e-10
+
+# pow
+pow 2 0 3 0
+pow -1 0 2 0
+pow 0 0 2 0
+
+# Hyperbolic - sinh
+sinh 0 0
+sinh 0.5 0.7
+sinh 0 1
+sinh inf 0
+sinh -inf 0
+
+# cosh
+cosh 0 0
+cosh 0.5 0.7
+cosh 0 1
+cosh inf 0
+
+# tanh
+tanh 0 0
+tanh 0.5 0.7
+tanh inf 0
+tanh -inf 0
+
+# Inverse trig - asin
+# WARNING: gmpy2 returns NaN for asin(2,0); Go Complex.Asin may not panic
+asin 0 0
+asin 0.5 0
+asin 1 0
+asin 0.5 0.7
+asin 2 0
+
+# acos
+# WARNING: gmpy2 returns NaN for acos(2,0); Go Complex.Acos may not panic
+acos 0 0
+acos 0.5 0
+acos 1 0
+acos 0.5 0.7
+acos 2 0
+
+# atan
+atan 0 0
+atan 1 0
+atan 0.5 0.7
+# WARNING: gmpy2 returns NaN for atan(0,2); Go Complex.Atan may not panic
+atan 0 2
+
+# asinh
+asinh 0 0
+asinh 1 0
+asinh 0.5 0.7
+# WARNING: gmpy2 returns NaN for asinh(0,2); Go Complex.Asinh may not panic
+asinh 0 2
+
+# acosh
+acosh 1 0
+acosh 2 0
+acosh 0.5 0.7
+# WARNING: gmpy2 returns NaN for acosh(0.5,0); Go Complex.Acosh may not panic
+acosh 0.5 0
+
+# atanh
+atanh 0 0
+atanh 0.5 0
+atanh 0.5 0.7
+# WARNING: gmpy2 returns NaN for atanh(2,0); Go Complex.Atanh may not panic
+atanh 2 0

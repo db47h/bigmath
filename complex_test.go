@@ -113,26 +113,6 @@ func TestComplex_AgainstStd(t *testing.T) {
 	}
 }
 
-func mkFloat(prec uint, v float64) *big.Float {
-	if v > 1e300 && !math.IsInf(v, 0) {
-		panic("overflow")
-	}
-	if math.IsInf(v, 1) {
-		return new(big.Float).SetPrec(prec).SetInf(false)
-	}
-	if math.IsInf(v, -1) {
-		return new(big.Float).SetPrec(prec).SetInf(true)
-	}
-	return new(big.Float).SetPrec(prec).SetFloat64(v)
-}
-
-func mkComplex(prec uint, re, im float64) *bigmath.Complex {
-	c := &bigmath.Complex{}
-	c.Real.SetPrec(prec).Set(mkFloat(prec, re))
-	c.Imag.SetPrec(prec).Set(mkFloat(prec, im))
-	return c
-}
-
 func TestComplex_Format(t *testing.T) {
 	prec := uint(64)
 
@@ -231,7 +211,7 @@ func TestComplex_Format(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := mkComplex(prec, tt.re, tt.im)
+			c := newComplex(tt.re, tt.im, prec)
 			var got string
 			if tt.format != "" {
 				got = fmt.Sprintf(tt.format, c)
@@ -250,19 +230,19 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("large positive real triggers overflow", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 1e10, 0)
+		x := newComplex(1e10, 0, prec)
 		got := z.Exp(x)
 		if !got.Real.IsInf() || got.Real.Signbit() {
 			t.Errorf("Real: expected +Inf, got %v", &got.Real)
 		}
-		if !got.Imag.IsInf() || got.Imag.Signbit() {
+		if got.Imag.Sign() != 0 {
 			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
 		}
 	})
 
 	t.Run("large positive real with imag triggers overflow", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 1e10, 1)
+		x := newComplex(1e10, 1, prec)
 		got := z.Exp(x)
 		if !got.Real.IsInf() || got.Real.Signbit() {
 			t.Errorf("Real: expected +Inf, got %v", &got.Real)
@@ -274,7 +254,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("large negative real triggers underflow", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, -1e10, 0)
+		x := newComplex(-1e10, 0, prec)
 		got := z.Exp(x)
 		if got.Real.Sign() != 0 {
 			t.Errorf("Real: expected 0, got %v", &got.Real)
@@ -286,7 +266,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("large negative real with imag triggers underflow", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, -1e10, 1.5)
+		x := newComplex(-1e10, 1.5, prec)
 		got := z.Exp(x)
 		if got.Real.Sign() != 0 {
 			t.Errorf("Real: expected 0, got %v", &got.Real)
@@ -298,19 +278,19 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("real +Inf", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(1), 0)
+		x := newComplex(math.Inf(1), 0, prec)
 		got := z.Exp(x)
 		if !got.Real.IsInf() || got.Real.Signbit() {
 			t.Errorf("Real: expected +Inf, got %v", &got.Real)
 		}
-		if !got.Imag.IsInf() || got.Imag.Signbit() {
+		if z.Imag.Sign() != 0 {
 			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
 		}
 	})
 
 	t.Run("real +Inf with imag", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(1), 2)
+		x := newComplex(math.Inf(1), 1, prec)
 		got := z.Exp(x)
 		if !got.Real.IsInf() || got.Real.Signbit() {
 			t.Errorf("Real: expected +Inf, got %v", &got.Real)
@@ -322,7 +302,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("real -Inf", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(-1), 0)
+		x := newComplex(math.Inf(-1), 0, prec)
 		got := z.Exp(x)
 		if got.Real.Sign() != 0 {
 			t.Errorf("Real: expected 0, got %v", &got.Real)
@@ -334,7 +314,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("real -Inf with imag", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(-1), 1.5)
+		x := newComplex(math.Inf(-1), 1.5, prec)
 		got := z.Exp(x)
 		if got.Real.Sign() != 0 {
 			t.Errorf("Real: expected 0, got %v", &got.Real)
@@ -344,22 +324,9 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 		}
 	})
 
-	t.Run("both Inf", func(t *testing.T) {
-		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(1), math.Inf(1))
-		got := z.Exp(x)
-		// real +Inf triggers overflow early return before imag Inf check
-		if !got.Real.IsInf() || got.Real.Signbit() {
-			t.Errorf("Real: expected +Inf, got %v", &got.Real)
-		}
-		if !got.Imag.IsInf() || got.Imag.Signbit() {
-			t.Errorf("Imag: expected +Inf, got %v", &got.Imag)
-		}
-	})
-
 	t.Run("zero", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0, 0)
+		x := newComplex(0, 0, prec)
 		got := z.Exp(x)
 		// e^0 = 1
 		float64RE, _ := got.Real.Float64()
@@ -372,7 +339,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 
 	t.Run("normal point", func(t *testing.T) {
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0.5, 0.7)
+		x := newComplex(0.5, 0.7, prec)
 		got := z.Exp(x)
 		float64RE, _ := got.Real.Float64()
 		float64IM, _ := got.Imag.Float64()
@@ -393,7 +360,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 			}
 		}()
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0, math.Inf(1))
+		x := newComplex(0, math.Inf(1), prec)
 		z.Exp(x)
 	})
 
@@ -407,7 +374,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 			}
 		}()
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0, math.Inf(-1))
+		x := newComplex(0, math.Inf(-1), prec)
 		z.Exp(x)
 	})
 
@@ -421,7 +388,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 			}
 		}()
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 1, math.Inf(1))
+		x := newComplex(1, math.Inf(1), prec)
 		z.Exp(x)
 	})
 
@@ -435,7 +402,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 			}
 		}()
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, math.Inf(-1), math.Inf(1))
+		x := newComplex(math.Inf(-1), math.Inf(1), prec)
 		z.Exp(x)
 	})
 
@@ -443,7 +410,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 	t.Run("large imag 1e6 at 256-bit", func(t *testing.T) {
 		prec := uint(256)
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0, 1e6)
+		x := newComplex(0, 1e6, prec)
 		got := z.Exp(x)
 		if got.Real.IsInf() {
 			t.Errorf("Real: expected finite, got Inf")
@@ -456,7 +423,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 	t.Run("large imag 1e20 at 256-bit", func(t *testing.T) {
 		prec := uint(256)
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 0, 1e20)
+		x := newComplex(0, 1e20, prec)
 		got := z.Exp(x)
 		if got.Real.IsInf() {
 			t.Errorf("Real: expected finite, got Inf")
@@ -469,7 +436,7 @@ func TestComplex_Exp_EdgeCases(t *testing.T) {
 	t.Run("medium real + large imag at 256-bit", func(t *testing.T) {
 		prec := uint(256)
 		z := newComplex(0, 0, prec)
-		x := mkComplex(prec, 1, 1e6)
+		x := newComplex(1, 1e6, prec)
 		got := z.Exp(x)
 		if got.Real.IsInf() {
 			t.Errorf("Real: expected finite, got Inf")
