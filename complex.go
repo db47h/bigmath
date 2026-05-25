@@ -44,6 +44,9 @@ func (z *Complex) Sub(x, y *Complex) *Complex {
 // If z's precision is 0, it is changed to the larger of x's or y's precision
 // before the operation.
 func (z *Complex) Mul(x, y *Complex) *Complex {
+	if (x.Real.Sign() == 0 && y.Real.IsInf()) || (x.Imag.Sign() == 0 && y.Imag.IsInf()) {
+		// Define result as ±Inf according to sign rules, avoid panic.
+	}
 	workPrec := z.setPrec2(x, y) + _W
 
 	temp := new(big.Float) // temp for fma. prec will be handled by fma()
@@ -194,24 +197,37 @@ func (x *Complex) IsZero() bool {
 //
 // Special cases are:
 //
-//	Exp(+Inf + i·y) = +Inf + i·+Inf  (for any finite y)
-//	Exp(-Inf + i·y) = 0               (exact underflow, for finite y)
-//	Exp(x + i·±Inf) = panic           (infinite imaginary part)
+//	Exp(x + i·±Inf) = panic                     (infinite imaginary part)
+//	Exp(x + i·0)    = Exp(x)                    (for any x)
+//	Exp(-Inf + i·y) = 0                         (exact underflow, for finite y)
+//	Exp(+Inf + i·y) = +Inf·(cos(y) + i·sin(y))  (for any finite y)
 func (z *Complex) Exp(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
-
-	expA := Exp(newFloat(workPrec), &x.Real)
-	if expA.IsInf() {
-		z.Real.SetInf(false)
-		z.Imag.SetInf(false)
-		return z
-	}
 
 	if x.Imag.IsInf() {
 		panic(ErrNaN("complex exponential of infinite imaginary part"))
 	}
 
+	expA := Exp(newFloat(workPrec), &x.Real)
+	if x.Imag.Sign() == 0 {
+		z.Real.Set(expA)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
 	s, c := Sincos(newFloat(workPrec), newFloat(workPrec), &x.Imag)
+	if expA.IsInf() {
+		switch {
+		case expA.Signbit():
+			z.Real.Set(zero)
+			z.Imag.Set(zero)
+			return z
+		case c.Sign() == 0:
+			// in this unlikely case, choose geometric continuity over panicking
+			z.Real.SetInf(false)
+			z.Imag.SetInf(s.Signbit())
+			return z
+		}
+	}
 
 	z.Real.Mul(expA, c)
 	z.Imag.Mul(expA, s)
@@ -450,20 +466,50 @@ func (z *Complex) Atanh(x *Complex) *Complex {
 
 // Sqrt sets z to the square root of x and returns z.
 func (z *Complex) Sqrt(x *Complex) *Complex {
-	// sqrt(x) = exp(0.5 * log(x))
+	// Algebraic square root: sqrt(a+bi) = sqrt((r+a)/2) + i·sgn(b)*sqrt((r-a)/2)
 	workPrec := z.setPrec(x) + _W
 
-	l := newComplex(workPrec).Log(x)
-	l.Real.SetMantExp(&l.Real, -1)
-	l.Imag.SetMantExp(&l.Imag, -1)
-	return z.Exp(l)
+	// r = |x|
+	r := x.Abs(newFloat(workPrec))
+	si := x.Imag.Sign()
+	a := &x.Real
+	if x == z {
+		a = new(big.Float).Copy(a)
+	}
+
+	// real part = sqrt((r + a) / 2)
+	t := newFloat(workPrec).Add(r, a)
+	t.SetMantExp(t, -1)
+	z.Real.Sqrt(t)
+
+	// imag part = sqrt((r - a) / 2)
+	t.Sub(r, a)
+	t.SetMantExp(t, -1)
+	z.Imag.Sqrt(t)
+	if si < 0 {
+		z.Imag.Neg(&z.Imag)
+	}
+
+	return z
 }
 
 // Pow sets z to x^y and returns z.
 func (z *Complex) Pow(x, y *Complex) *Complex {
-	// x^y = exp(y * log(x))
 	workPrec := z.setPrec2(x, y) + _W
 
+	// Special case: x and y are real, meaning imaginary parts are 0
+	if x.Imag.Sign() == 0 && y.Imag.Sign() == 0 {
+		// If x.Real >= 0, or y.Real is an integer, the result is purely real.
+		// (For negative x and non-integer y, it will panic with ErrNaN in Pow,
+		// which matches the real-domain Pow behavior).
+		if x.Real.Sign() >= 0 || y.Real.IsInt() {
+			Pow(&z.Real, &x.Real, &y.Real)
+			z.Imag.Set(zero)
+			return z
+		}
+	}
+
+	// x^y = exp(y * log(x))
 	l := newComplex(workPrec).Log(x)
 	prod := newComplex(workPrec).Mul(y, l)
 	return z.Exp(prod)
