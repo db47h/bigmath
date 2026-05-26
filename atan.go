@@ -116,7 +116,7 @@ func Atan(z, x *big.Float) *big.Float {
 	}
 
 	if x.Sign() == 0 {
-		return z.Set(zero)
+		return z.Set(x)
 	}
 
 	// u is the reduction threshold where we'll reduce x until x < 2^-u.

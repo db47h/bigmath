@@ -315,8 +315,7 @@ func Asinh(z, x *big.Float) *big.Float {
 	if x2.IsInf() {
 		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
 		t := Log(x2, xVal)
-		ln2 := Log(newFloat(workPrec), two)
-		t.Add(t, ln2)
+		t.Add(t, ln2(workPrec))
 		if neg {
 			t.Neg(t)
 		}
