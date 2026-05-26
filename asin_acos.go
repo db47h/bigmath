@@ -48,13 +48,12 @@ func Asin(z, x *big.Float) *big.Float {
 	}
 
 	// Domain check: |x| ≤ 1
-	xAbs := newFloat(prec).Abs(x)
-	if xAbs.Cmp(one) > 0 {
+	switch absCmpOne(x) {
+	case 1:
 		panic(ErrNaN("asin of x outside [-1, 1]"))
-	}
 
-	// |x| == 1 → ±π/2
-	if xAbs.Cmp(one) == 0 {
+	case 0:
+		// |x| == 1 → ±π/2
 		Pi(z)               // z = π at z's precision
 		z.SetMantExp(z, -1) // z = π/2, keeps z's precision
 		if x.Signbit() {
@@ -100,16 +99,14 @@ func Acos(z, x *big.Float) *big.Float {
 	}
 
 	// Domain check: |x| ≤ 1
-	xAbs := newFloat(prec).Abs(x)
-	if xAbs.Cmp(one) > 0 {
+	switch absCmpOne(x) {
+	case 1:
 		panic(ErrNaN("acos of x outside [-1, 1]"))
-	}
-
-	if x.Cmp(one) == 0 {
+	case 0:
+		if x.Signbit() {
+			return Pi(z)
+		}
 		return z.Set(zero)
-	}
-	if x.Cmp(minusOne) == 0 {
-		return Pi(z)
 	}
 
 	// Acos(x) = π/2 - Asin(x)

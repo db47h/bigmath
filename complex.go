@@ -98,6 +98,21 @@ func (z *Complex) Quo(x, y *Complex) *Complex {
 	return z
 }
 
+// Inv sets z to the multiplicative inverse of x (1/x) and returns z.
+func (z *Complex) Inv(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	// denom = real² + imag²
+	a2 := newFloat(workPrec).Mul(&x.Real, &x.Real)
+	b2 := newFloat(workPrec).Mul(&x.Imag, &x.Imag)
+	denom := newFloat(workPrec).Add(a2, b2)
+
+	// Compute real and imag parts
+	z.Real.Quo(&x.Real, denom)
+	z.Imag.Quo(&x.Imag, denom)
+	z.Imag.Neg(&z.Imag) // imag = -imag
+	return z
+}
+
 // Neg sets z to -x and returns z.
 func (z *Complex) Neg(x *Complex) *Complex {
 	z.setPrec(x)
@@ -172,7 +187,7 @@ func (z *Complex) Atan(x *Complex) *Complex {
 		return z
 	}
 	if x.Real.Sign() == 0 {
-		if new(big.Float).Abs(&x.Imag).Cmp(one) <= 0 {
+		if absCmpOne(&x.Imag) <= 0 {
 			z.Real.Set(&x.Real)
 			Atanh(&z.Imag, &x.Imag)
 			return z
@@ -395,13 +410,12 @@ func (z *Complex) Tanh(x *Complex) *Complex {
 func (z *Complex) Asin(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
-	t := new(big.Float)
 	switch {
-	case x.Imag.Sign() == 0 && t.Abs(&x.Real).Cmp(one) <= 0:
+	case x.Imag.Sign() == 0 && absCmpOne(&x.Real) <= 0:
 		Asin(&z.Real, &x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
-	case x.Real.Sign() == 0 && t.Abs(&x.Imag).Cmp(one) <= 0:
+	case x.Real.Sign() == 0 && absCmpOne(&x.Imag) <= 0:
 		z.Real.Set(&x.Real)
 		Asinh(&z.Imag, &x.Imag)
 		return z
@@ -443,13 +457,12 @@ func (z *Complex) Acos(x *Complex) *Complex {
 	prec := z.setPrec(x)
 	workPrec := prec + _W
 
-	t := new(big.Float)
 	switch {
-	case x.Imag.Sign() == 0 && t.Abs(&x.Real).Cmp(one) <= 0:
+	case x.Imag.Sign() == 0 && absCmpOne(&x.Real) <= 0:
 		Acos(&z.Real, &x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
-	case x.Real.Sign() == 0 && t.Abs(&x.Imag).Cmp(one) <= 0:
+	case x.Real.Sign() == 0 && absCmpOne(&x.Imag) <= 0:
 		z.Real.Set(halfPi(prec))
 		Asinh(&z.Imag, &x.Imag)
 		z.Imag.Neg(&z.Imag)
@@ -568,91 +581,6 @@ func (z *Complex) Atanh(x *Complex) *Complex {
 	z.Imag.SetMantExp(&z.Imag, -1)
 
 	return z
-}
-
-// Sqrt sets z to the square root of x and returns z.
-func (z *Complex) Sqrt(x *Complex) *Complex {
-	// Algebraic square root: sqrt(a+bi) = sqrt((r+a)/2) + i·sgn(b)*sqrt((r-a)/2)
-	workPrec := z.setPrec(x) + _W
-
-	if x.Imag.Sign() == 0 {
-		switch x.Real.Sign() {
-		case -1:
-			z.Imag.Sqrt(new(big.Float).Neg(&x.Real))
-			if x.Imag.Signbit() {
-				z.Imag.Neg(&z.Imag)
-			}
-			z.Real.Set(zero)
-		case 0:
-			z.Real.Set(zero)
-			z.Imag.Set(&x.Imag)
-		case 1:
-			z.Real.Sqrt(&x.Real)
-			z.Imag.Set(&x.Imag)
-		}
-		return z
-	}
-	if x.Imag.IsInf() {
-		z.Real.SetInf(false)
-		z.Imag.Set(&x.Imag)
-		return z
-	}
-	if x.Real.Sign() == 0 {
-		if x.Imag.Sign() < 0 {
-			r := new(big.Float).SetMantExp(&x.Imag, -1)
-			z.Real.Sqrt(r.Neg(r))
-			z.Imag.Neg(&z.Real)
-			return z
-		}
-		z.Real.Sqrt(new(big.Float).SetMantExp(&x.Imag, -1))
-		z.Imag.Set(&z.Real)
-		return z
-	}
-
-	// r = |x|
-	r := x.Abs(newFloat(workPrec))
-	si := x.Imag.Sign()
-	a := &x.Real
-	if x == z {
-		a = new(big.Float).Copy(a)
-	}
-
-	// real part = sqrt((r + a) / 2)
-	t := newFloat(workPrec).Add(r, a)
-	t.SetMantExp(t, -1)
-	z.Real.Sqrt(t)
-
-	// imag part = sqrt((r - a) / 2)
-	t.Sub(r, a)
-	t.SetMantExp(t, -1)
-	z.Imag.Sqrt(t)
-	if si < 0 {
-		z.Imag.Neg(&z.Imag)
-	}
-
-	return z
-}
-
-// Pow sets z to x^y and returns z.
-func (z *Complex) Pow(x, y *Complex) *Complex {
-	workPrec := z.setPrec2(x, y) + _W
-
-	// Special case: x and y are real, meaning imaginary parts are 0
-	if x.Imag.Sign() == 0 && y.Imag.Sign() == 0 {
-		// If x.Real >= 0, or y.Real is an integer, the result is purely real.
-		// (For negative x and non-integer y, it will panic with ErrNaN in Pow,
-		// which matches the real-domain Pow behavior).
-		if x.Real.Sign() >= 0 || y.Real.IsInt() {
-			Pow(&z.Real, &x.Real, &y.Real)
-			z.Imag.Set(zero)
-			return z
-		}
-	}
-
-	// x^y = exp(y * log(x))
-	l := newComplex(workPrec).Log(x)
-	prod := newComplex(workPrec).Mul(y, l)
-	return z.Exp(prod)
 }
 
 func (x *Complex) String() string {

@@ -369,10 +369,10 @@ func Acosh(z, x *big.Float) *big.Float {
 	if x.IsInf() {
 		return z.SetInf(false)
 	}
-	if x.Cmp(one) < 0 {
+	switch x.Cmp(one) {
+	case -1:
 		panic(ErrNaN("acosh of x < 1"))
-	}
-	if x.Cmp(one) == 0 {
+	case 0:
 		return z.Set(zero)
 	}
 
@@ -428,8 +428,7 @@ func Atanh(z, x *big.Float) *big.Float {
 	// Domain check: |x| < 1
 	// |x| == 1: atanh diverges to ±∞
 	// |x| > 1: mathematically undefined for real atanh
-	xAbs := newFloat(prec).Abs(x)
-	switch xAbs.Cmp(one) {
+	switch absCmpOne(x) {
 	case 0:
 		// atanh(1) = +Inf, atanh(-1) = -Inf
 		return z.SetInf(x.Signbit())

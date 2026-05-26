@@ -463,4 +463,12 @@ func TestComplex_Aliasing(t *testing.T) {
 	if !z.Equals(wantZ) {
 		t.Errorf("Sin aliasing failed: got %v, want %v", z, wantZ)
 	}
+
+	// Inv aliasing
+	z = newComplex(3, 4, prec)
+	want = newComplex(0, 0, prec).Quo(newComplex(1, 0, prec), z)
+	z.Inv(z)
+	if !z.Equals(want) {
+		t.Errorf("Inv aliasing failed: got %v, want %v", z, want)
+	}
 }
