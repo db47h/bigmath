@@ -254,9 +254,10 @@ func Tanh(z, x *big.Float) *big.Float {
 		return z.Set(x)
 	}
 	if x.IsInf() {
-		z.SetUint64(1)
 		if x.Signbit() {
-			z.Neg(z)
+			z.SetInt64(-1)
+		} else {
+			z.SetUint64(1)
 		}
 		return z
 	}

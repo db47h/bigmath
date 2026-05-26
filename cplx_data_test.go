@@ -45,28 +45,23 @@ func loadCplxTestData(path string) (*cplxTestData, error) {
 }
 
 // parseCplxHex parses a hex float string at the given precision.
-func parseCplxHex(s string, prec uint) *big.Float {
-	x, _, err := new(big.Float).SetPrec(prec).Parse(s, 0)
+func parseCplxHex(x *big.Float, s string) {
+	_, _, err := x.Parse(s, 0)
 	if err != nil {
-		panic(fmt.Sprintf("parseCplxHex(%q, %d): %v", s, prec, err))
+		panic(fmt.Sprintf("parseCplxHex(%q): %v", s, err))
 	}
-	return x
 }
 
 // parseComplexArg builds a *bigmath.Complex from a JSON [re,im] pair at prec.
-func parseComplexArg(pair [2]string, prec uint) *bigmath.Complex {
-	c := new(bigmath.Complex)
-	c.Real.SetPrec(prec)
+func parseComplexArg(c *bigmath.Complex, pair [2]string) {
 	_, _, err := c.Real.Parse(pair[0], 0)
 	if err != nil {
 		panic(fmt.Sprintf("parseComplexArg real(%q): %v", pair[0], err))
 	}
-	c.Imag.SetPrec(prec)
 	_, _, err = c.Imag.Parse(pair[1], 0)
 	if err != nil {
 		panic(fmt.Sprintf("parseComplexArg imag(%q): %v", pair[1], err))
 	}
-	return c
 }
 
 // callComplexFn dispatches to the correct *Complex method by function name.
@@ -144,6 +139,12 @@ func TestComplexData(t *testing.T) {
 		t.Fatalf("Expected mode 'cplx', got %q", data.Mode)
 	}
 
+	x := new(bigmath.Complex).SetPrec(data.Prec)
+	y := new(bigmath.Complex).SetPrec(data.Prec)
+	got := new(bigmath.Complex).SetPrec(data.Prec)
+	wantRe := new(big.Float).SetPrec(data.Prec)
+	wantIm := new(big.Float).SetPrec(data.Prec)
+
 	for _, d := range data.Cases {
 		t.Run(fmt.Sprintf("%s%v", d.Fn, d.Args), func(t *testing.T) {
 			defer func() {
@@ -169,21 +170,20 @@ func TestComplexData(t *testing.T) {
 					t.Errorf("%s(%v): expected ErrNaN, got: %T %v", d.Fn, d.Args, e, e)
 				}
 			}()
-			got := new(bigmath.Complex).SetPrec(data.Prec)
 
 			// Parse arguments
-			x := parseComplexArg(d.Args[0], data.Prec)
-			var y *bigmath.Complex
+			parseComplexArg(x, d.Args[0])
 			if isBinaryFn(d.Fn) {
-				y = parseComplexArg(d.Args[1], data.Prec)
+				parseComplexArg(y, d.Args[1])
 			}
 
 			// Dispatch
-			callComplexFn(d.Fn, got, x, y)
+			got.Set(x) // test aliasing on x at the same time
+			callComplexFn(d.Fn, got, got, y)
 
 			// Parse expected results
-			wantRe := parseCplxHex(d.ResRe, data.Prec)
-			wantIm := parseCplxHex(d.ResIm, data.Prec)
+			parseCplxHex(wantRe, d.ResRe)
+			parseCplxHex(wantIm, d.ResIm)
 
 			if got.Real.Cmp(wantRe) != 0 || got.Imag.Cmp(wantIm) != 0 {
 				t.Fatalf("%s(%v): got (%s, %s), want (%s, %s)",

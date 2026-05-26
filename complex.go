@@ -578,11 +578,11 @@ func (z *Complex) Sqrt(x *Complex) *Complex {
 	if x.Imag.Sign() == 0 {
 		switch x.Real.Sign() {
 		case -1:
-			z.Real.Set(zero)
 			z.Imag.Sqrt(new(big.Float).Neg(&x.Real))
 			if x.Imag.Signbit() {
 				z.Imag.Neg(&z.Imag)
 			}
+			z.Real.Set(zero)
 		case 0:
 			z.Real.Set(zero)
 			z.Imag.Set(&x.Imag)
