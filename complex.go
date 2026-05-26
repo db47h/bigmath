@@ -177,12 +177,18 @@ func (z *Complex) Atan(x *Complex) *Complex {
 			Atanh(&z.Imag, &x.Imag)
 			return z
 		}
+		if x.Imag.Signbit() {
+			z.Real.Neg(halfPi(prec))
+		} else {
+			z.Real.Set(halfPi(prec))
+		}
+		Atanh(&z.Imag, newFloat(workPrec).Quo(one, &x.Imag))
+		return z
 	}
 	if x.Real.IsInf() || x.Imag.IsInf() {
 		sgn := x.Real.Signbit()
 		sgnI := x.Imag.Signbit()
-		z.Real.Set(pi(prec))
-		z.Real.SetMantExp(&z.Real, -1)
+		z.Real.Set(halfPi(prec))
 		if sgn {
 			z.Real.Neg(&z.Real)
 		}
@@ -444,8 +450,7 @@ func (z *Complex) Acos(x *Complex) *Complex {
 		z.Imag.Set(&x.Imag)
 		return z
 	case x.Real.Sign() == 0 && t.Abs(&x.Imag).Cmp(one) <= 0:
-		z.Real.Set(pi(prec))
-		z.Real.SetMantExp(&z.Real, -1)
+		z.Real.Set(halfPi(prec))
 		Asinh(&z.Imag, &x.Imag)
 		z.Imag.Neg(&z.Imag)
 		return z
