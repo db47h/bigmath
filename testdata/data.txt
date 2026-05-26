@@ -13,6 +13,7 @@ exp -744261117
 # exp 1488522234.523491675
 
 # log
+log inf
 log 0
 log 2
 log 1
@@ -23,7 +24,35 @@ log -1           !panic
 log -10          !panic
 log -inf         !panic
 
-# pow
+# pow: inf exponent coverage (absCmpOne, y.IsInf)
+pow 2 inf
+pow 0.5 inf
+pow 1 inf
+pow 2 -inf
+pow 0.5 -inf
+pow 1 -inf
+pow -1 inf
+pow -1 -inf
+pow -2 inf
+pow 1.5 inf
+pow -1.5 inf
+
+# pow: y == 1 shortcut
+pow 5 1
+
+# pow: -inf base (x.IsInf with negative x)
+pow -inf 2
+pow -inf 3
+pow -inf -2
+pow -inf -3
+
+# pow: huge integer exponent (yExp > 64 overflow/underflow)
+pow 2 18446744073709551616
+pow 0.5 18446744073709551616
+pow -2 18446744073709551616
+pow -2 18446744073709551615
+
+# pow (original cases)
 pow 2 3
 pow 2 0.5
 pow 10 2
@@ -68,7 +97,21 @@ atan inf
 atan -inf
 atan 27e36
 
-# atan2
+# atan2: remaining special cases (zero-and-inf combinations)
+atan2 0 -1
+atan2 -0 -1
+atan2 1 0
+atan2 -1 0
+atan2 1 inf
+atan2 -1 inf
+atan2 1 -inf
+atan2 -1 -inf
+atan2 inf 0
+atan2 -inf 0
+atan2 inf 2
+atan2 -inf 2
+
+# atan2 (original cases)
 atan2 2 3
 atan2 2 -3
 atan2 -2 -3
@@ -82,6 +125,12 @@ atan2 -inf inf
 atan2 inf -inf
 atan2 -inf -inf
 
+# extra quadrant coverage for trig functions
+sin_cos 3
+sin_cos 4
+sin_cos 5
+sin_cos -3
+
 # sin_cos (generates both sin and cos test entries)
 sin_cos 0
 sin_cos 0.5
@@ -93,6 +142,11 @@ sin_cos -0.5
 sin_cos -1
 sin_cos 10
 sin_cos 100
+
+# large value hyperbolic tests (overflow / edge-case)
+sinh 1000
+cosh 1000
+tanh 1000
 
 # hyperbolic
 sinh 0
@@ -153,6 +207,15 @@ atanh -0.9
 atanh 1
 atanh -1
 
+# large atan
+atan 1e10
+atan -1e10
+
+# additional hyperbolic inverse edge cases
+asinh 1e10
+asinh -1e10
+acosh 1e10
+
 sinh_cosh 0
 sinh_cosh 0.5
 sinh_cosh -0.5
@@ -201,6 +264,10 @@ tan -0.5
 tan -1
 tan 10
 tan 100
+
+# tan edge cases (near pi/2)
+tan 1.5707963267948966
+tan -1.5707963267948966
 
 # additional edge cases
 asin 0.9999999999999999
