@@ -8,13 +8,14 @@ import "math/big"
 func (z *Complex) Pow(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 
-	if x.IsZero() {
+	t0 := x.Abs(newFloat(workPrec))
+	if t0.Sign() == 0 {
 		switch sgn := y.Real.Sign(); {
 		case sgn == 0:
 			z.Real.Set(one)
 			z.Imag.Set(zero)
 		case sgn < 0:
-			z.Real.SetInf(y.Imag.Sign() == 0)
+			z.Real.SetInf(y.IsReal())
 			z.Imag.Set(zero)
 		default:
 			z.Set(&Complex{})
@@ -23,8 +24,8 @@ func (z *Complex) Pow(x, y *Complex) *Complex {
 	}
 
 	// Special case: y real
-	if y.Imag.Sign() == 0 {
-		if x.Imag.Sign() == 0 {
+	if y.IsReal() {
+		if x.IsReal() {
 			// If x.Real: delegate to real-domain Pow.
 			z.Real.Pow(&x.Real, &y.Real)
 			z.Imag.Set(zero)
@@ -35,11 +36,6 @@ func (z *Complex) Pow(x, y *Complex) *Complex {
 		}
 	}
 
-	t0 := x.Abs(newFloat(workPrec))
-	if t0.Sign() == 0 {
-		z.Set(&Complex{})
-		return z
-	}
 	t1 := x.Arg(newFloat(workPrec))
 	t2 := newFloat(workPrec)
 	r := newFloat(workPrec).Pow(t0, &y.Real)
@@ -96,7 +92,7 @@ func (z *Complex) Sqrt(x *Complex) *Complex {
 	// Algebraic square root: sqrt(a+bi) = sqrt((r+a)/2) + i·sgn(b)*sqrt((r-a)/2)
 	workPrec := z.setPrec(x) + _W
 
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		switch x.Real.Sign() {
 		case -1:
 			z.Imag.Sqrt(new(Float).Neg(&x.Real))

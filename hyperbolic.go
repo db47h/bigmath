@@ -336,7 +336,7 @@ func (x *Float) acoshGuard(prec uint) uint {
 	if xExp > 1 {
 		return prec + 2*_W
 	}
-	// x is in [1, 4). Compute x-1 at the default working precision to
+	// x is in [1, 2). Compute x-1 at the default working precision to
 	// determine the guard bits needed.
 	workPrec := prec + 2*_W
 	t := newFloat(workPrec).Sub(x, one)

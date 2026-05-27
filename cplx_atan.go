@@ -19,7 +19,7 @@ func (z *Complex) Atan(x *Complex) *Complex {
 	prec := z.setPrec(x)
 	workPrec := prec + _W
 
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		z.Real.Atan(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
@@ -30,11 +30,7 @@ func (z *Complex) Atan(x *Complex) *Complex {
 			z.Imag.Atanh(&x.Imag)
 			return z
 		}
-		if x.Imag.Signbit() {
-			z.Real.Neg(halfPi(prec))
-		} else {
-			z.Real.Set(halfPi(prec))
-		}
+		z.Real.Set(halfPi(prec))
 		z.Imag.Atanh(newFloat(workPrec).Quo(one, &x.Imag))
 		return z
 	}
@@ -87,7 +83,7 @@ func (z *Complex) Asin(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	switch {
-	case x.Imag.Sign() == 0 && x.Real.absCmpOne() <= 0:
+	case x.IsReal() && x.Real.absCmpOne() <= 0:
 		z.Real.Asin(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
@@ -134,7 +130,7 @@ func (z *Complex) Acos(x *Complex) *Complex {
 	workPrec := prec + _W
 
 	switch {
-	case x.Imag.Sign() == 0 && x.Real.absCmpOne() <= 0:
+	case x.IsReal() && x.Real.absCmpOne() <= 0:
 		z.Real.Acos(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z

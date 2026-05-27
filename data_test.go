@@ -75,6 +75,8 @@ var fnMap = map[string]any{
 	"asin":      (*bigmath.Float).Asin,
 	"acos":      (*bigmath.Float).Acos,
 	"tan":       (*bigmath.Float).Tan,
+	"hypot":     (*bigmath.Float).Hypot,
+	"fma":       (*bigmath.Float).FMA,
 }
 
 func testPiConst(z *bigmath.Float) *bigmath.Float {
@@ -110,7 +112,6 @@ func TestFloatData(t *testing.T) {
 		t.Fatalf("Failed to load test data: %v", err)
 	}
 
-	got := new(bigmath.Float).SetPrec(data.Prec)
 	for _, d := range data.Cases {
 		if d.Panics {
 			continue // skip panic tests
@@ -123,8 +124,8 @@ func TestFloatData(t *testing.T) {
 
 			if d.Res2 != "" {
 				// Tuple function: two results
-				got1 := new(bigmath.Float).SetPrec(data.Prec)
-				got2 := new(bigmath.Float).SetPrec(data.Prec)
+				got1 := new(bigmath.Float)
+				got2 := new(bigmath.Float)
 				args := makeReflectArgs([]*bigmath.Float{got1, got2}, d.Args, data.Prec)
 				reflect.ValueOf(fn).Call(args)
 
@@ -139,6 +140,10 @@ func TestFloatData(t *testing.T) {
 						d.Fn, d.Args, got2.Text('x', -1), want2.Text('x', -1))
 				}
 			} else {
+				got := new(bigmath.Float)
+				if d.Fn == "const_pi" {
+					got.SetPrec(data.Prec)
+				}
 				// Single-result function (existing logic)
 				args := buildReflectArgs(got, d.Args, data.Prec)
 				reflect.ValueOf(fn).Call(args)

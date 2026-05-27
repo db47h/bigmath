@@ -13,20 +13,18 @@ type Complex struct {
 }
 
 func (z *Complex) Copy(x *Complex) *Complex {
-	if z == x {
-		return z
+	if z != x {
+		z.Real.Copy(&x.Real)
+		z.Imag.Copy(&x.Imag)
 	}
-	z.Real.Copy(&x.Real)
-	z.Imag.Copy(&x.Imag)
 	return z
 }
 
 func (z *Complex) Set(x *Complex) *Complex {
-	if z == x {
-		return z
+	if z != x {
+		z.Real.Set(&x.Real)
+		z.Imag.Set(&x.Imag)
 	}
-	z.Real.Set(&x.Real)
-	z.Imag.Set(&x.Imag)
 	return z
 }
 

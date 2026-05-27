@@ -23,24 +23,17 @@ func (z *Complex) Exp(x *Complex) *Complex {
 		panic(ErrNaN("complex exponential of infinite imaginary part"))
 	}
 	expA := newFloat(workPrec).Exp(&x.Real)
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		z.Real.Set(expA)
 		z.Imag.Set(&x.Imag)
 		return z
 	}
 	s, c := Sincos(newFloat(workPrec), newFloat(workPrec), &x.Imag)
-	if expA.IsInf() {
-		switch {
-		case expA.Signbit():
-			z.Real.Set(zero)
-			z.Imag.Set(zero)
-			return z
-		case c.Sign() == 0:
-			// in this unlikely case, choose geometric continuity over panicking
-			z.Real.SetInf(false)
-			z.Imag.SetInf(s.Signbit())
-			return z
-		}
+	if expA.IsInf() && c.Sign() == 0 {
+		// in this unlikely case, choose geometric continuity over panicking
+		z.Real.SetInf(false)
+		z.Imag.SetInf(s.Signbit())
+		return z
 	}
 
 	z.Real.Mul(expA, c)

@@ -24,6 +24,43 @@ log -1           !panic
 log -10          !panic
 log -inf         !panic
 
+# pow
+pow 2 3
+pow 2 0.5
+pow 10 2
+pow 10 -2
+pow 0.5 2
+pow 0.5 -2
+pow 1 100
+pow 100 0
+pow 0 0
+pow 0 1
+pow 0 2
+pow 0 3
+pow 0 -1
+pow 0 -2
+pow inf 2
+pow inf -2
+pow -1 2
+pow -1 3
+pow -2 2
+pow -2 3
+pow -2 0.5       !panic
+pow -1 1.5       !panic
+pow 2 1.5
+pow 10 1.5
+pow 2 10
+pow 2 100
+pow 0.5 10
+pow 0.5 100
+pow -2 10
+pow -2 11
+pow 2 1000000000
+pow 0.5 1000000000
+pow 1.1 1000000000
+pow 0.9 1000000000
+const_pi 0
+
 # pow: inf exponent coverage (absCmpOne, y.IsInf)
 pow 2 inf
 pow 0.5 inf
@@ -50,40 +87,10 @@ pow -inf -3
 pow 2 18446744073709551616
 pow 0.5 18446744073709551616
 pow -2 18446744073709551616
-pow -2 18446744073709551615
-
-# pow (original cases)
-pow 2 3
-pow 2 0.5
-pow 10 2
-pow 10 -2
-pow 0.5 2
-pow 0.5 -2
-pow 1 100
-pow 100 0
-pow 0 1
-pow 0 -1
-pow inf 2
-pow inf -2
-pow -1 2
-pow -1 3
-pow -2 2
-pow -2 3
-pow -2 0.5       !panic
-pow -1 1.5       !panic
-pow 2 1.5
-pow 10 1.5
-pow 2 10
-pow 2 100
-pow 0.5 10
-pow 0.5 100
-pow -2 10
-pow -2 11
-pow 2 1000000000
-pow 0.5 1000000000
-pow 1.1 1000000000
-pow 0.9 1000000000
-const_pi 0
+pow -2 18446744073709551617
+pow -2 -18446744073709551616
+pow -2 -18446744073709551617
+pow 1e123456 1234567890
 
 # atan
 atan 0
@@ -96,6 +103,7 @@ atan -2
 atan inf
 atan -inf
 atan 27e36
+atan 1e100
 
 # atan2: remaining special cases (zero-and-inf combinations)
 atan2 0 -1
@@ -124,6 +132,10 @@ atan2 inf inf
 atan2 -inf inf
 atan2 inf -inf
 atan2 -inf -inf
+
+# test z.SetPrec(z.Prec())
+sin 1
+cos 1
 
 # extra quadrant coverage for trig functions
 sin_cos 3
@@ -189,8 +201,11 @@ asinh -2
 asinh -10
 asinh inf
 asinh -inf
+asinh 1e1073741822
 
 acosh 1
+acosh 1.01
+acosh 1.8
 acosh 2
 acosh 10
 acosh 100
@@ -227,6 +242,9 @@ sinh_cosh 100
 sinh_cosh -100
 sinh_cosh 1e-5
 sinh_cosh -1e-5
+sinh_cosh +inf
+sinh_cosh -inf
+
 sin inf          !panic
 sin -inf         !panic
 cos inf          !panic
@@ -244,6 +262,7 @@ asin 0.25
 asin -0.25
 asin 0.9
 asin -0.9
+asin 0.8
 
 # acos
 acos 0
@@ -264,10 +283,16 @@ tan -0.5
 tan -1
 tan 10
 tan 100
+tan 1.6
+tan 4
+tan 5
+tan -1.6
+tan -4
+tan -5
 
 # tan edge cases (near pi/2)
-tan 1.5707963267948966
-tan -1.5707963267948966
+tan 1.570796326794896619231321691639751442098584699687552910487472296153908203143104499314017412671058533991074043256641153323546922304775291115862679704064240558725142051350969260552779822311474477465190982214405487832966723064237824116893391582635600954572824283461730174305227163324106696803630124570636862293499
+tan -1.570796326794896619231321691639751442098584699687552910487472296153908203143104499314017412671058533991074043256641153323546922304775291115862679704064240558725142051350969260552779822311474477465190982214405487832966723064237824116893391582635600954572824283461730174305227163324106696803630124570636862293499
 
 # additional edge cases
 asin 0.9999999999999999
@@ -283,3 +308,9 @@ atanh 2          !panic
 atanh -2         !panic
 acosh 0.5        !panic
 acosh 0          !panic
+
+hypot 0 0
+hypot 1 1
+hypot +inf 0
+
+fma 1 1 1

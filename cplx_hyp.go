@@ -8,7 +8,7 @@ package bigmath
 func (z *Complex) Sinh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		z.Real.Sinh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
@@ -29,7 +29,7 @@ func (z *Complex) Sinh(x *Complex) *Complex {
 func (z *Complex) Cosh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		z.Real.Cosh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
@@ -48,7 +48,7 @@ func (z *Complex) Cosh(x *Complex) *Complex {
 func (z *Complex) Tanh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
-	if x.Imag.Sign() == 0 {
+	if x.IsReal() {
 		z.Real.Tanh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z

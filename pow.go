@@ -16,8 +16,6 @@ import (
 //	Pow(x, ±0) = 1 for any x
 //	Pow(1, y) = 1 for any y
 //	Pow(x, 1) = x for any x
-//	Pow(NaN, y) = NaN (panics with ErrNaN)
-//	Pow(x, NaN) = NaN (panics with ErrNaN)
 //	Pow(±0, y) where y is an odd integer:
 //	    Pow(±0, y) = ±Inf for y < 0
 //	    Pow(±0, y) = ±0 for y > 0
@@ -40,6 +38,12 @@ import (
 //
 // For finite x < 0 and finite non-integer y, Pow panics with ErrNaN.
 func (z *Float) Pow(x, y *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = max(x.Prec(), y.Prec())
+		z.SetPrec(prec)
+	}
+
 	if y.Sign() == 0 {
 		return z.Set(one)
 	}
@@ -92,12 +96,6 @@ func (z *Float) Pow(x, y *Float) *Float {
 		panic(ErrNaN("Pow(x, y) where x < 0 and y is not an integer"))
 	}
 
-	prec := z.Prec()
-	if prec == 0 {
-		prec = x.Prec()
-		z.SetPrec(prec)
-	}
-
 	// For integer exponents, use optimizations.
 	if y.IsInt() {
 		// Detect huge exponents that will surely overflow or underflow.
@@ -135,26 +133,19 @@ func (z *Float) Pow(x, y *Float) *Float {
 
 // powInt computes x^n using exponentiation by squaring.
 func (z *Float) powInt(x *Float, n *big.Int) *Float {
-	prec := z.Prec()
-	if prec == 0 {
-		prec = x.Prec()
-		z.SetPrec(prec)
-	}
-	workPrec := prec + _W
+	workPrec := z.Prec() + _W
 
 	neg := n.Sign() < 0
 	absN := new(big.Int).Abs(n)
 
 	res := newFloat(workPrec).Set(one)
 	temp := newFloat(workPrec)
-	base := newFloat(workPrec).Set(x)
+	base := newFloat(workPrec).Abs(x)
 
 	for i := absN.BitLen() - 1; i >= 0; i-- {
 		temp.Mul(res, res)
 		res, temp = temp, res
-		if res.IsInf() {
-			break
-		}
+
 		if absN.Bit(i) != 0 {
 			temp.Mul(res, base)
 			res, temp = temp, res
@@ -168,5 +159,8 @@ func (z *Float) powInt(x *Float, n *big.Int) *Float {
 		return z.Quo(one, res)
 	}
 
+	if x.Sign() < 0 && absN.Bit(0) != 0 {
+		return z.Neg(res)
+	}
 	return z.Set(res)
 }

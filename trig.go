@@ -407,23 +407,9 @@ func (z *Float) Tan(x *Float) *Float {
 	// The formula choice determines the sign; no extra quadrant sign flip needed.
 	if quad&1 == 0 {
 		// Q0, Q2: tan = s / c
-		if c.Sign() == 0 {
-			z.SetInf(false)
-			if neg {
-				z.Neg(z)
-			}
-			return z
-		}
 		z.Quo(s, c)
 	} else {
 		// Q1, Q3: tan = -c / s
-		if s.Sign() == 0 {
-			z.SetInf(true)
-			if neg {
-				z.Neg(z)
-			}
-			return z
-		}
 		c.Neg(c)
 		z.Quo(c, s)
 	}

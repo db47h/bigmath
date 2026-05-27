@@ -20,6 +20,10 @@
 
 No remaining gaps.
 
+### Tests
+
+- Unify panic tests and regular tests in data_test.go
+
 ## Priority
 
 | Task | Effort | Impact |
