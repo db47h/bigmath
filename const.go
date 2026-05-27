@@ -42,7 +42,7 @@ var (
 	// cached constants
 	sqrt2 = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(two) })
 	ln2   = cache(func(prec uint) *Float {
-		return computeLn(newFloat(prec+_W), two).SetPrec(prec)
+		return newFloat(prec + _W).lnCore(two).SetPrec(prec)
 	})
 	ln10      = cache(func(prec uint) *Float { return newFloat(prec).Log(ten) })
 	pi        = cache(computePi)

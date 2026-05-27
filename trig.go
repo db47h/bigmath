@@ -22,7 +22,7 @@ import (
 // It returns the quadrant (0–3) of the original reduced value.
 // z may alias x. z's precision determines the target precision of the result.
 // x must be non-negative; panics otherwise.
-func reducePi2(z, x *Float) int {
+func (z *Float) reducePi2(x *Float) int {
 	if x.Sign() == 0 {
 		return 0
 	}
@@ -81,7 +81,7 @@ func reducePi2(z, x *Float) int {
 
 	// -x + n * π/2
 	xAbs.Neg(xAbs)
-	rTmp := fma(newFloat(workPrec), t0, halfPi(workPrec), xAbs, t1)
+	rTmp := newFloat(workPrec).fma(t0, halfPi(workPrec), xAbs, t1)
 
 	// x - n * π/2
 	rTmp.Neg(rTmp)
@@ -98,7 +98,7 @@ func reducePi2(z, x *Float) int {
 // a comfortable margin. At target precision P, O(P) terms are needed;
 // the accumulated error (N × 2^-(P+2*_W)) is negligible for any N reachable
 // in practice (see file header for the full rationale).
-func sinCore(z, x *Float) *Float {
+func (z *Float) sinCore(x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -133,7 +133,7 @@ func sinCore(z, x *Float) *Float {
 //
 // Same flat +2*_W guard as sinCore — same alternating-series cancellation
 // characteristics. See sinCore doc for the rationale.
-func cosCore(z, x *Float) *Float {
+func (z *Float) cosCore(x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -245,12 +245,12 @@ func (z *Float) Sin(x *Float) *Float {
 	}
 
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := reducePi2(xVal, xVal)
+	quad := xVal.reducePi2(xVal)
 
 	if quad == 0 || quad == 2 {
-		sinCore(z, xVal)
+		z.sinCore(xVal)
 	} else {
-		cosCore(z, xVal)
+		z.cosCore(xVal)
 	}
 
 	if quad >= 2 {
@@ -293,12 +293,12 @@ func (z *Float) Cos(x *Float) *Float {
 	}
 
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := reducePi2(xVal, xVal)
+	quad := xVal.reducePi2(xVal)
 
 	if quad == 0 || quad == 2 {
-		cosCore(z, xVal)
+		z.cosCore(xVal)
 	} else {
-		sinCore(z, xVal)
+		z.sinCore(xVal)
 	}
 
 	if quad == 1 || quad == 2 {
@@ -344,7 +344,7 @@ func Sincos(zs, zc, x *Float) (*Float, *Float) {
 	}
 
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := reducePi2(xVal, xVal)
+	quad := xVal.reducePi2(xVal)
 
 	sincosCore(zs, zc, xVal)
 	if quad == 1 || quad == 3 {
@@ -394,12 +394,10 @@ func (z *Float) Tan(x *Float) *Float {
 	}
 
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := reducePi2(xVal, xVal)
+	quad := xVal.reducePi2(xVal)
 
-	s := newFloat(workPrec)
-	c := newFloat(workPrec)
-	sinCore(s, xVal)
-	cosCore(c, xVal)
+	s := newFloat(workPrec).sinCore(xVal)
+	c := newFloat(workPrec).cosCore(xVal)
 
 	// tan(x) after reduction to [0, π/2):
 	//   Q0: tan = sinR / cosR   → s / c

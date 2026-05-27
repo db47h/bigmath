@@ -8,7 +8,7 @@ import (
 
 // atanCore computes arctan(x) for |x| < 1 using the Taylor series:
 // arctan(x) = Σ (-1)^k * x^(2k+1) / (2k+1)
-func atanCore(z, x *Float) *Float {
+func (z *Float) atanCore(x *Float) *Float {
 	prec := z.Prec()
 	// Guard bits to ensure precision
 	workPrec := prec + 2*_W
@@ -54,7 +54,7 @@ func atanCore(z, x *Float) *Float {
 // atanReciprocal computes arctan(1/n) for n > 0 using the Taylor series.
 // This version is optimized for small integer n, avoiding full multiplications
 // in the loop by using divisions by n^2.
-func atanReciprocal(z *Float, n uint64) *Float {
+func (z *Float) atanReciprocal(n uint64) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -134,15 +134,16 @@ func (z *Float) Atan(x *Float) *Float {
 	nReductions := 0
 	t0 := newFloat(workPrec)
 	t1 := newFloat(workPrec)
+	t2 := new(Float)
 	for xVal.MantExp(nil) > -u {
-		t0.FMA(xVal, xVal, one)
+		t0.fma(xVal, xVal, one, t2)
 		t1.Sqrt(t0)
 		t0.Add(t1, one)
 		xVal.Quo(xVal, t0)
 		nReductions++
 	}
 
-	atanCore(t0, xVal)
+	t0.atanCore(xVal)
 
 	// Undo the double angle reductions: Atan(x) = 2^n * Atan(x_reduced)
 	if nReductions > 0 {
@@ -263,7 +264,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 
 // asinGuard computes the working precision needed for asin(x) near x=±1,
 // where 1-x² loses significant bits. Returns the required working precision.
-func asinGuard(x *Float, prec uint) uint {
+func (x *Float) asinGuard(prec uint) uint {
 	// Work with |x|
 	xAbs := newFloat(prec + 2*_W).Abs(x)
 
@@ -303,7 +304,7 @@ func (z *Float) Asin(x *Float) *Float {
 	}
 
 	// Domain check: |x| ≤ 1
-	switch absCmpOne(x) {
+	switch x.absCmpOne() {
 	case 1:
 		panic(ErrNaN("asin of x outside [-1, 1]"))
 
@@ -317,7 +318,7 @@ func (z *Float) Asin(x *Float) *Float {
 		return z
 	}
 
-	workPrec := asinGuard(x, prec)
+	workPrec := x.asinGuard(prec)
 
 	xVal := newFloat(workPrec).Set(x)
 	neg := xVal.Signbit()
@@ -354,7 +355,7 @@ func (z *Float) Acos(x *Float) *Float {
 	}
 
 	// Domain check: |x| ≤ 1
-	switch absCmpOne(x) {
+	switch x.absCmpOne() {
 	case 1:
 		panic(ErrNaN("acos of x outside [-1, 1]"))
 	case 0:
@@ -365,7 +366,7 @@ func (z *Float) Acos(x *Float) *Float {
 	}
 
 	// Acos(x) = π/2 - Asin(x)
-	workPrec := asinGuard(x, prec)
+	workPrec := x.asinGuard(prec)
 
 	tmp := newFloat(workPrec).Asin(x)
 	result := newFloat(workPrec)

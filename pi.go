@@ -20,11 +20,11 @@ func computePi(prec uint) *Float {
 
 	// 4*arctan(1/5)
 	// Use the optimized atanReciprocal for reciprocal integers.
-	atanReciprocal(p1, 5)
+	p1.atanReciprocal(5)
 	p1.SetMantExp(p1, 2)
 
 	// arctan(1/239)
-	atanReciprocal(p2, 239)
+	p2.atanReciprocal(239)
 
 	// pi/4 = 4*arctan(1/5) - arctan(1/239)
 	res := newFloat(workPrec).Sub(p1, p2)

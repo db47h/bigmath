@@ -35,13 +35,13 @@ func (x *Float) ULPExponent() int {
 }
 
 // isOdd returns true if x is a non-zero odd integer.
-func isOdd(x *Float) bool {
+func (x *Float) isOdd() bool {
 	return x.IsInt() && x.Sign() != 0 && x.MantExp(nil) == int(x.MinPrec())
 }
 
 // absCmpOne compares |x| to 1.
 // Returns -1 if |x| < 1, 0 if |x| == 1, 1 if |x| > 1.
-func absCmpOne(x *Float) int {
+func (x *Float) absCmpOne() int {
 	exp := x.MantExp(nil)
 	if exp > 1 {
 		return 1
@@ -88,4 +88,43 @@ func (z *Float) Hypot(x, y *Float) *Float {
 	t := newFloat(workPrec).FMA(x, x, newFloat(2*y.Prec()).Mul(y, y))
 
 	return z.Sqrt(t)
+}
+
+// fma implements fused multiply-add: z = x*y + t with a single rounding.
+//
+// big.Float.Mul always computes the full mantissa product (O(n×m) words)
+// before rounding to the target precision. By sizing temp at
+// x.Prec() + y.Prec(), we capture the full product without intermediate
+// rounding. Then z.Add rounds once to z.Prec(). Result: one rounding
+// for the entire x*y + t expression — genuine FMA semantics.
+//
+// The sum-of-precisions temp size is NOT wasteful. The full product would
+// have been computed internally by Mul regardless; sizing temp this way
+// just preserves it. Shrinking temp would introduce intermediate rounding
+// and break the FMA guarantee.
+//
+// z may alias x or y without extra allocations.
+// temp receives the full-precision product and must NOT alias any argument.
+func (z *Float) fma(x, y, t, temp *Float) *Float {
+	// Size temp to hold the full product: Mul computes the full mantissa
+	// product internally, so setting temp's precision to x.Prec() + y.Prec()
+	// prevents it from rounding the product away. SetPrec(0) first to
+	// free any previous mantissa, ensuring a fresh allocation of the
+	// correct size.
+	temp.SetPrec(0).SetPrec(x.Prec() + y.Prec())
+
+	if z.Prec() == 0 {
+		z.SetPrec(max(x.Prec(), y.Prec(), t.Prec()))
+	}
+	return z.Add(temp.Mul(x, y), t)
+}
+
+// FMA sets z to x*y + t with a single rounding (fused multiply-add) and
+// returns z. The product x*y is computed without intermediate rounding,
+// then added to t and rounded once to z's precision.
+//
+// This provides genuine FMA semantics: one rounding for the entire
+// expression, not two. See fma for the implementation details.
+func (z *Float) FMA(x, y, t *Float) *Float {
+	return z.fma(x, y, t, new(Float))
 }

@@ -59,11 +59,11 @@ func (z *Complex) Mul(x, y *Complex) *Complex {
 	// (a+bi)(c+di) = (ac-bd) + (ad+bc)i
 	// Real: ac - bd
 	bd := newFloat(x.Imag.Prec()+y.Imag.Prec()).Mul(&x.Imag, &y.Imag)
-	fma(re, &x.Real, &y.Real, bd.Neg(bd), temp)
+	re.fma(&x.Real, &y.Real, bd.Neg(bd), temp)
 
 	// Imag: ad + bc
 	bc := newFloat(x.Imag.Prec()+y.Real.Prec()).Mul(&x.Imag, &y.Real)
-	fma(im, &x.Real, &y.Imag, bc, temp)
+	im.fma(&x.Real, &y.Imag, bc, temp)
 
 	z.Real.Set(re)
 	z.Imag.Set(im)
@@ -81,15 +81,15 @@ func (z *Complex) Quo(x, y *Complex) *Complex {
 	// (a+bi)/(c+di) = ((ac+bd) + (bc-ad)i) / (c^2+d^2)
 	// denom = c^2 + d^2.
 	c2 := newFloat(y.Real.Prec()*2).Mul(&y.Real, &y.Real)
-	denom := fma(newFloat(workPrec), &y.Imag, &y.Imag, c2, temp)
+	denom := newFloat(workPrec).fma(&y.Imag, &y.Imag, c2, temp)
 
 	// ac + bd
 	ac := newFloat(x.Real.Prec()+y.Real.Prec()).Mul(&x.Real, &y.Real)
-	fma(re, &x.Imag, &y.Imag, ac, temp)
+	re.fma(&x.Imag, &y.Imag, ac, temp)
 
 	// bc - ad
 	ad := newFloat(x.Real.Prec()+y.Imag.Prec()).Mul(&x.Real, &y.Imag)
-	fma(im, &x.Imag, &y.Real, ad.Neg(ad), temp)
+	im.fma(&x.Imag, &y.Real, ad.Neg(ad), temp)
 
 	z.Real.Quo(re, denom)
 	z.Imag.Quo(im, denom)

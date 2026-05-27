@@ -2,10 +2,10 @@
 
 package bigmath
 
-// computeLn calculates z = ln(x) using the artanh series using z's precision
+// lnCore calculates z = ln(x) using the artanh series using z's precision
 // and returns z. Optimized for constants where x is a small integer near 1. The
 // result is not guaranteed to be correct in the last word of the mantissa.
-func computeLn(z, x *Float) *Float {
+func (z *Float) lnCore(x *Float) *Float {
 	prec := z.Prec()
 	// target = (x-1)/(x+1)
 	t0 := newFloat(prec).Sub(x, one)
@@ -65,7 +65,7 @@ func (z *Float) Log(x *Float) *Float {
 
 	// 3. Compute ln(m) using the artanh series
 	// ln(m) = 2 * artanh((m-1)/(m+1))
-	lnM := computeLn(newFloat(prec), m)
+	lnM := newFloat(prec).lnCore(m)
 
 	// 4. Combine: ln(x) = ln(m) + exp × ln(2)
 	if exp != 0 {

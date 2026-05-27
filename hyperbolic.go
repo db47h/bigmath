@@ -9,7 +9,7 @@ package bigmath
 // alternating signs (all terms are positive), so there is no subtractive
 // cancellation. A smaller guard (+_W) would likely suffice, but +2*_W is
 // harmless — the performance difference is negligible at any precision.
-func sinhCore(z, x *Float) *Float {
+func (z *Float) sinhCore(x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -115,7 +115,7 @@ func (z *Float) Sinh(x *Float) *Float {
 	}
 
 	if xVal.Cmp(one) < 0 {
-		t := sinhCore(newFloat(workPrec), xVal)
+		t := newFloat(workPrec).sinhCore(xVal)
 		if neg {
 			t.Neg(t)
 		}
@@ -331,7 +331,7 @@ func (z *Float) Asinh(x *Float) *Float {
 
 // acoshGuard computes the working precision needed for acosh(x) near x=1,
 // where x-1 loses significant bits. Returns the required working precision.
-func acoshGuard(x *Float, prec uint) uint {
+func (x *Float) acoshGuard(prec uint) uint {
 	xExp := x.MantExp(nil)
 	if xExp > 1 {
 		return prec + 2*_W
@@ -372,7 +372,7 @@ func (z *Float) Acosh(x *Float) *Float {
 		return z.Set(zero)
 	}
 
-	workPrec := acoshGuard(x, prec)
+	workPrec := x.acoshGuard(prec)
 
 	xVal := newFloat(workPrec).Set(x)
 	t0 := newFloat(workPrec).Sub(xVal, one)
@@ -390,7 +390,7 @@ func (z *Float) Acosh(x *Float) *Float {
 
 // atanhGuard computes the working precision needed for atanh(x) near x=±1,
 // where 1-x (or 1+x) loses significant bits. Returns the required precision.
-func atanhGuard(x *Float, prec uint) uint {
+func (x *Float) atanhGuard(prec uint) uint {
 	// Work with |x| to always check 1-|x|.
 	xAbs := newFloat(prec + 2*_W).Abs(x)
 	oneMinus := newFloat(prec+2*_W).Sub(one, xAbs)
@@ -424,7 +424,7 @@ func (z *Float) Atanh(x *Float) *Float {
 	// Domain check: |x| < 1
 	// |x| == 1: atanh diverges to ±∞
 	// |x| > 1: mathematically undefined for real atanh
-	switch absCmpOne(x) {
+	switch x.absCmpOne() {
 	case 0:
 		// atanh(1) = +Inf, atanh(-1) = -Inf
 		return z.SetInf(x.Signbit())
@@ -432,7 +432,7 @@ func (z *Float) Atanh(x *Float) *Float {
 		panic(ErrNaN("atanh of |x| > 1"))
 	}
 
-	workPrec := atanhGuard(x, prec)
+	workPrec := x.atanhGuard(prec)
 
 	xVal := newFloat(workPrec).Set(x)
 	neg := xVal.Signbit()

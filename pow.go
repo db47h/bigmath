@@ -52,19 +52,19 @@ func (z *Float) Pow(x, y *Float) *Float {
 
 	if x.Sign() == 0 {
 		if y.Sign() < 0 {
-			if isOdd(y) {
+			if y.isOdd() {
 				return z.SetInf(x.Signbit())
 			}
 			return z.SetInf(false)
 		}
-		if isOdd(y) {
+		if y.isOdd() {
 			return z.Set(x)
 		}
 		return z.Set(zero)
 	}
 
 	if y.IsInf() {
-		cmp := absCmpOne(x)
+		cmp := x.absCmpOne()
 		if cmp == 0 {
 			return z.Set(one)
 		}
@@ -76,13 +76,13 @@ func (z *Float) Pow(x, y *Float) *Float {
 
 	if x.IsInf() {
 		if y.Sign() > 0 {
-			if x.Signbit() && isOdd(y) {
+			if x.Signbit() && y.isOdd() {
 				return z.SetInf(true)
 			}
 			return z.SetInf(false)
 		}
 		// y < 0
-		if x.Signbit() && isOdd(y) {
+		if x.Signbit() && y.isOdd() {
 			return z.Set(zero).Neg(z)
 		}
 		return z.Set(zero)
@@ -104,15 +104,15 @@ func (z *Float) Pow(x, y *Float) *Float {
 		// yExp > 64 implies |y| >= 2^64 (as f*2^e with 0.5 <= f < 1).
 		yExp := y.MantExp(nil)
 		if yExp > 64 {
-			cmp := absCmpOne(x)
+			cmp := x.absCmpOne()
 			if (y.Sign() > 0 && cmp > 0) || (y.Sign() < 0 && cmp < 0) {
-				if x.Signbit() && isOdd(y) {
+				if x.Signbit() && y.isOdd() {
 					return z.SetInf(true)
 				}
 				return z.SetInf(false)
 			}
 			// underflow
-			if x.Signbit() && isOdd(y) {
+			if x.Signbit() && y.isOdd() {
 				return z.Set(zero).Neg(z)
 			}
 			return z.Set(zero)
@@ -122,7 +122,7 @@ func (z *Float) Pow(x, y *Float) *Float {
 		// Binary exponentiation is efficient for this range.
 		n := new(big.Int)
 		y.Int(n)
-		return powInt(z, x, n)
+		return z.powInt(x, n)
 	}
 
 	// General case: x^y = exp(y * ln(x))
@@ -134,7 +134,7 @@ func (z *Float) Pow(x, y *Float) *Float {
 }
 
 // powInt computes x^n using exponentiation by squaring.
-func powInt(z, x *Float, n *big.Int) *Float {
+func (z *Float) powInt(x *Float, n *big.Int) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
