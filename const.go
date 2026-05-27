@@ -3,7 +3,6 @@
 package bigmath
 
 import (
-	"math/big"
 	"math/bits"
 	"sync"
 )
@@ -14,39 +13,41 @@ const _W = bits.UintSize
 // constProvider is an internal function type used to generate a mathematical
 // constant at a specific precision.
 //
-// Implementation Requirement: A constProvider must return a *big.Float that
+// Implementation Requirement: A constProvider must return a *Float that
 // has at least the requested precision. To ensure the integrity of the
-// cache, a constProvider should return a new *big.Float instance on each
+// cache, a constProvider should return a new *Float instance on each
 // call, or at least must never return the same pointer for different
 // precision values unless that pointer already satisfies the highest
 // requested precision.
-type constProvider func(prec uint) *big.Float
+type constProvider func(prec uint) *Float
 
 // The following variables provide access to common mathematical constants.
 //
 // Performance Note: These use an internal caching mechanism to avoid
 // recomputation. To eliminate allocation overhead, the functions return
-// a direct pointer to the cached *big.Float.
+// a direct pointer to the cached *Float.
 //
-// IMMUTABILITY CONTRACT: Callers MUST treat the returned *big.Float as
+// IMMUTABILITY CONTRACT: Callers MUST treat the returned *Float as
 // read-only. Modifying the value, precision, or rounding mode of a
 // returned constant will corrupt the cache and lead to undefined
 // behavior in subsequent calculations across the entire program.
 var (
 	// static constants not managed by the cache
-	minusOne = new(big.Float).SetInt64(-1)
-	zero     = new(big.Float)
-	one      = new(big.Float).SetUint64(1)
-	two      = new(big.Float).SetUint64(2)
-	ten      = new(big.Float).SetUint64(10)
+	minusOne = new(Float).SetInt64(-1)
+	zero     = new(Float)
+	one      = new(Float).SetUint64(1)
+	two      = new(Float).SetUint64(2)
+	ten      = new(Float).SetUint64(10)
 
 	// cached constants
-	sqrt2     = cache(func(prec uint) *big.Float { return newFloat(prec).Sqrt(two) })
-	ln2       = cache(func(prec uint) *big.Float { return computeLn(newFloat(prec+_W), two).SetPrec(prec) })
-	ln10      = cache(func(prec uint) *big.Float { return Log(newFloat(prec), ten) })
+	sqrt2 = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(two) })
+	ln2   = cache(func(prec uint) *Float {
+		return computeLn(newFloat(prec+_W), newFloat(prec+_W).SetUint64(2)).SetPrec(prec)
+	})
+	ln10      = cache(func(prec uint) *Float { return Log(newFloat(prec), newFloat(prec).SetUint64(10)) })
 	pi        = cache(computePi)
-	halfPi    = cache(func(prec uint) *big.Float { return newFloat(prec).SetMantExp(pi(prec), -1) })
-	twoOverPi = cache(func(prec uint) *big.Float { return newFloat(prec).Quo(two, pi(prec)) })
+	halfPi    = cache(func(prec uint) *Float { return newFloat(prec).SetMantExp(pi(prec), -1) })
+	twoOverPi = cache(func(prec uint) *Float { return newFloat(prec).Quo(newFloat(prec).SetUint64(2), pi(prec)) })
 )
 
 // cache wraps a constProvider with thread-safe memoization.
@@ -57,9 +58,9 @@ var (
 func cache(fn constProvider) constProvider {
 	var (
 		m sync.Mutex
-		v *big.Float
+		v *Float
 	)
-	return func(prec uint) *big.Float {
+	return func(prec uint) *Float {
 		m.Lock()
 		defer m.Unlock()
 		if v != nil && v.Prec() >= prec {

@@ -2,14 +2,10 @@
 
 package bigmath
 
-import (
-	"math/big"
-)
-
 // computeLn calculates z = ln(x) using the artanh series using z's precision
 // and returns z. Optimized for constants where x is a small integer near 1. The
 // result is not guaranteed to be correct in the last word of the mantissa.
-func computeLn(z, x *big.Float) *big.Float {
+func computeLn(z, x *Float) *Float {
 	prec := z.Prec()
 	// target = (x-1)/(x+1)
 	t0 := newFloat(prec).Sub(x, one)
@@ -36,7 +32,7 @@ func computeLn(z, x *big.Float) *big.Float {
 	return z.SetMantExp(z, 1)
 }
 
-func Log(z, x *big.Float) *big.Float {
+func Log(z, x *Float) *Float {
 	if x.Sign() <= 0 {
 		if x.Sign() == 0 {
 			return z.SetInf(true) // ln(0) = -Inf
@@ -57,7 +53,7 @@ func Log(z, x *big.Float) *big.Float {
 	prec += _W
 
 	// 1. Primary Reduction: x = m * 2^exp
-	m := new(big.Float).Copy(x)
+	m := new(Float).Copy(x)
 	exp := m.MantExp(m) // m is now [0.5, 1)
 
 	// 2. Secondary Reduction: Center m around 1.0

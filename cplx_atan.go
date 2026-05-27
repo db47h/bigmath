@@ -2,8 +2,6 @@
 
 package bigmath
 
-import "math/big"
-
 // Atan sets z to the inverse tangent of x and returns z.
 //
 // Formula: atan(x) = (i/2) · ln((1−ix)/(1+ix))
@@ -54,7 +52,7 @@ func (z *Complex) Atan(x *Complex) *Complex {
 		return z
 	}
 
-	ix := &Complex{Real: *new(big.Float).Neg(&x.Imag), Imag: x.Real}
+	ix := &Complex{Real: *new(Float).Neg(&x.Imag), Imag: x.Real}
 
 	// num = 1 - ix
 	num := newComplex(workPrec)
@@ -108,7 +106,7 @@ func (z *Complex) Asin(x *Complex) *Complex {
 	t0.Sqrt(t1)
 
 	// t1 = i * x
-	ix := &Complex{Real: *new(big.Float).Neg(&x.Imag), Imag: x.Real}
+	ix := &Complex{Real: *new(Float).Neg(&x.Imag), Imag: x.Real}
 
 	// t1 = i·x + √(1−x²)
 	t1.Add(ix, t0)

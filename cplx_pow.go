@@ -99,7 +99,7 @@ func (z *Complex) Sqrt(x *Complex) *Complex {
 	if x.Imag.Sign() == 0 {
 		switch x.Real.Sign() {
 		case -1:
-			z.Imag.Sqrt(new(big.Float).Neg(&x.Real))
+			z.Imag.Sqrt(new(Float).Neg(&x.Real))
 			if x.Imag.Signbit() {
 				z.Imag.Neg(&z.Imag)
 			}
@@ -120,12 +120,12 @@ func (z *Complex) Sqrt(x *Complex) *Complex {
 	}
 	if x.Real.Sign() == 0 {
 		if x.Imag.Sign() < 0 {
-			r := new(big.Float).SetMantExp(&x.Imag, -1)
+			r := new(Float).SetMantExp(&x.Imag, -1)
 			z.Real.Sqrt(r.Neg(r))
 			z.Imag.Neg(&z.Real)
 			return z
 		}
-		z.Real.Sqrt(new(big.Float).SetMantExp(&x.Imag, -1))
+		z.Real.Sqrt(new(Float).SetMantExp(&x.Imag, -1))
 		z.Imag.Set(&z.Real)
 		return z
 	}
@@ -135,7 +135,7 @@ func (z *Complex) Sqrt(x *Complex) *Complex {
 	si := x.Imag.Sign()
 	a := &x.Real
 	if x == z {
-		a = new(big.Float).Copy(a)
+		a = new(Float).Copy(a)
 	}
 
 	// real part = sqrt((r + a) / 2)

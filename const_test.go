@@ -3,7 +3,6 @@
 package bigmath
 
 import (
-	"math/big"
 	"testing"
 )
 
@@ -11,9 +10,9 @@ import (
 // precision increases.
 func TestCacheBehavior(t *testing.T) {
 	var count int
-	cached := cache(func(prec uint) *big.Float {
+	cached := cache(func(prec uint) *Float {
 		count++
-		return new(big.Float).SetPrec(prec).SetFloat64(3.14)
+		return new(Float).SetPrec(prec).SetFloat64(3.14)
 	})
 
 	// Initial call

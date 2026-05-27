@@ -4,12 +4,11 @@ package bigmath
 
 import (
 	"math"
-	"math/big"
 )
 
 // atanCore computes arctan(x) for |x| < 1 using the Taylor series:
 // arctan(x) = Σ (-1)^k * x^(2k+1) / (2k+1)
-func atanCore(z, x *big.Float) *big.Float {
+func atanCore(z, x *Float) *Float {
 	prec := z.Prec()
 	// Guard bits to ensure precision
 	workPrec := prec + 2*_W
@@ -55,7 +54,7 @@ func atanCore(z, x *big.Float) *big.Float {
 // atanReciprocal computes arctan(1/n) for n > 0 using the Taylor series.
 // This version is optimized for small integer n, avoiding full multiplications
 // in the loop by using divisions by n^2.
-func atanReciprocal(z *big.Float, n uint64) *big.Float {
+func atanReciprocal(z *Float, n uint64) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -99,7 +98,7 @@ func atanReciprocal(z *big.Float, n uint64) *big.Float {
 //
 //	Atan(±0) = ±0
 //	Atan(±Inf) = ±π/2
-func Atan(z, x *big.Float) *big.Float {
+func Atan(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -175,7 +174,7 @@ func Atan(z, x *big.Float) *big.Float {
 //	Atan2(y, -Inf) = ±π
 //	Atan2(+Inf, x) = +π/2
 //	Atan2(-Inf, x) = -π/2
-func Atan2(z, y, x *big.Float) *big.Float {
+func Atan2(z, y, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = max(y.Prec(), x.Prec())
@@ -264,7 +263,7 @@ func Atan2(z, y, x *big.Float) *big.Float {
 
 // asinGuard computes the working precision needed for asin(x) near x=±1,
 // where 1-x² loses significant bits. Returns the required working precision.
-func asinGuard(x *big.Float, prec uint) uint {
+func asinGuard(x *Float, prec uint) uint {
 	// Work with |x|
 	xAbs := newFloat(prec + 2*_W).Abs(x)
 
@@ -292,7 +291,7 @@ func asinGuard(x *big.Float, prec uint) uint {
 //	Asin(±0) = ±0
 //	Asin(±1) = ±π/2
 //	Asin(|x| > 1) = panic(ErrNaN)
-func Asin(z, x *big.Float) *big.Float {
+func Asin(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -347,7 +346,7 @@ func Asin(z, x *big.Float) *big.Float {
 //	Acos(0) = π/2
 //	Acos(-1) = π
 //	Acos(|x| > 1) = panic(ErrNaN)
-func Acos(z, x *big.Float) *big.Float {
+func Acos(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()

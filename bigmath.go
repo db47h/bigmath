@@ -5,10 +5,6 @@
 // as the standard [big.Float] operations.
 package bigmath
 
-import (
-	"math/big"
-)
-
 // An ErrNaN panic is raised by a [big.Float] operation that would lead to
 // a NaN under IEEE 754 rules. An ErrNaN implements the error interface.
 type ErrNaN string
@@ -44,7 +40,7 @@ func (err ErrNaN) Error() string {
 //
 // z may alias x or y without extra allocations.
 // temp receives the full-precision product and must NOT alias any argument.
-func fma(z, x, y, t, temp *big.Float) *big.Float {
+func fma(z, x, y, t, temp *Float) *Float {
 	// Size temp to hold the full product: Mul computes the full mantissa
 	// product internally, so setting temp's precision to x.Prec() + y.Prec()
 	// prevents it from rounding the product away. SetPrec(0) first to
@@ -64,6 +60,6 @@ func fma(z, x, y, t, temp *big.Float) *big.Float {
 //
 // This provides genuine FMA semantics: one rounding for the entire
 // expression, not two. See fma for the implementation details.
-func FMA(z, x, y, t *big.Float) *big.Float {
-	return fma(z, x, y, t, new(big.Float))
+func FMA(z, x, y, t *Float) *Float {
+	return fma(z, x, y, t, new(Float))
 }

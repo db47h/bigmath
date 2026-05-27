@@ -7,7 +7,6 @@ package bigmath_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 	"testing"
 
@@ -51,8 +50,8 @@ func loadULPData(prec uint) (*ulpData, error) {
 }
 
 // parseHexFloat parses a hex float string at the given precision.
-func parseHexFloat(s string, prec uint) *big.Float {
-	z := new(big.Float).SetPrec(prec)
+func parseHexFloat(s string, prec uint) *bigmath.Float {
+	z := new(bigmath.Float).SetPrec(prec)
 	_, _, err := z.Parse(s, 0)
 	if err != nil {
 		panic(fmt.Sprintf("parseHexFloat(%q, %d): %v", s, prec, err))
@@ -63,7 +62,7 @@ func parseHexFloat(s string, prec uint) *big.Float {
 // ulpErr computes the ULP error between got and ref.
 // Both got and ref must be at the same precision.
 // Returns |got - ref| / ULP(ref).
-func ulpErr(got, ref *big.Float) float64 {
+func ulpErr(got, ref *bigmath.Float) float64 {
 	// Handle special cases: if both are Inf or both are zero, error is 0.
 	if got.IsInf() || ref.IsInf() {
 		if got.IsInf() && ref.IsInf() && got.Signbit() == ref.Signbit() {
@@ -80,11 +79,11 @@ func ulpErr(got, ref *big.Float) float64 {
 		// got is non-zero but ref is zero — compute ULP relative to ULP at zero.
 		// For subnormal-like: ULP = 2^(0 - prec) when ref is exactly 0.
 		prec := ref.Prec()
-		ulp := new(big.Float).SetPrec(64).SetMantExp(
-			new(big.Float).SetFloat64(1),
+		ulp := new(bigmath.Float).SetPrec(64).SetMantExp(
+			new(bigmath.Float).SetFloat64(1),
 			-int(prec),
 		)
-		diff := new(big.Float).Sub(got, ref)
+		diff := new(bigmath.Float).Sub(got, ref)
 		diff.Abs(diff)
 		diff.Quo(diff, ulp)
 		err, _ := diff.Float64()
@@ -97,10 +96,10 @@ func ulpErr(got, ref *big.Float) float64 {
 	// use the minimum normal ULP (2^(-prec)) to avoid producing absurdly large
 	// ratios when ref is very close to zero (e.g., cos(π/2)).
 	ulpExp := max(refExp-int(prec), -int(prec))
-	diff := new(big.Float).Sub(got, ref)
+	diff := new(bigmath.Float).Sub(got, ref)
 	diff.Abs(diff)
-	ulp := new(big.Float).SetPrec(64).SetMantExp(
-		new(big.Float).SetFloat64(1),
+	ulp := new(bigmath.Float).SetPrec(64).SetMantExp(
+		new(bigmath.Float).SetFloat64(1),
 		ulpExp,
 	)
 	diff.Quo(diff, ulp)
@@ -110,7 +109,7 @@ func ulpErr(got, ref *big.Float) float64 {
 
 // isSpecial returns true if x is ±Inf or ±0 (exact-zero cases that don't
 // need ULP measurement).
-func isSpecial(x *big.Float) bool {
+func isSpecial(x *bigmath.Float) bool {
 	return x.IsInf() || x.Sign() == 0
 }
 
@@ -136,7 +135,7 @@ func TestULPErrorDirect(t *testing.T) {
 				refCosh := parseHexFloat(pt.CoshRef, prec)
 
 				// Test Sin
-				got := new(big.Float).SetPrec(prec)
+				got := new(bigmath.Float).SetPrec(prec)
 				bigmath.Sin(got, x)
 				err := ulpErr(got, refSin)
 				if err > maxSin {
@@ -194,7 +193,7 @@ func TestULPErrorDirect(t *testing.T) {
 }
 
 // identityULP computes |result - expected| / ULP(result) as a float64.
-func identityULP(result, expected *big.Float) float64 {
+func identityULP(result, expected *bigmath.Float) float64 {
 	// Handle special cases
 	if result.IsInf() || expected.IsInf() {
 		if result.IsInf() && expected.IsInf() && result.Signbit() == expected.Signbit() {
@@ -208,11 +207,11 @@ func identityULP(result, expected *big.Float) float64 {
 		}
 		// result is zero but expected isn't — measure ULP at zero
 		prec := expected.Prec()
-		ulp := new(big.Float).SetPrec(64).SetMantExp(
-			new(big.Float).SetFloat64(1),
+		ulp := new(bigmath.Float).SetPrec(64).SetMantExp(
+			new(bigmath.Float).SetFloat64(1),
 			-int(prec),
 		)
-		diff := new(big.Float).Sub(result, expected)
+		diff := new(bigmath.Float).Sub(result, expected)
 		diff.Abs(diff)
 		diff.Quo(diff, ulp)
 		err, _ := diff.Float64()
@@ -225,10 +224,10 @@ func identityULP(result, expected *big.Float) float64 {
 	// use the minimum normal ULP (2^(-prec)) to avoid producing absurdly large
 	// ratios when the result is very close to zero.
 	ulpExp := max(exp-int(prec), -int(prec))
-	diff := new(big.Float).Sub(result, expected)
+	diff := new(bigmath.Float).Sub(result, expected)
 	diff.Abs(diff)
-	ulp := new(big.Float).SetPrec(64).SetMantExp(
-		new(big.Float).SetFloat64(1),
+	ulp := new(bigmath.Float).SetPrec(64).SetMantExp(
+		new(bigmath.Float).SetFloat64(1),
 		ulpExp,
 	)
 	diff.Quo(diff, ulp)
@@ -248,20 +247,20 @@ func TestSinCosSquared(t *testing.T) {
 			}
 
 			maxErr := 0.0
-			oneRef := new(big.Float).SetPrec(prec).SetUint64(1)
+			oneRef := new(bigmath.Float).SetPrec(prec).SetUint64(1)
 			workPrec := prec + 64
 
 			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
-				s := new(big.Float).SetPrec(workPrec)
-				c := new(big.Float).SetPrec(workPrec)
+				s := new(bigmath.Float).SetPrec(workPrec)
+				c := new(bigmath.Float).SetPrec(workPrec)
 				bigmath.Sincos(s, c, x)
 
 				// sin² + cos²
-				s2 := new(big.Float).SetPrec(workPrec).Mul(s, s)
-				c2 := new(big.Float).SetPrec(workPrec).Mul(c, c)
-				sum := new(big.Float).SetPrec(prec).Add(s2, c2)
+				s2 := new(bigmath.Float).SetPrec(workPrec).Mul(s, s)
+				c2 := new(bigmath.Float).SetPrec(workPrec).Mul(c, c)
+				sum := new(bigmath.Float).SetPrec(prec).Add(s2, c2)
 
 				// Skip if Inf (can't compute ULP meaningfully)
 				if sum.IsInf() || oneRef.IsInf() {
@@ -299,7 +298,7 @@ func TestSinTripleAngle(t *testing.T) {
 				t.Fatalf("load data: %v", err)
 			}
 
-			three := new(big.Float).SetUint64(3)
+			three := new(bigmath.Float).SetUint64(3)
 			maxRefErr := 0.0
 			maxIdentErr := 0.0
 			workPrec := prec + guard
@@ -308,8 +307,8 @@ func TestSinTripleAngle(t *testing.T) {
 				x := parseHexFloat(pt.X, prec)
 
 				// LHS: sin(3x) at target precision
-				threeX := new(big.Float).SetPrec(prec).Mul(x, three)
-				sin3x := new(big.Float).SetPrec(prec)
+				threeX := new(bigmath.Float).SetPrec(prec).Mul(x, three)
+				sin3x := new(bigmath.Float).SetPrec(prec)
 				bigmath.Sin(sin3x, threeX)
 
 				// Primary check: compare against gmpy2 reference
@@ -331,18 +330,18 @@ func TestSinTripleAngle(t *testing.T) {
 				// Secondary check: sin(3x) = 3·sin(x) - 4·sin³(x)
 				// Compute RHS at workPrec to avoid precision loss from
 				// the polynomial evaluation (multiplications lose bits).
-				sinx := new(big.Float).SetPrec(workPrec)
+				sinx := new(bigmath.Float).SetPrec(workPrec)
 				bigmath.Sin(sinx, x)
 
 				// sin³(x)
-				sinx3 := new(big.Float).SetPrec(workPrec).Mul(sinx, sinx)
+				sinx3 := new(bigmath.Float).SetPrec(workPrec).Mul(sinx, sinx)
 				sinx3.Mul(sinx3, sinx)
 
-				threeW := new(big.Float).SetPrec(workPrec).SetUint64(3)
-				fourW := new(big.Float).SetPrec(workPrec).SetUint64(4)
-				t0 := new(big.Float).SetPrec(workPrec).Mul(threeW, sinx)
-				t1 := new(big.Float).SetPrec(workPrec).Mul(fourW, sinx3)
-				rhs := new(big.Float).SetPrec(prec).Sub(t0, t1)
+				threeW := new(bigmath.Float).SetPrec(workPrec).SetUint64(3)
+				fourW := new(bigmath.Float).SetPrec(workPrec).SetUint64(4)
+				t0 := new(bigmath.Float).SetPrec(workPrec).Mul(threeW, sinx)
+				t1 := new(bigmath.Float).SetPrec(workPrec).Mul(fourW, sinx3)
+				rhs := new(bigmath.Float).SetPrec(prec).Sub(t0, t1)
 
 				if sin3x.IsInf() || rhs.IsInf() {
 					continue
@@ -376,23 +375,23 @@ func TestSinhCoshIdentity(t *testing.T) {
 			}
 
 			maxErr := 0.0
-			two := new(big.Float).SetPrec(prec).SetUint64(2)
+			two := new(bigmath.Float).SetPrec(prec).SetUint64(2)
 			workPrec := prec + 64
 			for _, pt := range data.Points {
 				x := parseHexFloat(pt.X, prec)
 
 				// LHS: sinh²(x) + cosh²(x)
-				sh := new(big.Float).SetPrec(workPrec)
-				ch := new(big.Float).SetPrec(workPrec)
+				sh := new(bigmath.Float).SetPrec(workPrec)
+				ch := new(bigmath.Float).SetPrec(workPrec)
 				bigmath.SinhCosh(sh, ch, x)
 
-				sh2 := new(big.Float).SetPrec(workPrec).Mul(sh, sh)
-				ch2 := new(big.Float).SetPrec(workPrec).Mul(ch, ch)
-				lhs := new(big.Float).SetPrec(prec).Add(sh2, ch2)
+				sh2 := new(bigmath.Float).SetPrec(workPrec).Mul(sh, sh)
+				ch2 := new(bigmath.Float).SetPrec(workPrec).Mul(ch, ch)
+				lhs := new(bigmath.Float).SetPrec(prec).Add(sh2, ch2)
 
 				// RHS: cosh(2x)
-				twoX := new(big.Float).SetPrec(workPrec).Mul(x, two)
-				cosh2x := new(big.Float).SetPrec(prec)
+				twoX := new(bigmath.Float).SetPrec(workPrec).Mul(x, two)
+				cosh2x := new(bigmath.Float).SetPrec(prec)
 				bigmath.Cosh(cosh2x, twoX)
 
 				// Skip if either side is Inf

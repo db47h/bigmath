@@ -4,7 +4,6 @@ package bigmath
 
 import (
 	"math"
-	"math/big"
 )
 
 // Exp sets z to the rounded value of e^x, and returns z.
@@ -13,7 +12,7 @@ import (
 // Rounding is performed according to z's precision and rounding mode.
 //
 // The operation uses the Taylor series e^x = ∑(x^n/n!) for n ≥ 0.
-func Exp(z, x *big.Float) *big.Float {
+func Exp(z, x *Float) *Float {
 	sgn := x.Sign()
 	if sgn == 0 {
 		return z.Set(one)
@@ -33,7 +32,7 @@ func Exp(z, x *big.Float) *big.Float {
 	}
 
 	// make a modifyable copy of x. Also covers the case where z == x.
-	x = new(big.Float).Copy(x)
+	x = new(Float).Copy(x)
 
 	prec := z.Prec()
 	if prec == 0 {
@@ -76,7 +75,7 @@ func Exp(z, x *big.Float) *big.Float {
 	}
 
 	// temp vars
-	n := new(big.Float)
+	n := new(Float)
 	t0 := newFloat(prec)
 	t1 := newFloat(prec)
 	term := newFloat(prec).Set(one)

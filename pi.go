@@ -2,12 +2,8 @@
 
 package bigmath
 
-import (
-	"math/big"
-)
-
 // Pi sets z to the rounded value of PI and returns z.
-func Pi(z *big.Float) *big.Float {
+func Pi(z *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = 53
@@ -16,7 +12,7 @@ func Pi(z *big.Float) *big.Float {
 }
 
 // computePi computes PI using Machin's formula: PI/4 = 4*arctan(1/5) - arctan(1/239)
-func computePi(prec uint) *big.Float {
+func computePi(prec uint) *Float {
 	workPrec := prec + _W
 
 	p1 := newFloat(workPrec)

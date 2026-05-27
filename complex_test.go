@@ -5,7 +5,6 @@ package bigmath_test
 import (
 	"fmt"
 	"math"
-	"math/big"
 	"math/cmplx"
 	"testing"
 
@@ -56,10 +55,10 @@ func TestComplex_Identities(t *testing.T) {
 	res := new(bigmath.Complex).Add(s2, c2)
 
 	// Check if the difference is small.
-	diff := new(big.Float).SetPrec(prec).Sub(&res.Real, &oneC.Real)
+	diff := new(bigmath.Float).SetPrec(prec).Sub(&res.Real, &oneC.Real)
 	diff.Abs(diff)
 
-	limit := new(big.Float).SetPrec(prec).SetUint64(1)
+	limit := new(bigmath.Float).SetPrec(prec).SetUint64(1)
 	limit.SetMantExp(limit, 1-int(prec))
 
 	if diff.Cmp(limit) > 0 {

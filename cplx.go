@@ -4,13 +4,12 @@ package bigmath
 
 import (
 	"fmt"
-	"math/big"
 )
 
-// Complex represents a complex number with real and imaginary parts as big.Float.
+// Complex represents a complex number with real and imaginary parts as Float.
 type Complex struct {
-	Real big.Float
-	Imag big.Float
+	Real Float
+	Imag Float
 }
 
 func (z *Complex) Copy(x *Complex) *Complex {
@@ -53,7 +52,7 @@ func (z *Complex) Sub(x, y *Complex) *Complex {
 func (z *Complex) Mul(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 
-	temp := new(big.Float) // temp for fma. prec will be handled by fma()
+	temp := new(Float) // temp for fma. prec will be handled by fma()
 	re := newFloat(workPrec)
 	im := newFloat(workPrec)
 
@@ -75,7 +74,7 @@ func (z *Complex) Mul(x, y *Complex) *Complex {
 func (z *Complex) Quo(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 
-	temp := new(big.Float) // temp for fma. prec will be handled by fma()
+	temp := new(Float) // temp for fma. prec will be handled by fma()
 	re := newFloat(workPrec)
 	im := newFloat(workPrec)
 
@@ -130,12 +129,12 @@ func (z *Complex) Conj(x *Complex) *Complex {
 }
 
 // Abs sets z to the rounded value of |x| and returns z.
-func (x *Complex) Abs(z *big.Float) *big.Float {
+func (x *Complex) Abs(z *Float) *Float {
 	return Hypot(z, &x.Real, &x.Imag)
 }
 
 // Arg sets z to the rounded value of arg(x) and returns z.
-func (x *Complex) Arg(z *big.Float) *big.Float {
+func (x *Complex) Arg(z *Float) *Float {
 	return Atan2(z, &x.Imag, &x.Real)
 }
 
@@ -160,7 +159,7 @@ func (x *Complex) String() string {
 
 // formatFloat writes f to s, replacing "Inf" with "∞" for readability.
 // If addSign is true, positive infinity is printed as "+∞".
-func formatFloat(s fmt.State, verb rune, f *big.Float, addSign bool) {
+func formatFloat(s fmt.State, verb rune, f *Float, addSign bool) {
 	if f.IsInf() {
 		if f.Signbit() {
 			fmt.Fprint(s, "-∞")
@@ -176,7 +175,7 @@ func formatFloat(s fmt.State, verb rune, f *big.Float, addSign bool) {
 
 // formatImag writes the imaginary part f to s, replacing "Inf" with "∞".
 // When reZero is true and f is +Inf, the value is printed as "+∞i".
-func formatImag(s fmt.State, verb rune, f *big.Float, reZero bool) {
+func formatImag(s fmt.State, verb rune, f *Float, reZero bool) {
 	if f.IsInf() {
 		if f.Signbit() {
 			fmt.Fprint(s, "-∞i")

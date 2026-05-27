@@ -22,7 +22,7 @@ import (
 // It returns the quadrant (0–3) of the original reduced value.
 // z may alias x. z's precision determines the target precision of the result.
 // x must be non-negative; panics otherwise.
-func reducePi2(z, x *big.Float) int {
+func reducePi2(z, x *Float) int {
 	if x.Sign() == 0 {
 		return 0
 	}
@@ -98,7 +98,7 @@ func reducePi2(z, x *big.Float) int {
 // a comfortable margin. At target precision P, O(P) terms are needed;
 // the accumulated error (N × 2^-(P+2*_W)) is negligible for any N reachable
 // in practice (see file header for the full rationale).
-func sinCore(z, x *big.Float) *big.Float {
+func sinCore(z, x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -133,7 +133,7 @@ func sinCore(z, x *big.Float) *big.Float {
 //
 // Same flat +2*_W guard as sinCore — same alternating-series cancellation
 // characteristics. See sinCore doc for the rationale.
-func cosCore(z, x *big.Float) *big.Float {
+func cosCore(z, x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -169,7 +169,7 @@ func cosCore(z, x *big.Float) *big.Float {
 //
 // Same flat +2*_W guard as sinCore/cosCore. The shared loop handles both
 // alternating series; the guard covers the combined rounding error.
-func sincosCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
+func sincosCore(zs, zc, x *Float) (*Float, *Float) {
 	prec := zs.Prec()
 	workPrec := prec + 2*_W
 
@@ -217,7 +217,7 @@ func sincosCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 //
 //	Sin(±0) = ±0
 //	Sin(±Inf) = panic(ErrNaN)
-func Sin(z, x *big.Float) *big.Float {
+func Sin(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -269,7 +269,7 @@ func Sin(z, x *big.Float) *big.Float {
 //
 //	Cos(±0) = 1
 //	Cos(±Inf) = panic(ErrNaN)
-func Cos(z, x *big.Float) *big.Float {
+func Cos(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -316,7 +316,7 @@ func Cos(z, x *big.Float) *big.Float {
 //
 //	Sincos(±0, zc) = ±0, 1
 //	Sincos(±Inf, zc) = panic(ErrNaN)
-func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
+func Sincos(zs, zc, x *Float) (*Float, *Float) {
 	prec := zs.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -369,7 +369,7 @@ func Sincos(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 //	Tan(±0) = ±0
 //	Tan(±Inf) = panic(ErrNaN)
 //	Tan(π/2 + nπ) = ±Inf
-func Tan(z, x *big.Float) *big.Float {
+func Tan(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()

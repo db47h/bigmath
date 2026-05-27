@@ -39,7 +39,7 @@ import (
 //	    Pow(-Inf, y) = +0 for y < 0
 //
 // For finite x < 0 and finite non-integer y, Pow panics with ErrNaN.
-func Pow(z, x, y *big.Float) *big.Float {
+func Pow(z, x, y *Float) *Float {
 	if y.Sign() == 0 {
 		return z.Set(one)
 	}
@@ -134,7 +134,7 @@ func Pow(z, x, y *big.Float) *big.Float {
 }
 
 // powInt computes x^n using exponentiation by squaring.
-func powInt(z, x *big.Float, n *big.Int) *big.Float {
+func powInt(z, x *Float, n *big.Int) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()

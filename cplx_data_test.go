@@ -45,7 +45,7 @@ func loadCplxTestData(path string) (*cplxTestData, error) {
 }
 
 // parseCplxHex parses a hex float string at the given precision.
-func parseCplxHex(x *big.Float, s string) {
+func parseCplxHex(x *bigmath.Float, s string) {
 	_, _, err := x.Parse(s, 0)
 	if err != nil {
 		panic(fmt.Sprintf("parseCplxHex(%q): %v", s, err))
@@ -142,8 +142,8 @@ func TestComplexData(t *testing.T) {
 	x := new(bigmath.Complex).SetPrec(data.Prec)
 	y := new(bigmath.Complex).SetPrec(data.Prec)
 	got := new(bigmath.Complex).SetPrec(data.Prec)
-	wantRe := new(big.Float).SetPrec(data.Prec)
-	wantIm := new(big.Float).SetPrec(data.Prec)
+	wantRe := new(bigmath.Float).SetPrec(data.Prec)
+	wantIm := new(bigmath.Float).SetPrec(data.Prec)
 
 	for _, d := range data.Cases {
 		t.Run(fmt.Sprintf("%s%v", d.Fn, d.Args), func(t *testing.T) {

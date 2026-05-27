@@ -7,7 +7,6 @@ package bigmath_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 	"reflect"
 	"strings"
@@ -47,8 +46,8 @@ func loadFloatTestData(path string) (*floatTestData, error) {
 }
 
 // parseHex parses a hex float string at the given precision.
-func parseHex(s string, prec uint) *big.Float {
-	x, _, err := new(big.Float).SetPrec(prec).Parse(s, 0)
+func parseHex(s string, prec uint) *bigmath.Float {
+	x, _, err := new(bigmath.Float).SetPrec(prec).Parse(s, 0)
 	if err != nil {
 		panic(fmt.Sprintf("parseHex(%q, %d): %v", s, prec, err))
 	}
@@ -78,14 +77,14 @@ var fnMap = map[string]any{
 	"tan":       bigmath.Tan,
 }
 
-func testPiConst(z *big.Float) *big.Float {
+func testPiConst(z *bigmath.Float) *bigmath.Float {
 	return bigmath.Pi(z)
 }
 
 // makeReflectArgs builds a reflect.Value slice for calling fn.
 // gots contains one *big.Float per result pointer (1 for single-result,
 // 2 for tuple). strArgs are parsed at prec and appended after the results.
-func makeReflectArgs(gots []*big.Float, strArgs []string, prec uint) []reflect.Value {
+func makeReflectArgs(gots []*bigmath.Float, strArgs []string, prec uint) []reflect.Value {
 	args := make([]reflect.Value, len(gots))
 	for i, g := range gots {
 		args[i] = reflect.ValueOf(g)
@@ -99,8 +98,8 @@ func makeReflectArgs(gots []*big.Float, strArgs []string, prec uint) []reflect.V
 
 // buildReflectArgs prepares the reflect.Value arguments for a single-result function call.
 // First arg is the result *big.Float, remaining args are parsed from strings.
-func buildReflectArgs(got *big.Float, strArgs []string, prec uint) []reflect.Value {
-	return makeReflectArgs([]*big.Float{got}, strArgs, prec)
+func buildReflectArgs(got *bigmath.Float, strArgs []string, prec uint) []reflect.Value {
+	return makeReflectArgs([]*bigmath.Float{got}, strArgs, prec)
 }
 
 // TestFloatData runs golden comparison tests.
@@ -111,7 +110,7 @@ func TestFloatData(t *testing.T) {
 		t.Fatalf("Failed to load test data: %v", err)
 	}
 
-	got := new(big.Float).SetPrec(data.Prec)
+	got := new(bigmath.Float).SetPrec(data.Prec)
 	for _, d := range data.Cases {
 		if d.Panics {
 			continue // skip panic tests
@@ -124,9 +123,9 @@ func TestFloatData(t *testing.T) {
 
 			if d.Res2 != "" {
 				// Tuple function: two results
-				got1 := new(big.Float).SetPrec(data.Prec)
-				got2 := new(big.Float).SetPrec(data.Prec)
-				args := makeReflectArgs([]*big.Float{got1, got2}, d.Args, data.Prec)
+				got1 := new(bigmath.Float).SetPrec(data.Prec)
+				got2 := new(bigmath.Float).SetPrec(data.Prec)
+				args := makeReflectArgs([]*bigmath.Float{got1, got2}, d.Args, data.Prec)
 				reflect.ValueOf(fn).Call(args)
 
 				want1 := parseHex(d.Res, data.Prec)
@@ -187,12 +186,12 @@ func TestFloatPanics(t *testing.T) {
 			}()
 
 			if d.Res2 != "" {
-				got1 := new(big.Float).SetPrec(data.Prec)
-				got2 := new(big.Float).SetPrec(data.Prec)
-				args := makeReflectArgs([]*big.Float{got1, got2}, d.Args, data.Prec)
+				got1 := new(bigmath.Float).SetPrec(data.Prec)
+				got2 := new(bigmath.Float).SetPrec(data.Prec)
+				args := makeReflectArgs([]*bigmath.Float{got1, got2}, d.Args, data.Prec)
 				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
 			} else {
-				got := new(big.Float).SetPrec(data.Prec)
+				got := new(bigmath.Float).SetPrec(data.Prec)
 				args := buildReflectArgs(got, d.Args, data.Prec)
 				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
 			}

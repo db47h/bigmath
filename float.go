@@ -6,25 +6,37 @@ import (
 	"math/big"
 )
 
-// newFloat allocates a new *big.Float with the given precision.
-func newFloat(prec uint) *big.Float {
-	return new(big.Float).SetPrec(prec)
+//go:generate go run internal/gen/main.go
+
+// Float wraps math/big.Float as a named type, providing a bigmath-native
+// arbitrary-precision floating-point number with all *big.Float methods
+// forwarded via generated code (see float_gen.go).
+//
+// Conversion between *Float and *big.Float is zero-cost:
+//
+//	f := (*Float)(bf)
+//	bf := (*big.Float)(f)
+type Float big.Float
+
+// newFloat allocates a new *Float with the given precision.
+func newFloat(prec uint) *Float {
+	return new(Float).SetPrec(prec)
 }
 
 // ULPExponent returns the exponent of the Unit in the Last Place (ULP) of x,
 // i.e., the value of the least significant mantissa bit.
-func ULPExponent(x *big.Float) int {
+func ULPExponent(x *Float) int {
 	return x.MantExp(nil) - int(x.Prec())
 }
 
 // isOdd returns true if x is a non-zero odd integer.
-func isOdd(x *big.Float) bool {
+func isOdd(x *Float) bool {
 	return x.IsInt() && x.Sign() != 0 && x.MantExp(nil) == int(x.MinPrec())
 }
 
 // absCmpOne compares |x| to 1.
 // Returns -1 if |x| < 1, 0 if |x| == 1, 1 if |x| > 1.
-func absCmpOne(x *big.Float) int {
+func absCmpOne(x *Float) int {
 	exp := x.MantExp(nil)
 	if exp > 1 {
 		return 1
@@ -47,7 +59,7 @@ func absCmpOne(x *big.Float) int {
 //	Hypot(x, ±Inf) = +Inf
 //	Hypot(NaN, y) = NaN
 //	Hypot(x, NaN) = NaN
-func Hypot(z, x, y *big.Float) *big.Float {
+func Hypot(z, x, y *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = max(x.Prec(), y.Prec())

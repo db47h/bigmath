@@ -2,10 +2,6 @@
 
 package bigmath
 
-import (
-	"math/big"
-)
-
 // sinhCore computes sinh(x) for x in [0, 1] using the Taylor series.
 // sinh(x) = x + x³/3! + x⁵/5! + x⁷/7! + ...
 //
@@ -13,7 +9,7 @@ import (
 // alternating signs (all terms are positive), so there is no subtractive
 // cancellation. A smaller guard (+_W) would likely suffice, but +2*_W is
 // harmless — the performance difference is negligible at any precision.
-func sinhCore(z, x *big.Float) *big.Float {
+func sinhCore(z, x *Float) *Float {
 	prec := z.Prec()
 	workPrec := prec + 2*_W
 
@@ -45,7 +41,7 @@ func sinhCore(z, x *big.Float) *big.Float {
 //
 // Same flat +2*_W guard as sinhCore. Both series are all-positive (no
 // alternating signs), so the guard is conservative but adequate.
-func sinhcoshCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
+func sinhcoshCore(zs, zc, x *Float) (*Float, *Float) {
 	prec := zs.Prec()
 	workPrec := prec + 2*_W
 
@@ -92,7 +88,7 @@ func sinhcoshCore(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 //
 //	Sinh(±0) = ±0
 //	Sinh(±Inf) = ±Inf
-func Sinh(z, x *big.Float) *big.Float {
+func Sinh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -145,7 +141,7 @@ func Sinh(z, x *big.Float) *big.Float {
 //
 //	Cosh(±0) = 1
 //	Cosh(±Inf) = +Inf
-func Cosh(z, x *big.Float) *big.Float {
+func Cosh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -185,7 +181,7 @@ func Cosh(z, x *big.Float) *big.Float {
 //
 //	SinhCosh(±0, zc) = ±0, 1
 //	SinhCosh(±Inf, zc) = ±Inf, +Inf
-func SinhCosh(zs, zc, x *big.Float) (*big.Float, *big.Float) {
+func SinhCosh(zs, zc, x *Float) (*Float, *Float) {
 	prec := zs.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -243,7 +239,7 @@ func SinhCosh(zs, zc, x *big.Float) (*big.Float, *big.Float) {
 //
 //	Tanh(±0) = ±0
 //	Tanh(±Inf) = ±1
-func Tanh(z, x *big.Float) *big.Float {
+func Tanh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -287,7 +283,7 @@ func Tanh(z, x *big.Float) *big.Float {
 //
 //	Asinh(±0) = ±0
 //	Asinh(±Inf) = ±Inf
-func Asinh(z, x *big.Float) *big.Float {
+func Asinh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -335,7 +331,7 @@ func Asinh(z, x *big.Float) *big.Float {
 
 // acoshGuard computes the working precision needed for acosh(x) near x=1,
 // where x-1 loses significant bits. Returns the required working precision.
-func acoshGuard(x *big.Float, prec uint) uint {
+func acoshGuard(x *Float, prec uint) uint {
 	xExp := x.MantExp(nil)
 	if xExp > 1 {
 		return prec + 2*_W
@@ -359,7 +355,7 @@ func acoshGuard(x *big.Float, prec uint) uint {
 //	Acosh(1) = 0
 //	Acosh(x < 1) = panic(ErrNaN)
 //	Acosh(+Inf) = +Inf
-func Acosh(z, x *big.Float) *big.Float {
+func Acosh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -394,7 +390,7 @@ func Acosh(z, x *big.Float) *big.Float {
 
 // atanhGuard computes the working precision needed for atanh(x) near x=±1,
 // where 1-x (or 1+x) loses significant bits. Returns the required precision.
-func atanhGuard(x *big.Float, prec uint) uint {
+func atanhGuard(x *Float, prec uint) uint {
 	// Work with |x| to always check 1-|x|.
 	xAbs := newFloat(prec + 2*_W).Abs(x)
 	oneMinus := newFloat(prec+2*_W).Sub(one, xAbs)
@@ -414,7 +410,7 @@ func atanhGuard(x *big.Float, prec uint) uint {
 //	Atanh(1) = +Inf
 //	Atanh(-1) = -Inf
 //	Atanh(|x| > 1) = panic(ErrNaN)
-func Atanh(z, x *big.Float) *big.Float {
+func Atanh(z, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
