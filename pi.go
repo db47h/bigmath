@@ -3,7 +3,7 @@
 package bigmath
 
 // Pi sets z to the rounded value of PI and returns z.
-func Pi(z *Float) *Float {
+func (z *Float) Pi() *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = 53

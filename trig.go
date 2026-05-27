@@ -114,7 +114,7 @@ func sinCore(z, x *Float) *Float {
 		t1.SetUint64(2 * i * (2*i + 1))
 		term.Quo(t0, t1)
 
-		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
+		if term.Sign() == 0 || term.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
@@ -149,7 +149,7 @@ func cosCore(z, x *Float) *Float {
 		t1.SetUint64((2*i - 1) * (2 * i))
 		term.Quo(t0, t1)
 
-		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
+		if term.Sign() == 0 || term.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
@@ -191,8 +191,8 @@ func sincosCore(zs, zc, x *Float) (*Float, *Float) {
 		t1.SetUint64(2 * i * (2*i + 1))
 		sinTerm.Quo(t0, t1)
 
-		sinDone := sinTerm.Sign() == 0 || sinTerm.MantExp(nil) < ULPExponent(sinSum)
-		cosDone := cosTerm.Sign() == 0 || cosTerm.MantExp(nil) < ULPExponent(cosSum)
+		sinDone := sinTerm.Sign() == 0 || sinTerm.MantExp(nil) < sinSum.ULPExponent()
+		cosDone := cosTerm.Sign() == 0 || cosTerm.MantExp(nil) < cosSum.ULPExponent()
 		if sinDone && cosDone {
 			break
 		}
@@ -217,7 +217,7 @@ func sincosCore(zs, zc, x *Float) (*Float, *Float) {
 //
 //	Sin(±0) = ±0
 //	Sin(±Inf) = panic(ErrNaN)
-func Sin(z, x *Float) *Float {
+func (z *Float) Sin(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -269,7 +269,7 @@ func Sin(z, x *Float) *Float {
 //
 //	Cos(±0) = 1
 //	Cos(±Inf) = panic(ErrNaN)
-func Cos(z, x *Float) *Float {
+func (z *Float) Cos(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -369,7 +369,7 @@ func Sincos(zs, zc, x *Float) (*Float, *Float) {
 //	Tan(±0) = ±0
 //	Tan(±Inf) = panic(ErrNaN)
 //	Tan(π/2 + nπ) = ±Inf
-func Tan(z, x *Float) *Float {
+func (z *Float) Tan(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()

@@ -25,7 +25,7 @@ func sinhCore(z, x *Float) *Float {
 		t1.SetUint64(2 * i * (2*i + 1))
 		term.Quo(t0, t1)
 
-		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
+		if term.Sign() == 0 || term.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
@@ -63,8 +63,8 @@ func sinhcoshCore(zs, zc, x *Float) (*Float, *Float) {
 		t1.SetUint64(2 * i * (2*i + 1))
 		sinTerm.Quo(t0, t1)
 
-		sinDone := sinTerm.Sign() == 0 || sinTerm.MantExp(nil) < ULPExponent(sinSum)
-		cosDone := cosTerm.Sign() == 0 || cosTerm.MantExp(nil) < ULPExponent(cosSum)
+		sinDone := sinTerm.Sign() == 0 || sinTerm.MantExp(nil) < sinSum.ULPExponent()
+		cosDone := cosTerm.Sign() == 0 || cosTerm.MantExp(nil) < cosSum.ULPExponent()
 		if sinDone && cosDone {
 			break
 		}
@@ -88,7 +88,7 @@ func sinhcoshCore(zs, zc, x *Float) (*Float, *Float) {
 //
 //	Sinh(±0) = ±0
 //	Sinh(±Inf) = ±Inf
-func Sinh(z, x *Float) *Float {
+func (z *Float) Sinh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -123,7 +123,7 @@ func Sinh(z, x *Float) *Float {
 	}
 
 	// |x| >= 1: use (eˣ − e⁻ˣ) / 2
-	ep := Exp(newFloat(workPrec), xVal)
+	ep := newFloat(workPrec).Exp(xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
 	ep.Sub(ep, em)
@@ -141,7 +141,7 @@ func Sinh(z, x *Float) *Float {
 //
 //	Cosh(±0) = 1
 //	Cosh(±Inf) = +Inf
-func Cosh(z, x *Float) *Float {
+func (z *Float) Cosh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -164,7 +164,7 @@ func Cosh(z, x *Float) *Float {
 		xVal.Neg(xVal)
 	}
 
-	ep := Exp(newFloat(workPrec), xVal)
+	ep := newFloat(workPrec).Exp(xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
 	ep.Add(ep, em)
@@ -219,7 +219,7 @@ func SinhCosh(zs, zc, x *Float) (*Float, *Float) {
 	}
 
 	// |x| >= 1: share the Exp call between sinh and cosh.
-	ep := Exp(newFloat(workPrec), xVal)
+	ep := newFloat(workPrec).Exp(xVal)
 	em := newFloat(workPrec).Quo(one, ep)
 
 	zs.Sub(ep, em)
@@ -239,7 +239,7 @@ func SinhCosh(zs, zc, x *Float) (*Float, *Float) {
 //
 //	Tanh(±0) = ±0
 //	Tanh(±Inf) = ±1
-func Tanh(z, x *Float) *Float {
+func (z *Float) Tanh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -251,9 +251,9 @@ func Tanh(z, x *Float) *Float {
 	}
 	if x.IsInf() {
 		if x.Signbit() {
-			z.SetInt64(-1)
+			z.Set(minusOne)
 		} else {
-			z.SetUint64(1)
+			z.Set(one)
 		}
 		return z
 	}
@@ -267,7 +267,7 @@ func Tanh(z, x *Float) *Float {
 	SinhCosh(s, c, x)
 
 	if s.IsInf() && c.IsInf() {
-		z.SetUint64(1)
+		z.Set(one)
 		if x.Signbit() {
 			z.Neg(z)
 		}
@@ -283,7 +283,7 @@ func Tanh(z, x *Float) *Float {
 //
 //	Asinh(±0) = ±0
 //	Asinh(±Inf) = ±Inf
-func Asinh(z, x *Float) *Float {
+func (z *Float) Asinh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -311,7 +311,7 @@ func Asinh(z, x *Float) *Float {
 	x2 := newFloat(workPrec).Mul(xVal, xVal)
 	if x2.IsInf() {
 		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
-		t := Log(x2, xVal)
+		t := x2.Log(xVal)
 		t.Add(t, ln2(workPrec))
 		if neg {
 			t.Neg(t)
@@ -322,7 +322,7 @@ func Asinh(z, x *Float) *Float {
 	x2.Add(x2, one)
 	x2.Sqrt(x2)
 	x2.Add(xVal, x2)
-	Log(x2, x2)
+	x2.Log(x2)
 	if neg {
 		x2.Neg(x2)
 	}
@@ -355,7 +355,7 @@ func acoshGuard(x *Float, prec uint) uint {
 //	Acosh(1) = 0
 //	Acosh(x < 1) = panic(ErrNaN)
 //	Acosh(+Inf) = +Inf
-func Acosh(z, x *Float) *Float {
+func (z *Float) Acosh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -383,7 +383,7 @@ func Acosh(z, x *Float) *Float {
 	t1.Sqrt(t1)
 	t0.Mul(t0, t1)
 	t0.Add(xVal, t0)
-	Log(t0, t0)
+	t0.Log(t0)
 
 	return z.Set(t0)
 }
@@ -410,7 +410,7 @@ func atanhGuard(x *Float, prec uint) uint {
 //	Atanh(1) = +Inf
 //	Atanh(-1) = -Inf
 //	Atanh(|x| > 1) = panic(ErrNaN)
-func Atanh(z, x *Float) *Float {
+func (z *Float) Atanh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -443,7 +443,7 @@ func Atanh(z, x *Float) *Float {
 	t0 := newFloat(workPrec).Sub(one, xVal)
 	t1 := newFloat(workPrec).Add(one, xVal)
 	t0.Quo(t1, t0)
-	Log(t0, t0)
+	t0.Log(t0)
 	t0.SetMantExp(t0, -1)
 
 	if neg {

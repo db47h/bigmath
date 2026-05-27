@@ -7,12 +7,10 @@
 
 ### Edge-Case Tests for Complex Functions
 
-Current complex test coverage (`TestComplex_AgainstStd`) tests a single input `(0.5, 0.7)` at 53-bit. Missing:
-
+- TestComplexData/acosh[[0.5_0]] : at prec >= 256, result should have real part = 0, but we have residual bits (1e-319).
 - **Inputs**: ±0, ±Inf for all complex functions
 - **Large exponents**: e.g., `Sin(1e20+0i)`
 - **Values near branch cuts**: e.g., `Log(-1+εi)`, `Asin(2+0i)`, `Atan(0+1.001i)`
-- **Parameterized tests at higher precisions** (128-bit, 256-bit) against `math/cmplx`
 
 ### Real Tan — Large-Input Precision
 

@@ -39,7 +39,7 @@ import (
 //	    Pow(-Inf, y) = +0 for y < 0
 //
 // For finite x < 0 and finite non-integer y, Pow panics with ErrNaN.
-func Pow(z, x, y *Float) *Float {
+func (z *Float) Pow(x, y *Float) *Float {
 	if y.Sign() == 0 {
 		return z.Set(one)
 	}
@@ -128,9 +128,9 @@ func Pow(z, x, y *Float) *Float {
 	// General case: x^y = exp(y * ln(x))
 	// Working precision: add at least one word of guard bits.
 	prec += _W
-	l := Log(newFloat(prec), x)
+	l := newFloat(prec).Log(x)
 	t := newFloat(prec).Mul(l, y)
-	return z.Set(Exp(l, t))
+	return z.Set(l.Exp(t))
 }
 
 // powInt computes x^n using exponentiation by squaring.

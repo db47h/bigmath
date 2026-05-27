@@ -68,6 +68,6 @@ func fma(z, x, y, t, temp *Float) *Float {
 //
 // This provides genuine FMA semantics: one rounding for the entire
 // expression, not two. See fma for the implementation details.
-func FMA(z, x, y, t *Float) *Float {
+func (z *Float) FMA(x, y, t *Float) *Float {
 	return fma(z, x, y, t, new(Float))
 }

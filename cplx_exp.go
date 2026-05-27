@@ -22,7 +22,7 @@ func (z *Complex) Exp(x *Complex) *Complex {
 		}
 		panic(ErrNaN("complex exponential of infinite imaginary part"))
 	}
-	expA := Exp(newFloat(workPrec), &x.Real)
+	expA := newFloat(workPrec).Exp(&x.Real)
 	if x.Imag.Sign() == 0 {
 		z.Real.Set(expA)
 		z.Imag.Set(&x.Imag)
@@ -69,7 +69,7 @@ func (z *Complex) Log(x *Complex) *Complex {
 	// We use Abs and then real Log to avoid precision loss.
 	abs := x.Abs(newFloat(workPrec))
 	x.Arg(&z.Imag)
-	Log(&z.Real, abs)
+	z.Real.Log(abs)
 
 	return z
 }

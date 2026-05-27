@@ -37,7 +37,7 @@ func atanCore(z, x *Float) *Float {
 		t1.SetUint64(2*i + 1)
 		term.Quo(t2, t1)
 
-		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
+		if term.Sign() == 0 || term.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
@@ -78,7 +78,7 @@ func atanReciprocal(z *Float, n uint64) *Float {
 		t2.Mul(t0, bigN2) // Fast O(1)
 		term.Quo(t1, t2)  // O(P^2) but avoids full Mul
 
-		if term.Sign() == 0 || term.MantExp(nil) < ULPExponent(sum) {
+		if term.Sign() == 0 || term.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
@@ -98,7 +98,7 @@ func atanReciprocal(z *Float, n uint64) *Float {
 //
 //	Atan(±0) = ±0
 //	Atan(±Inf) = ±π/2
-func Atan(z, x *Float) *Float {
+func (z *Float) Atan(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -106,7 +106,7 @@ func Atan(z, x *Float) *Float {
 	}
 
 	if x.IsInf() {
-		Pi(z)
+		z.Pi()
 		z.SetMantExp(z, -1)
 		if x.Signbit() {
 			z.Neg(z)
@@ -135,7 +135,7 @@ func Atan(z, x *Float) *Float {
 	t0 := newFloat(workPrec)
 	t1 := newFloat(workPrec)
 	for xVal.MantExp(nil) > -u {
-		FMA(t0, xVal, xVal, one)
+		t0.FMA(xVal, xVal, one)
 		t1.Sqrt(t0)
 		t0.Add(t1, one)
 		xVal.Quo(xVal, t0)
@@ -174,7 +174,7 @@ func Atan(z, x *Float) *Float {
 //	Atan2(y, -Inf) = ±π
 //	Atan2(+Inf, x) = +π/2
 //	Atan2(-Inf, x) = -π/2
-func Atan2(z, y, x *Float) *Float {
+func (z *Float) Atan2(y, x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = max(y.Prec(), x.Prec())
@@ -185,7 +185,7 @@ func Atan2(z, y, x *Float) *Float {
 	yNeg := y.Signbit()
 	if y.Sign() == 0 {
 		if x.Signbit() {
-			Pi(z)
+			z.Pi()
 			if yNeg {
 				z.Neg(z)
 			}
@@ -195,7 +195,7 @@ func Atan2(z, y, x *Float) *Float {
 	}
 
 	if x.Sign() == 0 {
-		Pi(z)
+		z.Pi()
 		z.SetMantExp(z, -1)
 		if yNeg {
 			z.Neg(z)
@@ -207,12 +207,12 @@ func Atan2(z, y, x *Float) *Float {
 		if x.IsInf() && y.IsInf() {
 			if x.Signbit() {
 				prec := z.Prec() + _W
-				p := Pi(newFloat(prec))
-				q := Pi(newFloat(prec))
+				p := newFloat(prec).Pi()
+				q := newFloat(prec).Pi()
 				q.SetMantExp(q, -2) // π/4 at same precision as p
 				z.Sub(p, q)
 			} else {
-				Pi(z)
+				z.Pi()
 				z.SetMantExp(z, -2) // π/4
 			}
 			if yNeg {
@@ -222,7 +222,7 @@ func Atan2(z, y, x *Float) *Float {
 		}
 		if y.IsInf() {
 			// Atan2(±Inf, x) = ±π/2
-			Pi(z)
+			z.Pi()
 			z.SetMantExp(z, -1)
 			if yNeg {
 				z.Neg(z)
@@ -232,7 +232,7 @@ func Atan2(z, y, x *Float) *Float {
 		// x is Inf, y is finite
 		if x.Signbit() {
 			// Atan2(y, -Inf) = ±π
-			Pi(z)
+			z.Pi()
 			if yNeg {
 				z.Neg(z)
 			}
@@ -245,7 +245,7 @@ func Atan2(z, y, x *Float) *Float {
 	// Atan2(y, x) = Atan(y/x) + quadrant adjustment
 	workPrec := prec + _W
 	q := newFloat(workPrec).Quo(y, x)
-	res := Atan(newFloat(workPrec), q)
+	res := newFloat(workPrec).Atan(q)
 
 	if x.Signbit() {
 		p := pi(workPrec)
@@ -291,7 +291,7 @@ func asinGuard(x *Float, prec uint) uint {
 //	Asin(±0) = ±0
 //	Asin(±1) = ±π/2
 //	Asin(|x| > 1) = panic(ErrNaN)
-func Asin(z, x *Float) *Float {
+func (z *Float) Asin(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -309,7 +309,7 @@ func Asin(z, x *Float) *Float {
 
 	case 0:
 		// |x| == 1 → ±π/2
-		Pi(z)               // z = π at z's precision
+		z.Pi()              // z = π at z's precision
 		z.SetMantExp(z, -1) // z = π/2, keeps z's precision
 		if x.Signbit() {
 			z.Neg(z)
@@ -330,7 +330,7 @@ func Asin(z, x *Float) *Float {
 	oneMinusX2 := newFloat(workPrec).Sub(one, x2)
 	sqrt := newFloat(workPrec).Sqrt(oneMinusX2)
 	ratio := newFloat(workPrec).Quo(xVal, sqrt)
-	result := Atan(newFloat(workPrec), ratio)
+	result := newFloat(workPrec).Atan(ratio)
 
 	if neg {
 		result.Neg(result)
@@ -346,7 +346,7 @@ func Asin(z, x *Float) *Float {
 //	Acos(0) = π/2
 //	Acos(-1) = π
 //	Acos(|x| > 1) = panic(ErrNaN)
-func Acos(z, x *Float) *Float {
+func (z *Float) Acos(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
@@ -359,7 +359,7 @@ func Acos(z, x *Float) *Float {
 		panic(ErrNaN("acos of x outside [-1, 1]"))
 	case 0:
 		if x.Signbit() {
-			return Pi(z)
+			return z.Pi()
 		}
 		return z.Set(zero)
 	}
@@ -367,9 +367,9 @@ func Acos(z, x *Float) *Float {
 	// Acos(x) = π/2 - Asin(x)
 	workPrec := asinGuard(x, prec)
 
-	tmp := Asin(newFloat(workPrec), x)
+	tmp := newFloat(workPrec).Asin(x)
 	result := newFloat(workPrec)
-	Pi(result)                    // result = π at workPrec
+	result.Pi()                   // result = π at workPrec
 	result.SetMantExp(result, -1) // result = π/2, keeps workPrec
 	result.Sub(result, tmp)
 

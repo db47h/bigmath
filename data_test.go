@@ -56,29 +56,29 @@ func parseHex(s string, prec uint) *bigmath.Float {
 
 // fnMap maps function names to actual bigmath functions.
 var fnMap = map[string]any{
-	"exp":       bigmath.Exp,
-	"log":       bigmath.Log,
-	"pow":       bigmath.Pow,
-	"atan":      bigmath.Atan,
-	"atan2":     bigmath.Atan2,
+	"exp":       (*bigmath.Float).Exp,
+	"log":       (*bigmath.Float).Log,
+	"pow":       (*bigmath.Float).Pow,
+	"atan":      (*bigmath.Float).Atan,
+	"atan2":     (*bigmath.Float).Atan2,
 	"const_pi":  testPiConst,
-	"sin":       bigmath.Sin,
-	"cos":       bigmath.Cos,
+	"sin":       (*bigmath.Float).Sin,
+	"cos":       (*bigmath.Float).Cos,
 	"sin_cos":   bigmath.Sincos,
-	"sinh":      bigmath.Sinh,
-	"cosh":      bigmath.Cosh,
+	"sinh":      (*bigmath.Float).Sinh,
+	"cosh":      (*bigmath.Float).Cosh,
 	"sinh_cosh": bigmath.SinhCosh,
-	"tanh":      bigmath.Tanh,
-	"asinh":     bigmath.Asinh,
-	"acosh":     bigmath.Acosh,
-	"atanh":     bigmath.Atanh,
-	"asin":      bigmath.Asin,
-	"acos":      bigmath.Acos,
-	"tan":       bigmath.Tan,
+	"tanh":      (*bigmath.Float).Tanh,
+	"asinh":     (*bigmath.Float).Asinh,
+	"acosh":     (*bigmath.Float).Acosh,
+	"atanh":     (*bigmath.Float).Atanh,
+	"asin":      (*bigmath.Float).Asin,
+	"acos":      (*bigmath.Float).Acos,
+	"tan":       (*bigmath.Float).Tan,
 }
 
 func testPiConst(z *bigmath.Float) *bigmath.Float {
-	return bigmath.Pi(z)
+	return z.Pi()
 }
 
 // makeReflectArgs builds a reflect.Value slice for calling fn.

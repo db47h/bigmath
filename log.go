@@ -22,7 +22,7 @@ func computeLn(z, x *Float) *Float {
 		// t0 = term / (2i + 1)
 		t0.Quo(term, t1.SetUint64(2*i+1))
 
-		if t0.Sign() == 0 || t0.MantExp(nil) < ULPExponent(z) {
+		if t0.Sign() == 0 || t0.MantExp(nil) < z.ULPExponent() {
 			break
 		}
 		t0.Add(z, t0)
@@ -32,7 +32,7 @@ func computeLn(z, x *Float) *Float {
 	return z.SetMantExp(z, 1)
 }
 
-func Log(z, x *Float) *Float {
+func (z *Float) Log(x *Float) *Float {
 	if x.Sign() <= 0 {
 		if x.Sign() == 0 {
 			return z.SetInf(true) // ln(0) = -Inf
@@ -71,7 +71,7 @@ func Log(z, x *Float) *Float {
 	if exp != 0 {
 		// FMA is cheap here since the internal precision will be prec+64
 		// and it will handle temps nicely.
-		return FMA(z, m.SetPrec(0).SetInt64(int64(exp)), ln2(prec), lnM)
+		return z.FMA(m.SetPrec(0).SetInt64(int64(exp)), ln2(prec), lnM)
 	}
 
 	return z.Set(lnM)

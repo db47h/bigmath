@@ -13,7 +13,7 @@ import (
 func benchmarkPowInt(b *testing.B, x, y, z *bigmath.Float) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		bigmath.Pow(z, x, y)
+		z.Pow(x, y)
 	}
 }
 

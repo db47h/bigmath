@@ -12,7 +12,7 @@ import (
 // Rounding is performed according to z's precision and rounding mode.
 //
 // The operation uses the Taylor series e^x = ∑(x^n/n!) for n ≥ 0.
-func Exp(z, x *Float) *Float {
+func (z *Float) Exp(x *Float) *Float {
 	sgn := x.Sign()
 	if sgn == 0 {
 		return z.Set(one)

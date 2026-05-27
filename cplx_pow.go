@@ -26,7 +26,7 @@ func (z *Complex) Pow(x, y *Complex) *Complex {
 	if y.Imag.Sign() == 0 {
 		if x.Imag.Sign() == 0 {
 			// If x.Real: delegate to real-domain Pow.
-			Pow(&z.Real, &x.Real, &y.Real)
+			z.Real.Pow(&x.Real, &y.Real)
 			z.Imag.Set(zero)
 			return z
 		} else if n, acc := y.Real.Int64(); acc == big.Exact {
@@ -42,12 +42,12 @@ func (z *Complex) Pow(x, y *Complex) *Complex {
 	}
 	t1 := x.Arg(newFloat(workPrec))
 	t2 := newFloat(workPrec)
-	r := Pow(newFloat(workPrec), t0, &y.Real)
+	r := newFloat(workPrec).Pow(t0, &y.Real)
 	theta := newFloat(workPrec).Mul(&y.Real, t1)
 	if y.Imag.Sign() != 0 {
-		t2.Add(theta, t0.Mul(&y.Imag, Log(t2, t0)))
+		t2.Add(theta, t0.Mul(&y.Imag, t2.Log(t0)))
 		theta, t2 = t2, theta
-		Exp(t1, t0.Neg(t0.Mul(&y.Imag, t1))) // t1 = e^(-d⋅arg(x))
+		t1.Exp(t0.Neg(t0.Mul(&y.Imag, t1))) // t1 = e^(-d⋅arg(x))
 		t0.Mul(r, t1)
 		t0, r = r, t0
 	}
@@ -73,8 +73,8 @@ func (z *Complex) powInt(x *Complex, n int64) *Complex {
 
 	// Initialize result to 1 + 0i
 	res := newComplex(workPrec)
-	res.Real.SetInt64(1)
-	res.Imag.SetInt64(0)
+	res.Real.Set(one)
+	res.Imag.Set(zero)
 
 	// Power-by-squaring loop
 	for n > 0 {

@@ -130,12 +130,12 @@ func (z *Complex) Conj(x *Complex) *Complex {
 
 // Abs sets z to the rounded value of |x| and returns z.
 func (x *Complex) Abs(z *Float) *Float {
-	return Hypot(z, &x.Real, &x.Imag)
+	return z.Hypot(&x.Real, &x.Imag)
 }
 
 // Arg sets z to the rounded value of arg(x) and returns z.
 func (x *Complex) Arg(z *Float) *Float {
-	return Atan2(z, &x.Imag, &x.Real)
+	return z.Atan2(&x.Imag, &x.Real)
 }
 
 // Equals checks if x and y are equal.

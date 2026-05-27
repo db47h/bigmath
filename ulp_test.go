@@ -136,7 +136,7 @@ func TestULPErrorDirect(t *testing.T) {
 
 				// Test Sin
 				got := new(bigmath.Float).SetPrec(prec)
-				bigmath.Sin(got, x)
+				got.Sin(x)
 				err := ulpErr(got, refSin)
 				if err > maxSin {
 					maxSin = err
@@ -146,7 +146,7 @@ func TestULPErrorDirect(t *testing.T) {
 				}
 
 				// Test Cos
-				bigmath.Cos(got, x)
+				got.Cos(x)
 				err = ulpErr(got, refCos)
 				if err > maxCos {
 					maxCos = err
@@ -156,7 +156,7 @@ func TestULPErrorDirect(t *testing.T) {
 				}
 
 				// Test Sinh
-				bigmath.Sinh(got, x)
+				got.Sinh(x)
 				err = ulpErr(got, refSinh)
 				if err > maxSinh {
 					maxSinh = err
@@ -166,7 +166,7 @@ func TestULPErrorDirect(t *testing.T) {
 				}
 
 				// Test Cosh
-				bigmath.Cosh(got, x)
+				got.Cosh(x)
 				err = ulpErr(got, refCosh)
 				if err > maxCosh {
 					maxCosh = err
@@ -309,7 +309,7 @@ func TestSinTripleAngle(t *testing.T) {
 				// LHS: sin(3x) at target precision
 				threeX := new(bigmath.Float).SetPrec(prec).Mul(x, three)
 				sin3x := new(bigmath.Float).SetPrec(prec)
-				bigmath.Sin(sin3x, threeX)
+				sin3x.Sin(threeX)
 
 				// Primary check: compare against gmpy2 reference
 				ref := parseHexFloat(pt.Sin3xRef, prec)
@@ -325,13 +325,13 @@ func TestSinTripleAngle(t *testing.T) {
 
 				// redo sin3x with increased precision for 3x for the identity test.
 				threeX.SetPrec(workPrec).Mul(x, three)
-				bigmath.Sin(sin3x, threeX)
+				sin3x.Sin(threeX)
 
 				// Secondary check: sin(3x) = 3·sin(x) - 4·sin³(x)
 				// Compute RHS at workPrec to avoid precision loss from
 				// the polynomial evaluation (multiplications lose bits).
 				sinx := new(bigmath.Float).SetPrec(workPrec)
-				bigmath.Sin(sinx, x)
+				sinx.Sin(x)
 
 				// sin³(x)
 				sinx3 := new(bigmath.Float).SetPrec(workPrec).Mul(sinx, sinx)
@@ -392,7 +392,7 @@ func TestSinhCoshIdentity(t *testing.T) {
 				// RHS: cosh(2x)
 				twoX := new(bigmath.Float).SetPrec(workPrec).Mul(x, two)
 				cosh2x := new(bigmath.Float).SetPrec(prec)
-				bigmath.Cosh(cosh2x, twoX)
+				cosh2x.Cosh(twoX)
 
 				// Skip if either side is Inf
 				if lhs.IsInf() || cosh2x.IsInf() {

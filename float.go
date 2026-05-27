@@ -30,7 +30,7 @@ func newFloat(prec uint) *Float {
 
 // ULPExponent returns the exponent of the Unit in the Last Place (ULP) of x,
 // i.e., the value of the least significant mantissa bit.
-func ULPExponent(x *Float) int {
+func (x *Float) ULPExponent() int {
 	return x.MantExp(nil) - int(x.Prec())
 }
 
@@ -64,7 +64,7 @@ func absCmpOne(x *Float) int {
 //	Hypot(x, ±Inf) = +Inf
 //	Hypot(NaN, y) = NaN
 //	Hypot(x, NaN) = NaN
-func Hypot(z, x, y *Float) *Float {
+func (z *Float) Hypot(x, y *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = max(x.Prec(), y.Prec())
@@ -85,7 +85,7 @@ func Hypot(z, x, y *Float) *Float {
 	workPrec := prec + _W
 
 	// Use FMA for better precision: sqrt(x*x + y*y)
-	t := FMA(newFloat(workPrec), x, x, newFloat(2*y.Prec()).Mul(y, y))
+	t := newFloat(workPrec).FMA(x, x, newFloat(2*y.Prec()).Mul(y, y))
 
 	return z.Sqrt(t)
 }

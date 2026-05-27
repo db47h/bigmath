@@ -9,7 +9,7 @@ func (z *Complex) Sinh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	if x.Imag.Sign() == 0 {
-		Sinh(&z.Real, &x.Real)
+		z.Real.Sinh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
 	}
@@ -30,7 +30,7 @@ func (z *Complex) Cosh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	if x.Imag.Sign() == 0 {
-		Cosh(&z.Real, &x.Real)
+		z.Real.Cosh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
 	}
@@ -49,7 +49,7 @@ func (z *Complex) Tanh(x *Complex) *Complex {
 	workPrec := z.setPrec(x) + _W
 
 	if x.Imag.Sign() == 0 {
-		Tanh(&z.Real, &x.Real)
+		z.Real.Tanh(&x.Real)
 		z.Imag.Set(&x.Imag)
 		return z
 	}
