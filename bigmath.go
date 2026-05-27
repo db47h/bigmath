@@ -29,14 +29,6 @@ func (err ErrNaN) Error() string {
 	return string(err)
 }
 
-func newFloat(prec uint) *big.Float {
-	return new(big.Float).SetPrec(prec)
-}
-
-func ULPExponent(x *big.Float) int {
-	return x.MantExp(nil) - int(x.Prec())
-}
-
 // fma implements fused multiply-add: z = x*y + t with a single rounding.
 //
 // big.Float.Mul always computes the full mantissa product (O(n×m) words)

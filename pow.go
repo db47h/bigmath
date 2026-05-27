@@ -6,25 +6,6 @@ import (
 	"math/big"
 )
 
-func isOdd(x *big.Float) bool {
-	return x.IsInt() && x.Sign() != 0 && x.MantExp(nil) == int(x.MinPrec())
-}
-
-func absCmpOne(x *big.Float) int {
-	exp := x.MantExp(nil)
-	if exp > 1 {
-		return 1
-	}
-	if exp < 1 {
-		return -1
-	}
-	// exp == 1 => 1 <= |x| < 2
-	if x.Signbit() {
-		return -x.Cmp(minusOne)
-	}
-	return x.Cmp(one)
-}
-
 // Pow sets z to the rounded value of x^y and returns z.
 //
 // If z's precision is 0, it is changed to x's precision before the operation.
