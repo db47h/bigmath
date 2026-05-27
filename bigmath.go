@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-// Package bigmath provides arbitrary precision mathematical functions for [big.Float].
+// Package bigmath builds upon [big.Float] and provides [Float], a drop-in
+// replacement with a complete set of methods for transcendentals, power,
+// trigonometric and hyperbolic functions, and a [Complex] with full arithmetic
+// (add, sub, mul, quo), transcendental and trigonometric support.
+//
 // The functions in this package follow the same rounding and precision semantics
-// as the standard [big.Float] operations.
+// as the standard [big.Float] operations. Use them exactly like [big.Float]:
+//
+//	var z bigmath.Float
+//	z.SetPrec(128)
+//	bigmath.Sin(&z, &z)
 package bigmath
 
-// An ErrNaN panic is raised by a [big.Float] operation that would lead to
+// An ErrNaN panic is raised by a [Float] operation that would lead to
 // a NaN under IEEE 754 rules. An ErrNaN implements the error interface.
 type ErrNaN string
 

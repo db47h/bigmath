@@ -8,14 +8,19 @@ import (
 
 //go:generate go run internal/gen/main.go
 
-// Float wraps math/big.Float as a named type, providing a bigmath-native
-// arbitrary-precision floating-point number with all *big.Float methods
-// forwarded via generated code (see float_gen.go).
+// Float is a drop-in replacement for [big.Float] that adds transcendentals,
+// power, and trigonometric functions via the [bigmath] package.
 //
-// Conversion between *Float and *big.Float is zero-cost:
+// It has the same memory layout as [big.Float] and forwards all [big.Float]
+// methods via generated code (see float_gen.go), so it can be used as a
+// drop-in replacement. Conversion between *Float and *big.Float is zero-cost:
 //
 //	f := (*Float)(bf)
 //	bf := (*big.Float)(f)
+//
+// Functions like [Sin], [Cos], [Exp], [Log], [Pow], and [Pi] accept
+// *Float arguments and follow the same precision and rounding semantics
+// as [big.Float].
 type Float big.Float
 
 // newFloat allocates a new *Float with the given precision.

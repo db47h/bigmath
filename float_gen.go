@@ -8,11 +8,15 @@ import (
 	"math/big"
 )
 
+// Package-level type aliases for commonly-used big types.
+type Accuracy = big.Accuracy
+type RoundingMode = big.RoundingMode
+
 func (z *Float) SetPrec(prec uint) *Float {
 	return (*Float)((*big.Float)(z).SetPrec(prec))
 }
 
-func (z *Float) SetMode(mode big.RoundingMode) *Float {
+func (z *Float) SetMode(mode RoundingMode) *Float {
 	return (*Float)((*big.Float)(z).SetMode(mode))
 }
 
@@ -24,11 +28,11 @@ func (x *Float) MinPrec() uint {
 	return (*big.Float)(x).MinPrec()
 }
 
-func (x *Float) Mode() big.RoundingMode {
+func (x *Float) Mode() RoundingMode {
 	return (*big.Float)(x).Mode()
 }
 
-func (x *Float) Acc() big.Accuracy {
+func (x *Float) Acc() Accuracy {
 	return (*big.Float)(x).Acc()
 }
 
@@ -88,32 +92,32 @@ func (z *Float) Copy(x *Float) *Float {
 	return (*Float)((*big.Float)(z).Copy((*big.Float)(x)))
 }
 
-func (x *Float) Uint64() (uint64, big.Accuracy) {
+func (x *Float) Uint64() (uint64, Accuracy) {
 	v0, v1 := (*big.Float)(x).Uint64()
 	return v0, v1
 }
 
-func (x *Float) Int64() (int64, big.Accuracy) {
+func (x *Float) Int64() (int64, Accuracy) {
 	v0, v1 := (*big.Float)(x).Int64()
 	return v0, v1
 }
 
-func (x *Float) Float32() (float32, big.Accuracy) {
+func (x *Float) Float32() (float32, Accuracy) {
 	v0, v1 := (*big.Float)(x).Float32()
 	return v0, v1
 }
 
-func (x *Float) Float64() (float64, big.Accuracy) {
+func (x *Float) Float64() (float64, Accuracy) {
 	v0, v1 := (*big.Float)(x).Float64()
 	return v0, v1
 }
 
-func (x *Float) Int(z *big.Int) (*big.Int, big.Accuracy) {
+func (x *Float) Int(z *big.Int) (*big.Int, Accuracy) {
 	v0, v1 := (*big.Float)(x).Int(z)
 	return v0, v1
 }
 
-func (x *Float) Rat(z *big.Rat) (*big.Rat, big.Accuracy) {
+func (x *Float) Rat(z *big.Rat) (*big.Rat, Accuracy) {
 	v0, v1 := (*big.Float)(x).Rat(z)
 	return v0, v1
 }

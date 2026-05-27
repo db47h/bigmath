@@ -79,6 +79,14 @@ func main() {
 }
 
 // writeImports writes a compact import block for the given import paths.
+// aliasTypes maps qualified type names to their package-level type aliases
+// emitted by writeAliases.
+var aliasTypes = map[string]string{
+	"math/big.Accuracy":     "Accuracy",
+	"math/big.RoundingMode": "RoundingMode",
+}
+
+// writeImports writes a compact import block for the given import paths.
 func writeImports(w *bytes.Buffer, imports map[string]bool) {
 	if len(imports) == 0 {
 		return
@@ -94,6 +102,18 @@ func writeImports(w *bytes.Buffer, imports map[string]bool) {
 		fmt.Fprintf(w, "\t%q\n", p)
 	}
 	w.WriteString(")\n\n")
+	writeAliases(w)
+}
+
+// writeAliases emits type aliases for commonly-used math/big types so that
+// generated function signatures use short names (Accuracy, RoundingMode)
+// instead of qualified names (big.Accuracy, big.RoundingMode).
+func writeAliases(w *bytes.Buffer) {
+	w.WriteString("// Package-level type aliases for commonly-used big types.\n")
+	for _, alias := range aliasTypes {
+		fmt.Fprintf(w, "type %s = big.%s\n", alias, alias)
+	}
+	w.WriteString("\n")
 }
 
 // collectImportsFromSig collects all external package paths referenced in a
@@ -174,10 +194,14 @@ func needsBigFloatConversion(t types.Type) bool {
 }
 
 // genSigType returns the type name to use in the generated signature.
-// *math/big.Float becomes *Float; everything else passes through qname.
+// *math/big.Float becomes *Float; aliased types (Accuracy, RoundingMode)
+// use the short alias; everything else passes through qname.
 func genSigType(t types.Type) string {
 	if isBigFloatPtr(t) {
 		return "*Float"
+	}
+	if alias, ok := aliasTypes[t.String()]; ok {
+		return alias
 	}
 	return qname(t)
 }
