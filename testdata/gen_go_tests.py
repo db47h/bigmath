@@ -18,6 +18,19 @@ def format_or_nan(val):
     return format(val, 'a'), False
 
 
+def round_input(val, prec):
+    """Round an mpfr value to the given precision, matching Go's SetPrec(prec).Parse(s,0)
+    behavior: the decimal string is parsed at the target precision, so the result is
+    already rounded to prec bits. Re-rounding via mpfr creation at prec ensures the
+    value is at exactly prec bits regardless of any context precision changes."""
+    saved = gmpy2.get_context().precision
+    ctx = gmpy2.get_context()
+    ctx.precision = prec
+    r = gmpy2.mpfr(val)
+    ctx.precision = saved
+    return r
+
+
 def generate_json_tests(input_file, output_file, precision):
     ctx = gmpy2.get_context()
     ctx.precision = precision
@@ -48,8 +61,10 @@ def generate_json_tests(input_file, output_file, precision):
             if func_name.startswith("const_"):
                 str_args = []
 
-            # Parse arguments
-            mpfr_args = [gmpy2.mpfr(arg) for arg in str_args]
+            # Parse arguments at target precision to match Go's
+            # SetPrec(prec).Parse(s,0) — the input decimal is rounded to
+            # prec bits at parse time.
+            mpfr_args = [round_input(gmpy2.mpfr(arg), precision) for arg in str_args]
 
             # Lookup function: gmpy2 -> globals -> builtins
             if func_name.startswith("const_"):
@@ -150,12 +165,12 @@ def generate_cplx_tests(input_file, output_file, precision):
             is_panic = "!panic" in raw_pairs
             tokens = [t for t in raw_pairs if t != "!panic"]
 
-            # Pair-wise parse into mpc values
-            # tokens = [re1, im1, re2, im2, ...]
+            # Pair-wise parse into mpc values, rounding each component to
+            # target precision to match Go's SetPrec(prec).Parse(s,0).
             mpc_args = []
             for i in range(0, len(tokens), 2):
-                re = gmpy2.mpfr(tokens[i])
-                im = gmpy2.mpfr(tokens[i + 1])
+                re = round_input(gmpy2.mpfr(tokens[i]), precision)
+                im = round_input(gmpy2.mpfr(tokens[i + 1]), precision)
                 mpc_args.append(gmpy2.mpc(re, im))
 
             # Build args pairs as strings for JSON output
