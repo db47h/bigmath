@@ -13,6 +13,7 @@ import (
 	"go/importer"
 	"go/types"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -66,6 +67,9 @@ func main() {
 
 	writeImports(&buf, neededImports)
 
+	slices.SortFunc(methods, func(a, b methodInfo) int {
+		return strings.Compare(a.Name, b.Name)
+	})
 	for _, mi := range methods {
 		writeForwarder(&buf, mi.Name, mi.Sig)
 	}
@@ -110,10 +114,17 @@ func writeImports(w *bytes.Buffer, imports map[string]bool) {
 // instead of qualified names (big.Accuracy, big.RoundingMode).
 func writeAliases(w *bytes.Buffer) {
 	w.WriteString("// Package-level type aliases for commonly-used big types.\n")
+	// write aliases in a deterministic order
+	aliases := make([]string, 0, len(aliasTypes))
 	for _, alias := range aliasTypes {
-		fmt.Fprintf(w, "type %s = big.%s\n", alias, alias)
+		aliases = append(aliases, alias)
 	}
-	w.WriteString("\n")
+	slices.Sort(aliases)
+	w.WriteString("type (\n")
+	for _, alias := range aliases {
+		fmt.Fprintf(w, "\t%s = big.%s\n", alias, alias)
+	}
+	w.WriteString(")\n\n")
 }
 
 // collectImportsFromSig collects all external package paths referenced in a

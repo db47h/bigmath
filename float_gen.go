@@ -9,97 +9,38 @@ import (
 )
 
 // Package-level type aliases for commonly-used big types.
-type Accuracy = big.Accuracy
-type RoundingMode = big.RoundingMode
+type (
+	Accuracy = big.Accuracy
+	RoundingMode = big.RoundingMode
+)
 
-func (z *Float) SetPrec(prec uint) *Float {
-	return (*Float)((*big.Float)(z).SetPrec(prec))
-}
-
-func (z *Float) SetMode(mode RoundingMode) *Float {
-	return (*Float)((*big.Float)(z).SetMode(mode))
-}
-
-func (x *Float) Prec() uint {
-	return (*big.Float)(x).Prec()
-}
-
-func (x *Float) MinPrec() uint {
-	return (*big.Float)(x).MinPrec()
-}
-
-func (x *Float) Mode() RoundingMode {
-	return (*big.Float)(x).Mode()
+func (z *Float) Abs(x *Float) *Float {
+	return (*Float)((*big.Float)(z).Abs((*big.Float)(x)))
 }
 
 func (x *Float) Acc() Accuracy {
 	return (*big.Float)(x).Acc()
 }
 
-func (x *Float) Sign() int {
-	return (*big.Float)(x).Sign()
+func (z *Float) Add(x *Float, y *Float) *Float {
+	return (*Float)((*big.Float)(z).Add((*big.Float)(x), (*big.Float)(y)))
 }
 
-func (x *Float) MantExp(mant *Float) int {
-	return (*big.Float)(x).MantExp((*big.Float)(mant))
+func (x *Float) Append(buf []byte, fmt byte, prec int) []byte {
+	return (*big.Float)(x).Append(buf, fmt, prec)
 }
 
-func (z *Float) SetMantExp(mant *Float, exp int) *Float {
-	return (*Float)((*big.Float)(z).SetMantExp((*big.Float)(mant), exp))
+func (x *Float) AppendText(b []byte) ([]byte, error) {
+	v0, v1 := (*big.Float)(x).AppendText(b)
+	return v0, v1
 }
 
-func (x *Float) Signbit() bool {
-	return (*big.Float)(x).Signbit()
-}
-
-func (x *Float) IsInf() bool {
-	return (*big.Float)(x).IsInf()
-}
-
-func (x *Float) IsInt() bool {
-	return (*big.Float)(x).IsInt()
-}
-
-func (z *Float) SetUint64(x uint64) *Float {
-	return (*Float)((*big.Float)(z).SetUint64(x))
-}
-
-func (z *Float) SetInt64(x int64) *Float {
-	return (*Float)((*big.Float)(z).SetInt64(x))
-}
-
-func (z *Float) SetFloat64(x float64) *Float {
-	return (*Float)((*big.Float)(z).SetFloat64(x))
-}
-
-func (z *Float) SetInt(x *big.Int) *Float {
-	return (*Float)((*big.Float)(z).SetInt(x))
-}
-
-func (z *Float) SetRat(x *big.Rat) *Float {
-	return (*Float)((*big.Float)(z).SetRat(x))
-}
-
-func (z *Float) SetInf(signbit bool) *Float {
-	return (*Float)((*big.Float)(z).SetInf(signbit))
-}
-
-func (z *Float) Set(x *Float) *Float {
-	return (*Float)((*big.Float)(z).Set((*big.Float)(x)))
+func (x *Float) Cmp(y *Float) int {
+	return (*big.Float)(x).Cmp((*big.Float)(y))
 }
 
 func (z *Float) Copy(x *Float) *Float {
 	return (*Float)((*big.Float)(z).Copy((*big.Float)(x)))
-}
-
-func (x *Float) Uint64() (uint64, Accuracy) {
-	v0, v1 := (*big.Float)(x).Uint64()
-	return v0, v1
-}
-
-func (x *Float) Int64() (int64, Accuracy) {
-	v0, v1 := (*big.Float)(x).Int64()
-	return v0, v1
 }
 
 func (x *Float) Float32() (float32, Accuracy) {
@@ -112,56 +53,12 @@ func (x *Float) Float64() (float64, Accuracy) {
 	return v0, v1
 }
 
-func (x *Float) Int(z *big.Int) (*big.Int, Accuracy) {
-	v0, v1 := (*big.Float)(x).Int(z)
-	return v0, v1
+func (x *Float) Format(s fmt.State, format rune) {
+	(*big.Float)(x).Format(s, format)
 }
 
-func (x *Float) Rat(z *big.Rat) (*big.Rat, Accuracy) {
-	v0, v1 := (*big.Float)(x).Rat(z)
-	return v0, v1
-}
-
-func (z *Float) Abs(x *Float) *Float {
-	return (*Float)((*big.Float)(z).Abs((*big.Float)(x)))
-}
-
-func (z *Float) Neg(x *Float) *Float {
-	return (*Float)((*big.Float)(z).Neg((*big.Float)(x)))
-}
-
-func (z *Float) Add(x *Float, y *Float) *Float {
-	return (*Float)((*big.Float)(z).Add((*big.Float)(x), (*big.Float)(y)))
-}
-
-func (z *Float) Sub(x *Float, y *Float) *Float {
-	return (*Float)((*big.Float)(z).Sub((*big.Float)(x), (*big.Float)(y)))
-}
-
-func (z *Float) Mul(x *Float, y *Float) *Float {
-	return (*Float)((*big.Float)(z).Mul((*big.Float)(x), (*big.Float)(y)))
-}
-
-func (z *Float) Quo(x *Float, y *Float) *Float {
-	return (*Float)((*big.Float)(z).Quo((*big.Float)(x), (*big.Float)(y)))
-}
-
-func (x *Float) Cmp(y *Float) int {
-	return (*big.Float)(x).Cmp((*big.Float)(y))
-}
-
-func (z *Float) SetString(s string) (*Float, bool) {
-	v0, v1 := (*big.Float)(z).SetString(s)
-	return (*Float)(v0), v1
-}
-
-func (z *Float) Parse(s string, base int) (f *Float, b int, err error) {
-	v0, v1, v2 := (*big.Float)(z).Parse(s, base)
-	return (*Float)(v0), v1, v2
-}
-
-func (z *Float) Scan(s fmt.ScanState, ch rune) error {
-	return (*big.Float)(z).Scan(s, ch)
+func (z *Float) GobDecode(buf []byte) error {
+	return (*big.Float)(z).GobDecode(buf)
 }
 
 func (x *Float) GobEncode() ([]byte, error) {
@@ -169,13 +66,26 @@ func (x *Float) GobEncode() ([]byte, error) {
 	return v0, v1
 }
 
-func (z *Float) GobDecode(buf []byte) error {
-	return (*big.Float)(z).GobDecode(buf)
+func (x *Float) Int(z *big.Int) (*big.Int, Accuracy) {
+	v0, v1 := (*big.Float)(x).Int(z)
+	return v0, v1
 }
 
-func (x *Float) AppendText(b []byte) ([]byte, error) {
-	v0, v1 := (*big.Float)(x).AppendText(b)
+func (x *Float) Int64() (int64, Accuracy) {
+	v0, v1 := (*big.Float)(x).Int64()
 	return v0, v1
+}
+
+func (x *Float) IsInf() bool {
+	return (*big.Float)(x).IsInf()
+}
+
+func (x *Float) IsInt() bool {
+	return (*big.Float)(x).IsInt()
+}
+
+func (x *Float) MantExp(mant *Float) int {
+	return (*big.Float)(x).MantExp((*big.Float)(mant))
 }
 
 func (x *Float) MarshalText() (text []byte, err error) {
@@ -183,28 +93,120 @@ func (x *Float) MarshalText() (text []byte, err error) {
 	return v0, v1
 }
 
-func (z *Float) UnmarshalText(text []byte) error {
-	return (*big.Float)(z).UnmarshalText(text)
+func (x *Float) MinPrec() uint {
+	return (*big.Float)(x).MinPrec()
 }
 
-func (x *Float) Text(format byte, prec int) string {
-	return (*big.Float)(x).Text(format, prec)
+func (x *Float) Mode() RoundingMode {
+	return (*big.Float)(x).Mode()
+}
+
+func (z *Float) Mul(x *Float, y *Float) *Float {
+	return (*Float)((*big.Float)(z).Mul((*big.Float)(x), (*big.Float)(y)))
+}
+
+func (z *Float) Neg(x *Float) *Float {
+	return (*Float)((*big.Float)(z).Neg((*big.Float)(x)))
+}
+
+func (z *Float) Parse(s string, base int) (f *Float, b int, err error) {
+	v0, v1, v2 := (*big.Float)(z).Parse(s, base)
+	return (*Float)(v0), v1, v2
+}
+
+func (x *Float) Prec() uint {
+	return (*big.Float)(x).Prec()
+}
+
+func (z *Float) Quo(x *Float, y *Float) *Float {
+	return (*Float)((*big.Float)(z).Quo((*big.Float)(x), (*big.Float)(y)))
+}
+
+func (x *Float) Rat(z *big.Rat) (*big.Rat, Accuracy) {
+	v0, v1 := (*big.Float)(x).Rat(z)
+	return v0, v1
+}
+
+func (z *Float) Scan(s fmt.ScanState, ch rune) error {
+	return (*big.Float)(z).Scan(s, ch)
+}
+
+func (z *Float) Set(x *Float) *Float {
+	return (*Float)((*big.Float)(z).Set((*big.Float)(x)))
+}
+
+func (z *Float) SetFloat64(x float64) *Float {
+	return (*Float)((*big.Float)(z).SetFloat64(x))
+}
+
+func (z *Float) SetInf(signbit bool) *Float {
+	return (*Float)((*big.Float)(z).SetInf(signbit))
+}
+
+func (z *Float) SetInt(x *big.Int) *Float {
+	return (*Float)((*big.Float)(z).SetInt(x))
+}
+
+func (z *Float) SetInt64(x int64) *Float {
+	return (*Float)((*big.Float)(z).SetInt64(x))
+}
+
+func (z *Float) SetMantExp(mant *Float, exp int) *Float {
+	return (*Float)((*big.Float)(z).SetMantExp((*big.Float)(mant), exp))
+}
+
+func (z *Float) SetMode(mode RoundingMode) *Float {
+	return (*Float)((*big.Float)(z).SetMode(mode))
+}
+
+func (z *Float) SetPrec(prec uint) *Float {
+	return (*Float)((*big.Float)(z).SetPrec(prec))
+}
+
+func (z *Float) SetRat(x *big.Rat) *Float {
+	return (*Float)((*big.Float)(z).SetRat(x))
+}
+
+func (z *Float) SetString(s string) (*Float, bool) {
+	v0, v1 := (*big.Float)(z).SetString(s)
+	return (*Float)(v0), v1
+}
+
+func (z *Float) SetUint64(x uint64) *Float {
+	return (*Float)((*big.Float)(z).SetUint64(x))
+}
+
+func (x *Float) Sign() int {
+	return (*big.Float)(x).Sign()
+}
+
+func (x *Float) Signbit() bool {
+	return (*big.Float)(x).Signbit()
+}
+
+func (z *Float) Sqrt(x *Float) *Float {
+	return (*Float)((*big.Float)(z).Sqrt((*big.Float)(x)))
 }
 
 func (x *Float) String() string {
 	return (*big.Float)(x).String()
 }
 
-func (x *Float) Append(buf []byte, fmt byte, prec int) []byte {
-	return (*big.Float)(x).Append(buf, fmt, prec)
+func (z *Float) Sub(x *Float, y *Float) *Float {
+	return (*Float)((*big.Float)(z).Sub((*big.Float)(x), (*big.Float)(y)))
 }
 
-func (x *Float) Format(s fmt.State, format rune) {
-	(*big.Float)(x).Format(s, format)
+func (x *Float) Text(format byte, prec int) string {
+	return (*big.Float)(x).Text(format, prec)
 }
 
-func (z *Float) Sqrt(x *Float) *Float {
-	return (*Float)((*big.Float)(z).Sqrt((*big.Float)(x)))
+func (x *Float) Uint64() (uint64, Accuracy) {
+	v0, v1 := (*big.Float)(x).Uint64()
+	return v0, v1
+}
+
+func (z *Float) UnmarshalText(text []byte) error {
+	return (*big.Float)(z).UnmarshalText(text)
 }
 
 func NewFloat(x float64) *Float {
