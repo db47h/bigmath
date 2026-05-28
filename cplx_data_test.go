@@ -162,6 +162,7 @@ func TestComplexData(t *testing.T) {
 				if !d.Panics {
 					t.Errorf("%s(%v): expected (%s, %s), got error: %v", d.Fn, d.Args,
 						d.ResRe, d.ResIm, e)
+					return
 				}
 				switch e.(type) {
 				case bigmath.ErrNaN:

@@ -5,3 +5,6 @@ _go_src
 .pi
 *-review.md
 .antigravitycli
+AGENTS.md
+graphify-out
+.graphify_uncached.txt

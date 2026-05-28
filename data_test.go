@@ -7,6 +7,7 @@ package bigmath_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"reflect"
 	"strings"
@@ -104,8 +105,8 @@ func buildReflectArgs(got *bigmath.Float, strArgs []string, prec uint) []reflect
 	return makeReflectArgs([]*bigmath.Float{got}, strArgs, prec)
 }
 
-// TestFloatData runs golden comparison tests.
-// Only processes cases where panics is false (or unset).
+// TestFloatData runs golden comparison tests for float functions.
+// Handles both success cases (panics=false) and expected panic cases (panics=true).
 func TestFloatData(t *testing.T) {
 	data, err := loadFloatTestData("testdata/data_tests.json")
 	if err != nil {
@@ -113,10 +114,34 @@ func TestFloatData(t *testing.T) {
 	}
 
 	for _, d := range data.Cases {
-		if d.Panics {
-			continue // skip panic tests
-		}
 		t.Run(fmt.Sprintf("%s%v", d.Fn, d.Args), func(t *testing.T) {
+			defer func() {
+				r := recover()
+				if r == nil {
+					if d.Panics {
+						t.Errorf("%s(%v): expected ErrNaN panic, got none",
+							d.Fn, d.Args)
+					}
+					return
+				}
+				e, ok := r.(error)
+				if !ok {
+					panic(r)
+				}
+				if !d.Panics {
+					t.Errorf("%s(%v): expected %s, got error: %v",
+						d.Fn, d.Args, d.Res, e)
+					return
+				}
+				switch e.(type) {
+				case bigmath.ErrNaN:
+				case big.ErrNaN:
+				default:
+					t.Errorf("%s(%v): expected ErrNaN, got: %T %v",
+						d.Fn, d.Args, e, e)
+				}
+			}()
+
 			fn := fnMap[strings.ToLower(d.Fn)]
 			if fn == nil {
 				t.Fatalf("unknown function %v", d.Fn)
@@ -154,51 +179,6 @@ func TestFloatData(t *testing.T) {
 					t.Fatalf("%s(%v): got %s, want %s",
 						d.Fn, d.Args, got.Text('x', -1), want.Text('x', -1))
 				}
-			}
-		})
-	}
-}
-
-// TestFloatPanics tests that certain inputs panic with ErrNaN.
-// Only processes cases where panics is true.
-func TestFloatPanics(t *testing.T) {
-	data, err := loadFloatTestData("testdata/data_tests.json")
-	if err != nil {
-		t.Fatalf("Failed to load test data: %v", err)
-	}
-
-	for _, d := range data.Cases {
-		if !d.Panics {
-			continue // skip golden tests
-		}
-		t.Run(fmt.Sprintf("%s%v", d.Fn, d.Args), func(t *testing.T) {
-			defer func() {
-				r := recover()
-				if r == nil {
-					t.Errorf("%s(%v): expected ErrNaN panic, got none",
-						d.Fn, d.Args)
-					return
-				}
-				if _, ok := r.(bigmath.ErrNaN); ok {
-					return // expected type
-				}
-				// ErrNaN satisfies error with Error() == "ErrNaN"
-				if errStr, ok := r.(error); ok && errStr.Error() == "ErrNaN" {
-					return
-				}
-				t.Errorf("%s(%v): expected ErrNaN, got %T(%v)",
-					d.Fn, d.Args, r, r)
-			}()
-
-			if d.Res2 != "" {
-				got1 := new(bigmath.Float).SetPrec(data.Prec)
-				got2 := new(bigmath.Float).SetPrec(data.Prec)
-				args := makeReflectArgs([]*bigmath.Float{got1, got2}, d.Args, data.Prec)
-				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
-			} else {
-				got := new(bigmath.Float).SetPrec(data.Prec)
-				args := buildReflectArgs(got, d.Args, data.Prec)
-				reflect.ValueOf(fnMap[strings.ToLower(d.Fn)]).Call(args)
 			}
 		})
 	}
