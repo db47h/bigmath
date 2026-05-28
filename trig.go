@@ -19,39 +19,43 @@ import (
 )
 
 // reducePi2 reduces x modulo 2π and maps the result to [0, π/2).
-// It returns the quadrant (0–3) of the original reduced value.
-// z may alias x. z's precision determines the target precision of the result.
-// x must be non-negative; panics otherwise.
-func (z *Float) reducePi2(x *Float) int {
+// It returns the reduced value in z and the quadrant (0–3) of the original
+// reduced value. z may alias x. z's precision determines the target precision
+// of the result; the computation runs at z's precision (no extra guard bits),
+// with adaptive scaling for large inputs.
+func (z *Float) reducePi2(x *Float) (*Float, int) {
 	if x.Sign() == 0 {
-		return 0
+		return z.Set(x), 0
 	}
 
 	prec := z.Prec()
 
-	xAbs := newFloat(prec).Set(x)
-	if xAbs.Signbit() {
-		panic("reducePi2: x must be >= 0")
+	// xAbs is read-only
+	xAbs := x
+	if x.Signbit() {
+		xAbs = new(Float).Abs(x)
 	}
-
 	xExp := xAbs.MantExp(nil)
-	workPrec := prec + _W
+
 	if xExp > 0 {
-		workPrec += uint(xExp)
+		prec += uint(xExp)
 	}
 
 	// t0 = xAbs * (2/π)
-	t0 := newFloat(workPrec).Mul(xAbs, twoOverPi(workPrec))
+	t0 := newFloat(prec).Mul(xAbs, twoOverPi(prec))
+	t1 := newFloat(prec)
 
 	// Get the number of bits required to represent the integer part
 	E := t0.MantExp(nil)
-	t1 := newFloat(workPrec)
 	var quadrant int
 
 	if E <= 0 {
 		// x * (2/π) < 1, so the integer part n = 0
+		if x.Signbit() {
+			return z.Sub(halfPi(prec), xAbs), 3
+		}
 		z.Set(xAbs)
-		return 0
+		return z, 0
 	}
 
 	// 1. Truncate t0 to an exact integer (Floor)
@@ -71,23 +75,27 @@ func (z *Float) reducePi2(x *Float) int {
 		t1.SetPrec(uint(E - 2)).SetMode(big.ToZero).Set(t0)
 
 		// The difference is exactly the modulo 4 remainder (0, 1, 2, or 3).
-		rem := newFloat(workPrec).Sub(t0, t1)
+		rem := newFloat(prec).Sub(t0, t1)
 		q64, _ := rem.Int64()
 		quadrant = int(q64)
 
 		// reset t1
-		t1.SetMode(0).SetPrec(0).SetPrec(workPrec)
+		t1.SetMode(0).SetPrec(0).SetPrec(prec)
 	}
 
 	// -x + n * π/2
-	xAbs.Neg(xAbs)
-	rTmp := newFloat(workPrec).fma(t0, halfPi(workPrec), xAbs, t1)
+	rTmp := newFloat(prec).fms(t0, halfPi(prec), xAbs, t1)
 
 	// x - n * π/2
 	rTmp.Neg(rTmp)
 
-	z.Set(rTmp)
-	return quadrant
+	if x.Signbit() {
+		quadrant = (3 - quadrant) % 4
+		z.Sub(halfPi(prec), rTmp)
+	} else {
+		z.Set(rTmp)
+	}
+	return z, quadrant
 }
 
 // sinCore computes sin(x) for x in [0, π/2) using the Taylor series.
@@ -232,34 +240,22 @@ func (z *Float) Sin(x *Float) *Float {
 	}
 
 	// Flat +_W guard for the full computation path:
-	// xVal at this precision feeds into reducePi2 (which adds its own
-	// dynamic guard internally) and then into sinCore (whose temps are
-	// also at prec+2*_W). The guard covers sign handling, reduction
-	// output rounding, and the Taylor series accumulation.
+	// x at this precision feeds into reducePi2 and then into sinCore (whose temps
+	// are at prec+2*_W). The guard covers sign handling, reduction output rounding,
+	// and the Taylor series accumulation.
 	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
-
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := xVal.reducePi2(xVal)
+	xr, quad := newFloat(workPrec).reducePi2(x)
 
 	if quad == 0 || quad == 2 {
-		z.sinCore(xVal)
+		z.sinCore(xr)
 	} else {
-		z.cosCore(xVal)
+		z.cosCore(xr)
 	}
-
 	if quad >= 2 {
 		z.Neg(z)
 	}
-	if neg {
-		z.Neg(z)
-	}
-
 	return z
 }
 
@@ -287,20 +283,14 @@ func (z *Float) Cos(x *Float) *Float {
 	// (reducePi2 → cosCore) is identical in structure.
 	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	if xVal.Signbit() {
-		xVal.Neg(xVal)
-	}
-
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := xVal.reducePi2(xVal)
+	xr, quad := newFloat(workPrec).reducePi2(x)
 
 	if quad == 0 || quad == 2 {
-		z.cosCore(xVal)
+		z.cosCore(xr)
 	} else {
-		z.sinCore(xVal)
+		z.sinCore(xr)
 	}
-
 	if quad == 1 || quad == 2 {
 		z.Neg(z)
 	}
@@ -337,16 +327,10 @@ func Sincos(zs, zc, x *Float) (*Float, *Float) {
 	// (reducePi2 → sincosCore) is identical in structure.
 	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	// reducePi2 handles z == x aliasing; reuse xr as both input and output.
+	xr, quad := newFloat(workPrec).reducePi2(x)
 
-	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := xVal.reducePi2(xVal)
-
-	sincosCore(zs, zc, xVal)
+	sincosCore(zs, zc, xr)
 	if quad == 1 || quad == 3 {
 		*zs, *zc = *zc, *zs
 	}
@@ -355,9 +339,6 @@ func Sincos(zs, zc, x *Float) (*Float, *Float) {
 	}
 	if quad == 1 || quad == 2 {
 		zc.Neg(zc)
-	}
-	if neg {
-		zs.Neg(zs)
 	}
 	return zs, zc
 }
@@ -387,17 +368,9 @@ func (z *Float) Tan(x *Float) *Float {
 	// (reducePi2 → sinCore/cosCore → Quo) is identical in structure.
 	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
-
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	quad := xVal.reducePi2(xVal)
-
-	s := newFloat(workPrec).sinCore(xVal)
-	c := newFloat(workPrec).cosCore(xVal)
+	xr, quad := newFloat(workPrec).reducePi2(x)
+	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xr)
 
 	// tan(x) after reduction to [0, π/2):
 	//   Q0: tan = sinR / cosR   → s / c
@@ -412,10 +385,6 @@ func (z *Float) Tan(x *Float) *Float {
 		// Q1, Q3: tan = -c / s
 		c.Neg(c)
 		z.Quo(c, s)
-	}
-
-	if neg {
-		z.Neg(z)
 	}
 	return z
 }
@@ -439,15 +408,9 @@ func (z *Float) Cot(x *Float) *Float {
 
 	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	xr, quad := newFloat(workPrec).reducePi2(x)
 
-	quad := xVal.reducePi2(xVal)
-
-	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xVal)
+	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xr)
 
 	// cot(x) after reduction to [0, π/2):
 	//   Q0: cot = cosR / sinR   → c / s
@@ -459,10 +422,6 @@ func (z *Float) Cot(x *Float) *Float {
 	} else {
 		s.Neg(s)
 		z.Quo(s, c)
-	}
-
-	if neg {
-		z.Neg(z)
 	}
 	return z
 }

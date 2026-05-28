@@ -119,6 +119,17 @@ func (z *Float) fma(x, y, t, temp *Float) *Float {
 	return z.Add(temp.Mul(x, y), t)
 }
 
+// fma implements fused multiply-sub: z = x*y - t with a single rounding.
+// See fma.
+func (z *Float) fms(x, y, t, temp *Float) *Float {
+	temp.SetPrec(0).SetPrec(x.Prec() + y.Prec())
+
+	if z.Prec() == 0 {
+		z.SetPrec(max(x.Prec(), y.Prec(), t.Prec()))
+	}
+	return z.Sub(temp.Mul(x, y), t)
+}
+
 // FMA sets z to x*y + t with a single rounding (fused multiply-add) and
 // returns z. The product x*y is computed without intermediate rounding,
 // then added to t and rounded once to z's precision.
