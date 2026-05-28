@@ -32,6 +32,22 @@ func (z *Complex) Cos(x *Complex) *Complex {
 	return z
 }
 
+// Cot sets z to the cotangent of x and returns z.
+//
+// Formula: cot(z) = cos(z) / sin(z)
+func (z *Complex) Cot(x *Complex) *Complex {
+	// Extra guard word: Cos/Sin internally compute at prec+_W and store the
+	// result at prec+_W precision (setPrec only increases, never decreases).
+	// Adding a second guard word here ensures Quo operates on Cos/Sin results
+	// with 2*_W guard bits, keeping the final rounding to z.Prec() within
+	// 0.5 ULP of gmpy2 reference.
+	workPrec := z.setPrec(x) + 2*_W
+
+	c := newComplex(workPrec).Cos(x)
+	s := newComplex(workPrec).Sin(x)
+	return z.Quo(c, s)
+}
+
 // Tan sets z to the tangent of x and returns z.
 func (z *Complex) Tan(x *Complex) *Complex {
 	// TODO: take this as an example for future review of guard bits strategy.

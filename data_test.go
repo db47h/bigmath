@@ -76,6 +76,7 @@ var fnMap = map[string]any{
 	"asin":      (*bigmath.Float).Asin,
 	"acos":      (*bigmath.Float).Acos,
 	"tan":       (*bigmath.Float).Tan,
+	"cot":       (*bigmath.Float).Cot,
 	"hypot":     (*bigmath.Float).Hypot,
 	"fma":       (*bigmath.Float).FMA,
 }

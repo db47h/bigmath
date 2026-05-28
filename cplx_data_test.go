@@ -88,6 +88,8 @@ func callComplexFn(fn string, z, x, y *bigmath.Complex) {
 		z.Sin(x)
 	case "cos":
 		z.Cos(x)
+	case "cot":
+		z.Cot(x)
 	case "tan":
 		z.Tan(x)
 	case "sinh":

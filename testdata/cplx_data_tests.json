@@ -362,6 +362,39 @@
       "reason": "gmpy2 returned NaN"
     },
     {
+      "fn": "cot",
+      "args": [
+        [
+          "0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0x8.5bfe4f8e9607dfda30d1ec0fec569ae4445fc6a090ab6e920f4ebbc3d9e9b4bp-4",
+      "res_im": "-0x1.2eaf062215c858e5ccd3a1527ccd624709ece80259229d1d6b75249d350907bcp+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        [
+          "1",
+          "0"
+        ]
+      ],
+      "res_re": "0xa.4602e8270e7ec1a29d95ba181eaee2bb95572fe9a42b06163603bbb70a08864p-4",
+      "res_im": "-0x0p+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "res_re": "0x0p+0",
+      "res_im": "-0x1.50231499b6b1d49f813a188f96073e59ccbbe2ecd5d580a00d333a359ea7c282p+0"
+    },
+    {
       "fn": "tan",
       "args": [
         [

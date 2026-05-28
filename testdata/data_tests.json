@@ -1834,6 +1834,120 @@
       "res": "0xf.ffffffffffffe9d3ea6a962ab38816fp-4"
     },
     {
+      "fn": "cot",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.d49ad7e47c0a2a4d1064f77f44f802bcp+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "1"
+      ],
+      "res": "0xa.4602e8270e7ec1a29d95ba181eaee2cp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x1.d49ad7e47c0a2a4d1064f77f44f802bcp+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-1"
+      ],
+      "res": "-0xa.4602e8270e7ec1a29d95ba181eaee2cp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "10"
+      ],
+      "res": "0x1.8ad784a2c26701aac502c6bd782674d4p+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "100"
+      ],
+      "res": "-0x1.b3f4fc136effe8ad8b2d8c54a2f7be3ep+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "1.6"
+      ],
+      "res": "-0x7.7a6fab052da744bed926de0120aab19p-8"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "4"
+      ],
+      "res": "0xd.d1add0e35bae7d8e0e78e46caa5885fp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "5"
+      ],
+      "res": "-0x4.bba652df292cd2f8d932d4aa0c6e22bp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-1.6"
+      ],
+      "res": "0x7.7a6fab052da744bed926de0120aab19p-8"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-4"
+      ],
+      "res": "-0xd.d1add0e35bae7d8e0e78e46caa5885fp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-5"
+      ],
+      "res": "0x4.bba652df292cd2f8d932d4aa0c6e22bp-4"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "0.7853981633974483"
+      ],
+      "res": "0x1.0000000000000162c159569d54c96a2cp+0"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "cot",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
       "fn": "asin",
       "args": [
         "1.5"

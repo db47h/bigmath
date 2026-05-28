@@ -224,6 +224,30 @@ func TestComplex_Format(t *testing.T) {
 	}
 }
 
+func TestComplex_Cot_Identity(t *testing.T) {
+	prec := uint(256)
+	x := newComplex(0.5, 0.7, prec)
+	oneC := newComplex(1, 0, prec)
+
+	// cot(z) * tan(z) = 1
+	cot := new(bigmath.Complex).Cot(x)
+	tan := new(bigmath.Complex).Tan(x)
+	prod := new(bigmath.Complex).Mul(cot, tan)
+
+	diff := new(bigmath.Float).SetPrec(prec).Sub(&prod.Real, &oneC.Real)
+	diff.Abs(diff)
+
+	limit := new(bigmath.Float).SetPrec(prec).SetUint64(1)
+	limit.SetMantExp(limit, 1-int(prec))
+
+	if diff.Cmp(limit) > 0 {
+		t.Errorf("cot(z)*tan(z) != 1: got %v, diff %v", prod.Real.Text('g', 10), diff.Text('g', 10))
+	}
+	if prod.Imag.Sign() != 0 && prod.Imag.MantExp(nil) > 1-int(prec) {
+		t.Errorf("cot(z)*tan(z) has non-zero Imag: got %v", prod.Imag.Text('g', 10))
+	}
+}
+
 func TestComplex_Exp_EdgeCases(t *testing.T) {
 	prec := uint(53)
 

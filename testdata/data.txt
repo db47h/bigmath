@@ -299,6 +299,24 @@ asin 0.9999999999999999
 acos 0.9999999999999999
 tan 0.7853981633974483
 
+# cot
+cot 0
+cot 0.5
+cot 1
+cot -0.5
+cot -1
+cot 10
+cot 100
+cot 1.6
+cot 4
+cot 5
+cot -1.6
+cot -4
+cot -5
+cot 0.7853981633974483
+cot inf          !panic
+cot -inf         !panic
+
 # Additional NaN panic cases from the source code
 asin 1.5         !panic
 asin -1.5        !panic

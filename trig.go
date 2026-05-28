@@ -419,3 +419,50 @@ func (z *Float) Tan(x *Float) *Float {
 	}
 	return z
 }
+
+// Cot sets z to the cotangent of x and returns z.
+//
+// Special cases:
+//
+//	Cot(±0) = ±Inf
+//	Cot(±Inf) = panic(ErrNaN)
+func (z *Float) Cot(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+
+	if x.IsInf() {
+		panic(ErrNaN("cot of infinity"))
+	}
+
+	workPrec := prec + _W
+
+	xVal := newFloat(workPrec).Set(x)
+	neg := xVal.Signbit()
+	if neg {
+		xVal.Neg(xVal)
+	}
+
+	quad := xVal.reducePi2(xVal)
+
+	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xVal)
+
+	// cot(x) after reduction to [0, π/2):
+	//   Q0: cot = cosR / sinR   → c / s
+	//   Q1: cot = -sinR / cosR  → -s / c
+	//   Q2: cot = -cosR / -sinR → c / s
+	//   Q3: cot = sinR / -cosR  → -s / c
+	if quad&1 == 0 {
+		z.Quo(c, s)
+	} else {
+		s.Neg(s)
+		z.Quo(s, c)
+	}
+
+	if neg {
+		z.Neg(z)
+	}
+	return z
+}

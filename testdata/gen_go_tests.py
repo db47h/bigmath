@@ -163,7 +163,18 @@ def generate_cplx_tests(input_file, output_file, precision):
 
             # Lookup function and call with mpc_args
             # Some Go function names differ from gmpy2 names, handled here
-            if func_name == "quo":
+            if func_name == "cot":
+                # gmpy2 does not provide cot for mpc, compute as cos/sin
+                # Compute at 2x precision then round down to match Go's
+                # sequential Cos/Sin → Quo at target precision.
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.cos(mpc_args[0]) / gmpy2.sin(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "quo":
                 result = gmpy2.div(*mpc_args)
             elif func_name == "neg":
                 result = -mpc_args[0]
