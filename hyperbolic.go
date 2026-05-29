@@ -102,37 +102,33 @@ func (z *Float) Sinh(x *Float) *Float {
 		return z.Set(x)
 	}
 
-	// Flat +2*_W guard for the full computation path. For |x|<1 the Taylor
+	// Flat +_W guard for the full computation path. For |x|<1 the Taylor
 	// series sinhCore uses +2*_W internally; for |x|≥1 the Exp call brings
 	// its own proportional guard. The outer guard covers sign and branch
 	// handling around both paths.
-	workPrec := prec + 2*_W
+	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	t0 := new(Float).Abs(x)
+	neg := x.Signbit()
 
-	if xVal.Cmp(one) < 0 {
-		t := newFloat(workPrec).sinhCore(xVal)
+	if t0.Cmp(one) < 0 {
+		z.sinhCore(t0)
 		if neg {
-			t.Neg(t)
+			z.Neg(z)
 		}
-		return z.Set(t)
+		return z
 	}
 
 	// |x| >= 1: use (eˣ − e⁻ˣ) / 2
-	ep := newFloat(workPrec).Exp(xVal)
-	em := newFloat(workPrec).Quo(one, ep)
+	t1 := newFloat(workPrec).Exp(t0)
+	t0.SetPrec(0).SetPrec(workPrec).Inv(t1)
 
-	ep.Sub(ep, em)
-	ep.SetMantExp(ep, -1)
-
+	z.Sub(t1, t0)
+	z.SetMantExp(z, -1)
 	if neg {
-		ep.Neg(ep)
+		z.Neg(z)
 	}
-	return z.Set(ep)
+	return z
 }
 
 // Cosh sets z to the hyperbolic cosine of x and returns z.
@@ -155,22 +151,19 @@ func (z *Float) Cosh(x *Float) *Float {
 		return z.Set(one)
 	}
 
-	// Flat +2*_W guard. Always uses Exp internally (no Taylor path), so
+	// Flat +_W guard. Always uses Exp internally (no Taylor path), so
 	// Exp's own proportional guard plus this outer margin covers it.
-	workPrec := prec + 2*_W
+	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	if xVal.Signbit() {
-		xVal.Neg(xVal)
-	}
+	t0 := new(Float).Abs(x)
 
-	ep := newFloat(workPrec).Exp(xVal)
-	em := newFloat(workPrec).Quo(one, ep)
+	t1 := newFloat(workPrec).Exp(t0)
+	t0.SetPrec(0).SetPrec(workPrec).Inv(t1)
 
-	ep.Add(ep, em)
-	ep.SetMantExp(ep, -1)
+	z.Add(t1, t0)
+	z.SetMantExp(z, -1)
 
-	return z.Set(ep)
+	return z
 }
 
 // SinhCosh sets zs to sinh(x) and zc to cosh(x) and returns both.
@@ -200,18 +193,15 @@ func SinhCosh(zs, zc, x *Float) (*Float, *Float) {
 		return zs, zc
 	}
 
-	// Flat +2*_W guard. Dispatches to sinhcoshCore (|x|<1) or shared Exp
+	// Flat +_W guard. Dispatches to sinhcoshCore (|x|<1) or shared Exp
 	// (|x|≥1); in both paths the internal temps use matching precision.
-	workPrec := prec + 2*_W
+	workPrec := prec + _W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	t0 := new(Float).Abs(x)
+	neg := x.Signbit()
 
-	if xVal.Cmp(one) < 0 {
-		sinhcoshCore(zs, zc, xVal)
+	if t0.Cmp(one) < 0 {
+		sinhcoshCore(zs, zc, t0)
 		if neg {
 			zs.Neg(zs)
 		}
@@ -219,12 +209,12 @@ func SinhCosh(zs, zc, x *Float) (*Float, *Float) {
 	}
 
 	// |x| >= 1: share the Exp call between sinh and cosh.
-	ep := newFloat(workPrec).Exp(xVal)
-	em := newFloat(workPrec).Quo(one, ep)
+	t1 := newFloat(workPrec).Exp(t0)
+	t0.SetPrec(0).SetPrec(workPrec).Inv(t1)
 
-	zs.Sub(ep, em)
+	zs.Sub(t1, t0)
 	zs.SetMantExp(zs, -1)
-	zc.Add(ep, em)
+	zc.Add(t1, t0)
 	zc.SetMantExp(zc, -1)
 
 	if neg {
@@ -260,15 +250,14 @@ func (z *Float) Tanh(x *Float) *Float {
 
 	// Flat +2*_W guard. Delegates to SinhCosh internally, which in turn
 	// provides sufficient precision for both sinh and cosh paths.
-	workPrec := prec + 2*_W
+	workPrec := prec + _W
 
-	s := newFloat(workPrec)
-	c := newFloat(workPrec)
-	SinhCosh(s, c, x)
+	s, c := SinhCosh(newFloat(workPrec), newFloat(workPrec), x)
 
 	if s.IsInf() && c.IsInf() {
+		neg := x.Signbit()
 		z.Set(one)
-		if x.Signbit() {
+		if neg {
 			z.Neg(z)
 		}
 		return z
@@ -302,31 +291,28 @@ func (z *Float) Asinh(x *Float) *Float {
 	// covers intermediate rounding in sqrt and addition.
 	workPrec := prec + 2*_W
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	neg := x.Signbit()
+	xVal := new(Float).Abs(x)
 
-	x2 := newFloat(workPrec).Mul(xVal, xVal)
-	if x2.IsInf() {
+	t0 := newFloat(workPrec).Mul(xVal, xVal)
+	if t0.IsInf() {
 		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
-		t := x2.Log(xVal)
-		t.Add(t, ln2(workPrec))
+		t0.Log(xVal)
+		z.Add(t0, ln2(workPrec))
 		if neg {
-			t.Neg(t)
+			z.Neg(z)
 		}
-		return z.Set(t)
+		return z
 	}
 
-	x2.Add(x2, one)
-	x2.Sqrt(x2)
-	x2.Add(xVal, x2)
-	x2.Log(x2)
+	t1 := newFloat(workPrec).Add(t0, one)
+	t0.Sqrt(t1)
+	t1.Add(xVal, t0)
+	z.Log(t1)
 	if neg {
-		x2.Neg(x2)
+		z.Neg(z)
 	}
-	return z.Set(x2)
+	return z
 }
 
 // acoshGuard computes the working precision needed for acosh(x) near x=1,
@@ -374,15 +360,14 @@ func (z *Float) Acosh(x *Float) *Float {
 
 	workPrec := x.acoshGuard(prec)
 
-	xVal := newFloat(workPrec).Set(x)
-	t0 := newFloat(workPrec).Sub(xVal, one)
-	t1 := newFloat(workPrec).Add(xVal, one)
+	t0 := newFloat(workPrec).Sub(x, one)
+	t1 := newFloat(workPrec).Add(x, one)
 
 	// √(x-1) * √(x+1) for numerical stability (avoids computing x² directly).
 	t0.Sqrt(t0)
 	t1.Sqrt(t1)
 	t0.Mul(t0, t1)
-	t0.Add(xVal, t0)
+	t0.Add(x, t0)
 	t0.Log(t0)
 
 	return z.Set(t0)
@@ -434,20 +419,17 @@ func (z *Float) Atanh(x *Float) *Float {
 
 	workPrec := x.atanhGuard(prec)
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
-	if neg {
-		xVal.Neg(xVal)
-	}
+	neg := x.Signbit()
+	t0 := new(Float).Abs(x)
 
-	t0 := newFloat(workPrec).Sub(one, xVal)
-	t1 := newFloat(workPrec).Add(one, xVal)
-	t0.Quo(t1, t0)
-	t0.Log(t0)
-	t0.SetMantExp(t0, -1)
+	t1 := newFloat(workPrec).Sub(one, t0)
+	t2 := newFloat(workPrec).Add(one, t0)
+	t0.SetPrec(0).SetPrec(workPrec).Quo(t2, t1)
+	z.Log(t0)
+	z.SetMantExp(z, -1)
 
 	if neg {
-		t0.Neg(t0)
+		z.Neg(z)
 	}
-	return z.Set(t0)
+	return z
 }

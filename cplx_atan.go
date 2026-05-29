@@ -31,7 +31,7 @@ func (z *Complex) Atan(x *Complex) *Complex {
 			return z
 		}
 		z.Real.Set(halfPi(prec))
-		z.Imag.Atanh(newFloat(workPrec).Quo(one, &x.Imag))
+		z.Imag.Atanh(newFloat(workPrec).Inv(&x.Imag))
 		return z
 	}
 	if x.Real.IsInf() || x.Imag.IsInf() {
@@ -176,12 +176,38 @@ func (z *Complex) Acos(x *Complex) *Complex {
 //
 //	Asinh(0 + i·0) = 0 + i·0
 func (z *Complex) Asinh(x *Complex) *Complex {
-	workPrec := z.setPrec(x) + _W
+	prec := z.setPrec(x)
+
+	switch {
+	case x.IsReal() && x.Real.absCmpOne() <= 0:
+		z.Real.Asinh(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	case x.Real.Sign() == 0 && x.Imag.absCmpOne() <= 0:
+		z.Real.Set(&x.Real)
+		z.Imag.Asin(&x.Imag)
+		return z
+	case x.Real.IsInf():
+		neg := x.Imag.Signbit()
+		z.Real.Set(&x.Real)
+		if x.Imag.IsInf() {
+			z.Imag.Set(pi(prec))
+			z.Imag.SetMantExp(&z.Imag, -2)
+		} else {
+			z.Imag.Set(zero)
+		}
+		if neg {
+			z.Imag.Neg(&z.Imag)
+		}
+		return z
+	}
+
+	workPrec := prec + _W
 
 	// t0 = x^2
 	t0 := newComplex(workPrec).Mul(x, x)
 	// t1 = x^2 + 1
-	t1 := newComplex(workPrec) //.Add(t0, oneC)
+	t1 := newComplex(workPrec)
 	t1.Real.Add(&t0.Real, one)
 	t1.Imag.Set(&t0.Imag)
 
@@ -195,31 +221,34 @@ func (z *Complex) Asinh(x *Complex) *Complex {
 
 // Acosh sets z to the inverse hyperbolic cosine of x and returns z.
 //
-// Formula: acosh(x) = ln(x + √(x−1)·√(x+1))
+// Formula: acosh(x) = ±i · acos(x)
 //
 // The branch cut is along the real axis, for x < 1.
 // The imaginary part of the result lies in the interval [0, π].
 //
 // Special cases:
 //
-//	Acosh(0 + i·0) = 0 + i·π/2
+//	Acosh(0 ± i·0) = 0 ± i·π/2
 func (z *Complex) Acosh(x *Complex) *Complex {
-	workPrec := z.setPrec(x) + _W
+	prec := z.setPrec(x)
 
-	// t0 = sqrt(x - 1)
-	t1 := newComplex(workPrec)
-	t1.Real.Sub(&x.Real, one)
-	t1.Imag.Set(&x.Imag)
-	t0 := newComplex(workPrec).Sqrt(t1)
-	// t1 = x + 1
-	t2 := newComplex(workPrec)
-	t2.Real.Add(&x.Real, one)
-	t2.Imag.Set(&x.Imag)
-	t1.Sqrt(t2)
-	// t2 = sqrt(x-1) * sqrt(x+1)
-	t2.Mul(t0, t1)
-	// log(x + t2)
-	return z.Log(t0.Add(x, t2))
+	if x.IsZero() {
+		neg := x.Imag.Signbit()
+		z.Real.Set(zero)
+		z.Imag.Set(halfPi(prec))
+		if neg {
+			z.Imag.Neg(&z.Imag)
+		}
+		return z
+	}
+
+	z.Acos(x)
+	if z.Imag.Sign() <= 0 {
+		z.Imag.Neg(&z.Imag)
+	}
+	*z = Complex{z.Imag, z.Real}
+
+	return z
 }
 
 // Atanh sets z to the inverse hyperbolic tangent of x and returns z.

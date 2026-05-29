@@ -62,7 +62,7 @@ func (z *Float) atanReciprocal(n uint64) *Float {
 	bigN2 := newFloat(workPrec).SetUint64(n2)
 
 	// term = 1/n
-	term := newFloat(workPrec).Quo(one, newFloat(workPrec).SetUint64(n))
+	term := newFloat(workPrec).Inv(newFloat(workPrec).SetUint64(n))
 	sum := newFloat(workPrec).Set(term)
 
 	t0 := newFloat(workPrec)

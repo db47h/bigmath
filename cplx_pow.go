@@ -5,6 +5,9 @@ package bigmath
 import "math/big"
 
 // Pow sets z to x^y and returns z.
+//
+//	Pow(0, ±0) returns 1+0i
+//	Pow(0, c) for real(c)<0 returns Inf+0i if imag(c) is zero, otherwise Inf+Inf i.
 func (z *Complex) Pow(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 

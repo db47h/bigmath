@@ -1351,6 +1351,17 @@
       "fn": "asinh",
       "args": [
         [
+          "0",
+          "1"
+        ]
+      ],
+      "res_re": "0x0p+0",
+      "res_im": "0x1.921fb54442d18469898cc51701b839a2p+0"
+    },
+    {
+      "fn": "asinh",
+      "args": [
+        [
           "1",
           "0"
         ]
@@ -1378,6 +1389,50 @@
         ]
       ],
       "res_re": "0x1.51242719804349be684bd0188d52ceccp+0",
+      "res_im": "0x1.921fb54442d18469898cc51701b839a2p+0"
+    },
+    {
+      "fn": "asinh",
+      "args": [
+        [
+          "inf",
+          "inf"
+        ]
+      ],
+      "res_re": "inf",
+      "res_im": "0xc.90fdaa22168c234c4c6628b80dc1cd1p-4"
+    },
+    {
+      "fn": "asinh",
+      "args": [
+        [
+          "inf",
+          "-inf"
+        ]
+      ],
+      "res_re": "inf",
+      "res_im": "-0xc.90fdaa22168c234c4c6628b80dc1cd1p-4"
+    },
+    {
+      "fn": "asinh",
+      "args": [
+        [
+          "inf",
+          "0"
+        ]
+      ],
+      "res_re": "inf",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "acosh",
+      "args": [
+        [
+          "0",
+          "0"
+        ]
+      ],
+      "res_re": "0x0p+0",
       "res_im": "0x1.921fb54442d18469898cc51701b839a2p+0"
     },
     {

@@ -133,9 +133,19 @@ func (z *Float) fms(x, y, t, temp *Float) *Float {
 // FMA sets z to x*y + t with a single rounding (fused multiply-add) and
 // returns z. The product x*y is computed without intermediate rounding,
 // then added to t and rounded once to z's precision.
-//
-// This provides genuine FMA semantics: one rounding for the entire
-// expression, not two. See fma for the implementation details.
 func (z *Float) FMA(x, y, t *Float) *Float {
 	return z.fma(x, y, t, new(Float))
+}
+
+// FMS sets z to x*y - t with a single rounding (fused multiply-sub) and
+// returns z. The product x*y is computed without intermediate rounding,
+// then added to t and rounded once to z's precision.
+func (z *Float) FMS(x, y, t *Float) *Float {
+	return z.fms(x, y, t, new(Float))
+}
+
+// Inv sets z to the rounded quotient 1/y and returns z.
+// Precision, rounding, and accuracy reporting are as for [Float.Add].
+func (z *Float) Inv(x *Float) *Float {
+	return z.Quo(one, x)
 }

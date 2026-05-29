@@ -150,11 +150,16 @@ atan inf inf
 
 # asinh
 asinh 0 0
+asinh 0 1
 asinh 1 0
 asinh 0.5 0.7
 asinh 0 2
+asinh inf inf
+asinh inf -inf
+asinh inf 0
 
 # acosh
+acosh 0 0
 acosh 1 0
 acosh 2 0
 acosh 0.5 0.7

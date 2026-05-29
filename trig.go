@@ -364,9 +364,9 @@ func (z *Float) Tan(x *Float) *Float {
 		return z.Set(x)
 	}
 
-	// Flat +_W guard — same rationale as Sin/Cos. The computation path
-	// (reducePi2 → sinCore/cosCore → Quo) is identical in structure.
-	workPrec := prec + _W
+	// Flat +2*_W guard, same rationale as Sin/Cos: +_W for sin/cos, + _W to
+	// compensate for Quo when |x| very close to pi/2. TODO: this needs review.
+	workPrec := prec + 2*_W
 
 	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
 	xr, quad := newFloat(workPrec).reducePi2(x)

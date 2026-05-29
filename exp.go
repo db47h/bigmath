@@ -109,7 +109,7 @@ func (z *Float) Exp(x *Float) *Float {
 	}
 
 	if invert {
-		return z.Quo(one, sum)
+		return z.Inv(sum)
 	}
 	return z.Set(sum)
 }

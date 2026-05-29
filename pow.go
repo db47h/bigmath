@@ -156,7 +156,7 @@ func (z *Float) powInt(x *Float, n *big.Int) *Float {
 	}
 
 	if neg {
-		return z.Quo(one, res)
+		return z.Inv(res)
 	}
 
 	if x.Sign() < 0 && absN.Bit(0) != 0 {
