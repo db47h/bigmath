@@ -76,3 +76,29 @@ func (z *Float) Log(x *Float) *Float {
 
 	return z.Set(lnM)
 }
+
+// Log10 sets z to the base-10 logarithm of x and returns z.
+func (z *Float) Log10(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	// Log10(x) = Log(x) / ln(10)
+	workPrec := prec + _W
+	lnX := newFloat(workPrec).Log(x)
+	return z.Quo(lnX, ln10(workPrec))
+}
+
+// Log2 sets z to the base-2 logarithm of x and returns z.
+func (z *Float) Log2(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	// Log2(x) = Log(x) / ln(2)
+	workPrec := prec + _W
+	lnX := newFloat(workPrec).Log(x)
+	return z.Quo(lnX, ln2(workPrec))
+}

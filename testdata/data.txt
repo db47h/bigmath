@@ -24,6 +24,39 @@ log -1           !panic
 log -10          !panic
 log -inf         !panic
 
+# log10
+log10 1
+log10 10
+log10 100
+log10 0.1
+log10 2
+log10 0.5
+log10 3
+log10 42
+log10 inf
+log10 0
+log10 -1        !panic
+log10 -10       !panic
+log10 -inf       !panic
+
+# log2
+log2 1
+log2 2
+log2 4
+log2 8
+log2 0.5
+log2 0.25
+log2 10
+log2 3
+log2 42
+log2 100
+log2 0.1
+log2 inf
+log2 0
+log2 -1        !panic
+log2 -10       !panic
+log2 -inf       !panic
+
 # pow
 pow 2 3
 pow 2 0.5

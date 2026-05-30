@@ -131,6 +131,215 @@
       "reason": "gmpy2 returned NaN"
     },
     {
+      "fn": "log10",
+      "args": [
+        "1"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "10"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "100"
+      ],
+      "res": "0x2p+0"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "0.1"
+      ],
+      "res": "-0x1p+0"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "2"
+      ],
+      "res": "0x4.d104d427de7fbcc47c4acd605be48bcp-4"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "0.5"
+      ],
+      "res": "-0x4.d104d427de7fbcc47c4acd605be48bcp-4"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "3"
+      ],
+      "res": "0x7.a249e593f57f4230c0d0ea0868907638p-4"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "42"
+      ],
+      "res": "0x1.9f8d43f783a1e93abd01b41e9244f2fap+0"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "inf"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "0"
+      ],
+      "res": "-inf"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "-1"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "-10"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "log10",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "1"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "2"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "4"
+      ],
+      "res": "0x2p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "8"
+      ],
+      "res": "0x3p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "0.5"
+      ],
+      "res": "-0x1p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "0.25"
+      ],
+      "res": "-0x2p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "10"
+      ],
+      "res": "0x3.5269e12f346e2bf924afdbfd36bf6d34p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "3"
+      ],
+      "res": "0x1.95c01a39fbd6879fa00b120a068badd2p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "42"
+      ],
+      "res": "0x5.646eea247c5c22d2cad415ae1a715618p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "100"
+      ],
+      "res": "0x6.a4d3c25e68dc57f2495fb7fa6d7eda68p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "0.1"
+      ],
+      "res": "-0x3.5269e12f346e2bf924afdbfd36bf6d34p+0"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "inf"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "0"
+      ],
+      "res": "-inf"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "-1"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "-10"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "log2",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
       "fn": "pow",
       "args": [
         "2",

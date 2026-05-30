@@ -59,6 +59,8 @@ func parseHex(s string, prec uint) *bigmath.Float {
 var fnMap = map[string]any{
 	"exp":       (*bigmath.Float).Exp,
 	"log":       (*bigmath.Float).Log,
+	"log10":     (*bigmath.Float).Log10,
+	"log2":      (*bigmath.Float).Log2,
 	"pow":       (*bigmath.Float).Pow,
 	"atan":      (*bigmath.Float).Atan,
 	"atan2":     (*bigmath.Float).Atan2,
