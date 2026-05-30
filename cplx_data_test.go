@@ -110,6 +110,8 @@ func callComplexFn(fn string, z, x, y *bigmath.Complex) {
 		z.Acosh(x)
 	case "atanh":
 		z.Atanh(x)
+	case "cbrt":
+		z.Cbrt(x)
 	case "sqrt":
 		z.Sqrt(x)
 	case "pow":

@@ -57,6 +57,7 @@ func parseHex(s string, prec uint) *bigmath.Float {
 
 // fnMap maps function names to actual bigmath functions.
 var fnMap = map[string]any{
+	"cbrt":      (*bigmath.Float).Cbrt,
 	"exp":       (*bigmath.Float).Exp,
 	"log":       (*bigmath.Float).Log,
 	"log10":     (*bigmath.Float).Log10,

@@ -165,6 +165,24 @@ acosh 2 0
 acosh 0.5 0.7
 acosh 0.5 0
 
+# cbrt (principal cube root via polar decomposition)
+cbrt 0 0
+cbrt 1 0
+cbrt -1 0
+cbrt 0 1
+cbrt 0 -1
+cbrt 8 0
+cbrt -8 0
+cbrt 0 8
+cbrt 1 2
+cbrt -1 2
+cbrt 0.125 0
+cbrt -0.125 0
+cbrt 2 0
+cbrt -2 0
+cbrt 0 1e10
+cbrt 1e10 0
+
 # atanh
 atanh 0 0
 atanh 0.5 0

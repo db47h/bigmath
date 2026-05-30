@@ -178,7 +178,21 @@ def generate_cplx_tests(input_file, output_file, precision):
 
             # Lookup function and call with mpc_args
             # Some Go function names differ from gmpy2 names, handled here
-            if func_name == "cot":
+            if func_name == "cbrt":
+                # gmpy2.cbrt does not support mpc. Compute via polar
+                # decomposition at 2x precision to match Go's sequential
+                # Float.Cbrt + Sincos computation path.
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                z = mpc_args[0]
+                rho = gmpy2.cbrt(abs(z))
+                theta = gmpy2.phase(z) / 3
+                result = gmpy2.mpc(rho * gmpy2.cos(theta), rho * gmpy2.sin(theta))
+                ctx.precision = saved_prec
+            elif func_name == "cot":
                 # gmpy2 does not provide cot for mpc, compute as cos/sin
                 # Compute at 2x precision then round down to match Go's
                 # sequential Cos/Sin → Quo at target precision.

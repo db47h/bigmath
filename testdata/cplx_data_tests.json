@@ -1480,6 +1480,182 @@
       "res_im": "0x1.0c152382d73658465bb32e0f567ad116p+0"
     },
     {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0",
+          "0"
+        ]
+      ],
+      "res_re": "0x0p+0",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "1",
+          "0"
+        ]
+      ],
+      "res_re": "0x1p+0",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "-1",
+          "0"
+        ]
+      ],
+      "res_re": "0x8.000000000000000000000000000000000000000000000000000000000000001p-4",
+      "res_im": "0xd.db3d742c265539d92ba16b83c5c1dc492ec1a6629ed23cc639053243722d371p-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "res_re": "0xd.db3d742c265539d92ba16b83c5c1dc492ec1a6629ed23cc639053243722d371p-4",
+      "res_im": "0x7.fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8p-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0",
+          "-1"
+        ]
+      ],
+      "res_re": "0xd.db3d742c265539d92ba16b83c5c1dc492ec1a6629ed23cc639053243722d371p-4",
+      "res_im": "-0x7.fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8p-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "8",
+          "0"
+        ]
+      ],
+      "res_re": "0x2p+0",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "-8",
+          "0"
+        ]
+      ],
+      "res_re": "0x1.0000000000000000000000000000000000000000000000000000000000000002p+0",
+      "res_im": "0x1.bb67ae8584caa73b25742d7078b83b8925d834cc53da4798c720a6486e45a6e2p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0",
+          "8"
+        ]
+      ],
+      "res_re": "0x1.bb67ae8584caa73b25742d7078b83b8925d834cc53da4798c720a6486e45a6e2p+0",
+      "res_im": "0xf.fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffp-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "1",
+          "2"
+        ]
+      ],
+      "res_re": "0x1.3838c99766821317b1e919c6bd30bac2dfd3ff886170db8140a7d91855d87d9cp+0",
+      "res_im": "0x7.8c211d44f64493099149a66145114f72dc434211c07c67d595cd58b4d57b4cap-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "-1",
+          "2"
+        ]
+      ],
+      "res_re": "0x1.04b0c36cedf2e4c8d8599b8abfeea11d19ee2a909751da56e6a81647c5706924p+0",
+      "res_im": "0xd.203535b9db1901d08bc3a611b39d1a4bddc2a9cf4f331b502d4ed368411a8cp-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0.125",
+          "0"
+        ]
+      ],
+      "res_re": "0x8p-4",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "-0.125",
+          "0"
+        ]
+      ],
+      "res_re": "0x4.0000000000000000000000000000000000000000000000000000000000000008p-4",
+      "res_im": "0x6.ed9eba16132a9cec95d0b5c1e2e0ee249760d3314f691e631c829921b9169b88p-4"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "2",
+          "0"
+        ]
+      ],
+      "res_re": "0x1.428a2f98d728ae223ddab715be250d0c288f10291631fbc061800cc36fa2dd3ap+0",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "-2",
+          "0"
+        ]
+      ],
+      "res_re": "0xa.14517cc6b9457111eed5b8adf128686144788148b18fde030c00661b7d16e9ep-4",
+      "res_im": "0x1.1753e0ec642293cfe377706ef581c316c034898ac8011517bc0f9e7e3ed57dccp+0"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "0",
+          "1e10"
+        ]
+      ],
+      "res_re": "0x7.49cb906a79bf7e2931979f7d6148f8ffe9c583297eb10d95b07c459477310f5p+8",
+      "res_im": "0x4.3537a3ec476b3c72b98186805a338d61156365c98265d5526030073c44dfc46p+8"
+    },
+    {
+      "fn": "cbrt",
+      "args": [
+        [
+          "1e10",
+          "0"
+        ]
+      ],
+      "res_re": "0x8.6a6f47d88ed678e573030d00b4671ac22ac6cb9304cbaaa4c0600e7889bf88dp+8",
+      "res_im": "0x0p+0"
+    },
+    {
       "fn": "atanh",
       "args": [
         [

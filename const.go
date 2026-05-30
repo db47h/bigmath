@@ -37,11 +37,13 @@ var (
 	zero     = new(Float)
 	one      = new(Float).SetUint64(1)
 	two      = new(Float).SetUint64(2)
+	three    = new(Float).SetUint64(3)
 	ten      = new(Float).SetUint64(10)
 	half     = NewFloat(0.5)
 
 	// cached constants
 	sqrt2 = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(two) })
+	sqrt3 = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(three) })
 	ln2   = cache(func(prec uint) *Float {
 		return newFloat(prec + _W).lnCore(two).SetPrec(prec)
 	})
