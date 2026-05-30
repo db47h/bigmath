@@ -38,6 +38,7 @@ var (
 	one      = new(Float).SetUint64(1)
 	two      = new(Float).SetUint64(2)
 	ten      = new(Float).SetUint64(10)
+	half     = NewFloat(0.5)
 
 	// cached constants
 	sqrt2 = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(two) })

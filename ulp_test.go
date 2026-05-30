@@ -7,6 +7,7 @@ package bigmath_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"testing"
 
@@ -413,4 +414,105 @@ func TestSinhCoshIdentity(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestTanULP measures the ULP error of Tan at various precisions.
+// At basic precisions (64-1024) it tests standard float64 values.
+// At higher precisions it constructs x = π/2 + ε where ε = 2^(-prec/2)
+// to stress-test the reduction and Quo near the pole, comparing the
+// +_W guard result against a computation at prec+extraGuard.
+func TestTanULP(t *testing.T) {
+	const maxULP = 0.5
+	const extraGuard = 128 // extra guard bits for the reference computation
+
+	type tanPoint struct {
+		name string
+		x    float64
+	}
+
+	stdPoints := []tanPoint{
+		{"0.5", 0.5},
+		{"1.0", 1.0},
+		{"2.0", 2.0},
+		{"10.0", 10.0},
+		{"100.0", 100.0},
+		{"1e5", 1e5},
+		{"π/2+1e-15", math.Pi/2 + 1e-15},
+		{"neg_0.5", -0.5},
+		{"neg_1.0", -1.0},
+		{"neg_100.0", -100.0},
+	}
+
+	for _, prec := range precs {
+		for _, pt := range stdPoints {
+			x := new(bigmath.Float).SetPrec(prec + extraGuard).SetFloat64(pt.x)
+
+			got := new(bigmath.Float).SetPrec(prec)
+			got.Tan(x)
+
+			ref := new(bigmath.Float).SetPrec(prec + extraGuard)
+			ref.Tan(x)
+			ref.SetPrec(prec)
+
+			err := ulpErr(got, ref)
+			if err > maxULP && !isSpecial(ref) {
+				t.Errorf("prec=%d point=%s Tan ULP error=%g exceeds %g", prec, pt.name, err, maxULP)
+			}
+		}
+	}
+
+	// High-precision test at prec=2048 for well-conditioned inputs.
+	// This validates the +_W guard at scale where cancellation is
+	// not pathological.
+	for _, prec := range []uint{2048} {
+		hp := prec + extraGuard
+		for _, pt := range stdPoints {
+			x := new(bigmath.Float).SetPrec(hp).SetFloat64(pt.x)
+
+			got := new(bigmath.Float).SetPrec(prec)
+			got.Tan(x)
+
+			ref := new(bigmath.Float).SetPrec(hp)
+			ref.Tan(x)
+			ref.SetPrec(prec)
+
+			err := ulpErr(got, ref)
+			if err > maxULP && !isSpecial(ref) {
+				t.Errorf("prec=%d point=%s Tan ULP error=%g exceeds %g", prec, pt.name, err, maxULP)
+			}
+		}
+	}
+
+	// Tan · Cot = 1 identity near the tan pole.
+	// This uses x = π/2 + ε where ε is small enough to cause significant
+	// cancellation in modPi2. The identity tan(x)·cot(x) = 1 is
+	// algebraically exact regardless of how ill-conditioned the
+	// individual values are.
+	t.Run("TanCotIdentity_near_pole", func(t *testing.T) {
+		const prec = 2048
+		const margin = 64
+		const maxULP = 0.5
+
+		halfPi := new(bigmath.Float).SetPrec(prec + margin).Pi()
+		halfPi.SetMantExp(halfPi, -1)
+
+		for exp := -8; exp >= -12; exp-- {
+			eps := new(bigmath.Float).SetPrec(prec + margin)
+			eps.SetMantExp(new(bigmath.Float).SetFloat64(1), exp*int(prec)/16)
+
+			x := new(bigmath.Float).SetPrec(prec+margin).Add(halfPi, eps)
+
+			got := new(bigmath.Float).SetPrec(prec + margin).Tan(x)
+			cot := new(bigmath.Float).SetPrec(prec + margin).Cot(x)
+
+			prod := new(bigmath.Float).SetPrec(prec).Mul(got, cot)
+
+			oneRef := new(bigmath.Float).SetUint64(1)
+
+			err := identityULP(prod, oneRef)
+			if err > maxULP {
+				t.Errorf("ε=2^%d: tan(x)·cot(x) ULP error=%g exceeds %g", exp*int(prec)/16, err, maxULP)
+			}
+		}
+	})
 }

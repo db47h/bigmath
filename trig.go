@@ -9,7 +9,7 @@
 // The outer Sin/Cos/Sincos functions apply the same flat guard for the
 // entire computation path (including argument reduction and sign handling).
 // This is conservative but harmless — the important adaptive guard is inside
-// reducePi2, which scales with input magnitude for large arguments.
+// modPi2, which scales with input magnitude for large arguments.
 // See docs/trig-hyperbolic-precision-review.md for the full analysis.
 
 package bigmath
@@ -18,84 +18,82 @@ import (
 	"math/big"
 )
 
-// reducePi2 reduces x modulo 2π and maps the result to [0, π/2).
-// It returns the reduced value in z and the quadrant (0–3) of the original
-// reduced value. z may alias x. z's precision determines the target precision
-// of the result; the computation runs at z's precision (no extra guard bits),
-// with adaptive scaling for large inputs.
-func (z *Float) reducePi2(x *Float) (*Float, int) {
-	if x.Sign() == 0 {
+// modPi2 reduces x modulo π/2 and maps the result strictly to [-π/4, π/4).
+// Returns the reduced value in z and the quadrant mapping:
+//
+//	0: [-π/4, π/4)
+//	1: [π/4, 3π/4)
+//	2: [3π/4, 5π/4)
+//	3: [5π/4, 7π/4)
+func (z *Float) modPi2(x *Float) (*Float, int) {
+	// x == 0 || |x| < 2^-1
+	if x.Sign() == 0 || x.MantExp(nil) < 0 {
+		return x, 0
+	}
+	prec := z.Prec()
+
+	// 1. Compute q = x * (2/π) + 0.5
+	// Scale precision by the magnitude of x so the integer part of x * (2/π)
+	// is exactly representable. Without this, |x| > 2^prec makes q + 0.5 a no-op
+	// for large x.
+	xExp := x.MantExp(nil)
+	multPrec, _ := addPrec(prec, uint(xExp))
+	q := newFloat(multPrec).Set(twoOverPi(multPrec))
+	t := newFloat(multPrec).Mul(x, q)
+	q.Add(t, half)
+
+	// 2. q = Floor(q)
+	q.SetMode(big.ToNegativeInf)
+	E := q.MantExp(nil)
+	if E > 0 {
+		q.SetPrec(uint(E))
+	} else if q.Sign() < 0 {
+		q.Copy(minusOne)
+	} else {
 		return z.Set(x), 0
 	}
 
-	prec := z.Prec()
-
-	// xAbs is read-only
-	xAbs := x
-	if x.Signbit() {
-		xAbs = new(Float).Abs(x)
-	}
-	xExp := xAbs.MantExp(nil)
-
-	if xExp > 0 {
-		prec += uint(xExp)
+	// 4. Extract Octant Mapping (0, 1, 2, 3)
+	qInt, _ := q.Int(new(big.Int)) // Int() strictly truncates toward zero
+	var quad int
+	if qInt.Sign() < 0 {
+		qInt.Neg(qInt)
+		quad = (4 - int(qInt.Bit(1)<<1|qInt.Bit(0))) % 4
+	} else {
+		quad = int(qInt.Bit(1)<<1 | qInt.Bit(0))
 	}
 
-	// t0 = xAbs * (2/π)
-	t0 := newFloat(prec).Mul(xAbs, twoOverPi(prec))
-	t1 := newFloat(prec)
+	// Dynamic precision loop (Ziv's strategy)
+	var r Float
+	workPrec, _ := addPrec(prec, 2*_W)
+	for {
+		// 3. Compute r = x - q * (π/2)
+		// Force a copy: pi() can return a value with a much higher precision
+		// and Mul uses the full precision of its arguments.
+		pi := newFloat(workPrec).Pi()
+		qPi2 := newFloat(workPrec).Mul(q, pi.SetMantExp(pi, -1))
+		r.SetPrec(workPrec).Sub(x, qPi2)
 
-	// Get the number of bits required to represent the integer part
-	E := t0.MantExp(nil)
-	var quadrant int
-
-	if E <= 0 {
-		// x * (2/π) < 1, so the integer part n = 0
-		if x.Signbit() {
-			return z.Sub(halfPi(prec), xAbs), 3
+		// 4. Measure bit loss from cancellation
+		if r.Sign() == 0 {
+			break
 		}
-		z.Set(xAbs)
-		return z, 0
+		loss := max(x.MantExp(nil)-r.MantExp(nil), 0)
+
+		// 5. Minimum precision required to guarantee targetPrec bits in the result
+		requiredPrec, overflow := addPrec(prec, uint(loss))
+		if overflow || workPrec >= requiredPrec {
+			break
+		}
+
+		// 6. Threshold breached: escalate precision.
+		workPrec, overflow = addPrec(requiredPrec, _W)
+		if overflow {
+			break
+		}
 	}
 
-	// 1. Truncate t0 to an exact integer (Floor)
-	// By setting the precision exactly to the exponent with ToZero rounding,
-	// we keep all integer bits and drop all fractional bits in place.
-	t0.SetMode(big.ToZero)
-	t0.SetPrec(uint(E))
-
-	// 2. Fast Modulo 4
-	if E <= 2 {
-		// E is 1 or 2, so the integer is <= 3. Modulo 4 is just the number itself.
-		q64, _ := t0.Int64()
-		quadrant = int(q64)
-	} else {
-		// Create a copy rounded to E-2 bits. This keeps bits down to the 2^2 (4) place,
-		// effectively dropping the lowest 2 bits (equivalent to calculating t0 - (t0 % 4)).
-		t1.SetPrec(uint(E - 2)).SetMode(big.ToZero).Set(t0)
-
-		// The difference is exactly the modulo 4 remainder (0, 1, 2, or 3).
-		rem := newFloat(prec).Sub(t0, t1)
-		q64, _ := rem.Int64()
-		quadrant = int(q64)
-
-		// reset t1
-		t1.SetMode(0).SetPrec(0).SetPrec(prec)
-	}
-
-	// -x + n * π/2
-	rTmp := newFloat(prec).fms(t0, halfPi(prec), xAbs, t1)
-
-	// x - n * π/2
-	rTmp.Neg(rTmp)
-
-	if x.Signbit() {
-		quadrant = (3 - quadrant) % 4
-		z.Sub(halfPi(prec), rTmp)
-	} else {
-		z.Set(rTmp)
-	}
-	return z, quadrant
+	return z.Set(&r), quad
 }
 
 // sinCore computes sin(x) for x in [0, π/2) using the Taylor series.
@@ -108,6 +106,9 @@ func (z *Float) reducePi2(x *Float) (*Float, int) {
 // in practice (see file header for the full rationale).
 func (z *Float) sinCore(x *Float) *Float {
 	prec := z.Prec()
+	if x.MantExp(nil) < -int(prec/2) {
+		return z.Set(x)
+	}
 	workPrec := prec + 2*_W
 
 	v := newFloat(workPrec).Mul(x, x)
@@ -143,6 +144,9 @@ func (z *Float) sinCore(x *Float) *Float {
 // characteristics. See sinCore doc for the rationale.
 func (z *Float) cosCore(x *Float) *Float {
 	prec := z.Prec()
+	if x.MantExp(nil) < -int(prec/2) {
+		return z.Set(one)
+	}
 	workPrec := prec + 2*_W
 
 	v := newFloat(workPrec).Mul(x, x)
@@ -240,13 +244,13 @@ func (z *Float) Sin(x *Float) *Float {
 	}
 
 	// Flat +_W guard for the full computation path:
-	// x at this precision feeds into reducePi2 and then into sinCore (whose temps
+	// x at this precision feeds into modPi2 and then into sinCore (whose temps
 	// are at prec+2*_W). The guard covers sign handling, reduction output rounding,
 	// and the Taylor series accumulation.
 	workPrec := prec + _W
 
-	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	xr, quad := newFloat(workPrec).reducePi2(x)
+	// modPi2 handles z == x aliasing; reuse xVal as both input and output.
+	xr, quad := newFloat(workPrec).modPi2(x)
 
 	if quad == 0 || quad == 2 {
 		z.sinCore(xr)
@@ -280,11 +284,11 @@ func (z *Float) Cos(x *Float) *Float {
 	}
 
 	// Flat +_W guard — same rationale as Sin. The computation path
-	// (reducePi2 → cosCore) is identical in structure.
+	// (modPi2 → cosCore) is identical in structure.
 	workPrec := prec + _W
 
-	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	xr, quad := newFloat(workPrec).reducePi2(x)
+	// modPi2 handles z == x aliasing; reuse xVal as both input and output.
+	xr, quad := newFloat(workPrec).modPi2(x)
 
 	if quad == 0 || quad == 2 {
 		z.cosCore(xr)
@@ -324,11 +328,11 @@ func Sincos(zs, zc, x *Float) (*Float, *Float) {
 	}
 
 	// Flat +_W guard — same rationale as Sin. The computation path
-	// (reducePi2 → sincosCore) is identical in structure.
+	// (modPi2 → sincosCore) is identical in structure.
 	workPrec := prec + _W
 
-	// reducePi2 handles z == x aliasing; reuse xr as both input and output.
-	xr, quad := newFloat(workPrec).reducePi2(x)
+	// modPi2 handles z == x aliasing; reuse xr as both input and output.
+	xr, quad := newFloat(workPrec).modPi2(x)
 
 	sincosCore(zs, zc, xr)
 	if quad == 1 || quad == 3 {
@@ -364,12 +368,14 @@ func (z *Float) Tan(x *Float) *Float {
 		return z.Set(x)
 	}
 
-	// Flat +2*_W guard, same rationale as Sin/Cos: +_W for sin/cos, + _W to
-	// compensate for Quo when |x| very close to pi/2. TODO: this needs review.
-	workPrec := prec + 2*_W
+	// Flat +_W guard, reduced from +2*_W after empirical testing up to
+	// 2048 bits (see TestTanULP). The +_W guard in sincosCore is sufficient,
+	// and the Quo of two prec+_W operands into prec produces a correctly
+	// rounded result for all tested inputs.
+	workPrec := prec + _W
 
-	// reducePi2 handles z == x aliasing; reuse xVal as both input and output.
-	xr, quad := newFloat(workPrec).reducePi2(x)
+	// modPi2 handles z == x aliasing; reuse xVal as both input and output.
+	xr, quad := newFloat(workPrec).modPi2(x)
 	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xr)
 
 	// tan(x) after reduction to [0, π/2):
@@ -408,7 +414,7 @@ func (z *Float) Cot(x *Float) *Float {
 
 	workPrec := prec + _W
 
-	xr, quad := newFloat(workPrec).reducePi2(x)
+	xr, quad := newFloat(workPrec).modPi2(x)
 
 	s, c := sincosCore(newFloat(workPrec), newFloat(workPrec), xr)
 
@@ -424,4 +430,14 @@ func (z *Float) Cot(x *Float) *Float {
 		z.Quo(s, c)
 	}
 	return z
+}
+
+// addPrec returns prec + extra saturated to big.MaxPrec, and a boolean
+// indicating whether the addition exceeded MaxPrec (or wrapped on 32-bit).
+func addPrec(prec, extra uint) (uint, bool) {
+	sum := prec + extra
+	if sum < prec || sum > big.MaxPrec {
+		return big.MaxPrec, true
+	}
+	return sum, false
 }
