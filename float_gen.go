@@ -35,6 +35,13 @@ const (
 	ToPositiveInf                     // == IEEE 754-2008 roundTowardPositive
 )
 
+// Exponent and precision limits.
+const (
+	MaxExp  = big.MaxExp  // largest supported exponent
+	MinExp  = big.MinExp  // smallest supported exponent
+	MaxPrec = big.MaxPrec // largest (theoretically) supported precision; likely memory-limited
+)
+
 // Abs sets z to the (possibly rounded) value |x| (the absolute value of x)
 // and returns z.
 //

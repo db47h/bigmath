@@ -43,7 +43,7 @@ func (z *Float) modPi2(x *Float) (*Float, int) {
 	q.Add(t, half)
 
 	// 2. q = Floor(q)
-	q.SetMode(big.ToNegativeInf)
+	q.SetMode(ToNegativeInf)
 	E := q.MantExp(nil)
 	if E > 0 {
 		q.SetPrec(uint(E))
@@ -436,8 +436,8 @@ func (z *Float) Cot(x *Float) *Float {
 // indicating whether the addition exceeded MaxPrec (or wrapped on 32-bit).
 func addPrec(prec, extra uint) (uint, bool) {
 	sum := prec + extra
-	if sum < prec || sum > big.MaxPrec {
-		return big.MaxPrec, true
+	if sum < prec || sum > MaxPrec {
+		return MaxPrec, true
 	}
 	return sum, false
 }

@@ -165,6 +165,14 @@ func writeAliasesAndConstants(w *bytes.Buffer) {
 	w.WriteString("\tToNegativeInf                     // == IEEE 754-2008 roundTowardNegative\n")
 	w.WriteString("\tToPositiveInf                     // == IEEE 754-2008 roundTowardPositive\n")
 	w.WriteString(")\n\n")
+
+	// Exponent and precision limits — aliased from math/big to stay in sync.
+	w.WriteString("// Exponent and precision limits.\n")
+	w.WriteString("const (\n")
+	w.WriteString("\tMaxExp  = big.MaxExp  // largest supported exponent\n")
+	w.WriteString("\tMinExp  = big.MinExp  // smallest supported exponent\n")
+	w.WriteString("\tMaxPrec = big.MaxPrec // largest (theoretically) supported precision; likely memory-limited\n")
+	w.WriteString(")\n\n")
 }
 
 // collectImportsFromSig collects all external package paths referenced in a

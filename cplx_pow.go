@@ -2,8 +2,6 @@
 
 package bigmath
 
-import "math/big"
-
 // Pow sets z to x^y and returns z.
 //
 //	Pow(0, ±0) returns 1+0i
@@ -33,7 +31,7 @@ func (z *Complex) Pow(x, y *Complex) *Complex {
 			z.Real.Pow(&x.Real, &y.Real)
 			z.Imag.Set(zero)
 			return z
-		} else if n, acc := y.Real.Int64(); acc == big.Exact {
+		} else if n, acc := y.Real.Int64(); acc == Exact {
 			// x Complex: use Complex multiplication.
 			return z.powInt(x, n)
 		}
