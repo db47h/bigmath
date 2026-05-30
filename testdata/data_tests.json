@@ -2406,6 +2406,248 @@
         "1"
       ],
       "res": "0x2p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "0"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.23b5dfbfd97b67a2fc6dde0cee70eedp+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "1"
+      ],
+      "res": "0x1.d9cf0f125cc29bcec42581638e54cb54p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "1.5"
+      ],
+      "res": "0xe.23077b2b45c0ec1546a8d1f2dbfbba6p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "-0.5"
+      ],
+      "res": "0x1.23b5dfbfd97b67a2fc6dde0cee70eedp+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x2.15f8ee756d3b81e5f56559a4dc0232p+0"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "1"
+      ],
+      "res": "0x1.303aa9620b223e32e68b9bddc30d149p+0"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "1.5"
+      ],
+      "res": "0x1.00a494b19c2843fa58675e0b196a82acp+0"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x2.15f8ee756d3b81e5f56559a4dc0232p+0"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x2.29f8d9d61337dbaab838a8ad954c47c8p+0"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "1"
+      ],
+      "res": "0x1.50231499b6b1d49f813a188f96073e5ap+0"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "2"
+      ],
+      "res": "0x1.098d75212f273ba5d96804ecbc0d7326p+0"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x2.29f8d9d61337dbaab838a8ad954c47c8p+0"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        "-0"
+      ],
+      "res": "-inf"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "0"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "1"
+      ],
+      "res": "0xa.5e6e2876b5f3b99e515f5ceba6c91e2p-4"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "2"
+      ],
+      "res": "0x4.40b9d680bd909be0bba5faa34eb890d8p-4"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "-1"
+      ],
+      "res": "0xa.5e6e2876b5f3b99e515f5ceba6c91e2p-4"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        "-inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.eb45dc88defecfc84d1dc4fd06f8b7bp+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "1"
+      ],
+      "res": "0xd.9d5c53c5c86070b36fe901dff45097p-4"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "2"
+      ],
+      "res": "0x4.6959f78878a98f9a7d213a2d9f9cb338p-4"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x1.eb45dc88defecfc84d1dc4fd06f8b7bp+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "-0"
+      ],
+      "res": "-inf"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        "-inf"
+      ],
+      "res": "-0x0p+0"
     }
   ]
 }

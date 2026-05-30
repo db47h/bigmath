@@ -1,7 +1,7 @@
 # Completed Work
 
 > Everything listed here has been implemented, tested, and is passing.
-> Moved from `docs/TODO.md` on 2026-05-24.
+> Moved from `docs/TODO.md` on 2026-05-30.
 
 ## Core Functions
 
@@ -108,6 +108,20 @@ All methods implemented and supporting `z == x` aliasing:
 - **`docs/trig-hyperbolic-precision-review.md`** — guard-bit precision strategy review with analysis and conclusion.
 - **Code doc comments** on all exported functions with special cases listed.
 - Branch cuts documented on `Complex.Log` and all six complex inverse functions (Asin, Acos, Atan, Asinh, Acosh, Atanh).
+
+## P1 — Reciprocal Trig / Hyperbolic (via `trig.go`, `hyperbolic.go`, `cplx_trig.go`, `cplx_hyp.go`)
+
+| # | Function | Float | Complex | Via |
+|---|----------|-------|---------|-----|
+| 4 | **`Sec`** | ✅ `trig.go` | ✅ `cplx_trig.go` | `Inv(Cos(x))` |
+| 5 | **`Csc`** | ✅ `trig.go` | ✅ `cplx_trig.go` | `Inv(Sin(x))` |
+| 6 | **`Coth`** | ✅ `hyperbolic.go` | ✅ `cplx_trig.go` | `Quo(Cosh(x), Sinh(x))` (Float, Approach B) / `Inv(Tanh(x))` (Complex) |
+| 7 | **`Sech`** | ✅ `hyperbolic.go` | ✅ `cplx_hyp.go` | `Inv(Cosh(x))` |
+| 8 | **`Csch`** | ✅ `hyperbolic.go` | ✅ `cplx_hyp.go` | `Inv(Sinh(x))` |
+
+Tests: golden-comparison via MPFR/gmpy2 for both float and complex (3-6 values per function covering normal, negative, zero, ±Inf, and panic cases). All edge cases documented per existing codebase convention.
+
+Generator extended: added mpc special cases in `gen_go_tests.py` for sec/csc/coth/sech/csch (gmpy2 mpc lacks native versions, computed as `1/cos`, `1/sin`, `1/tanh`, `1/cosh`, `1/sinh` at 2× precision).
 
 ## Configuration / Infrastructure
 

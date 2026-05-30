@@ -432,6 +432,47 @@ func (z *Float) Cot(x *Float) *Float {
 	return z
 }
 
+// Sec sets z to the secant of x, sec(x) = 1/cos(x), and returns z.
+//
+// Special cases:
+//
+//	Sec(±0) = 1
+//	Sec(±Inf) = panic(ErrNaN)
+func (z *Float) Sec(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		panic(ErrNaN("sec of infinity"))
+	}
+	if x.Sign() == 0 {
+		return z.Set(one)
+	}
+	t := newFloat(prec + _W).Cos(x)
+	return z.Inv(t)
+}
+
+// Csc sets z to the cosecant of x, csc(x) = 1/sin(x), and returns z.
+//
+// Special cases:
+//
+//	Csc(±0) = ±Inf
+//	Csc(±Inf) = panic(ErrNaN)
+func (z *Float) Csc(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		panic(ErrNaN("csc of infinity"))
+	}
+	t := newFloat(prec + _W).Sin(x)
+	return z.Inv(t)
+}
+
 // addPrec returns prec + extra saturated to big.MaxPrec, and a boolean
 // indicating whether the addition exceeded MaxPrec (or wrapped on 32-bit).
 func addPrec(prec, extra uint) (uint, bool) {

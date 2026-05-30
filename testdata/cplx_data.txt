@@ -188,3 +188,21 @@ atanh 0 0
 atanh 0.5 0
 atanh 0.5 0.7
 atanh 2 0
+
+# sec, csc, coth, sech, csch
+sec  0 0
+sec  0.5 0.7
+sec  1 0.5
+sec  -0.5 0.7
+csc  0.5 0.7
+csc  1 0.5
+csc  -0.5 0.7
+coth 0.5 0.7
+coth 1 0.5
+coth 2 0
+sech 0 0
+sech 1 0.7
+sech 2 0
+csch 0.5 0.7
+csch 1 0.5
+csch 2 0

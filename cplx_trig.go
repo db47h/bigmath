@@ -48,6 +48,42 @@ func (z *Complex) Cot(x *Complex) *Complex {
 	return z.Quo(c, s)
 }
 
+// Sec sets z to the secant of x, sec(x) = 1/cos(x), and returns z.
+func (z *Complex) Sec(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Sec(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Cos(x)
+	return z.Inv(t)
+}
+
+// Csc sets z to the cosecant of x, csc(x) = 1/sin(x), and returns z.
+func (z *Complex) Csc(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Csc(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Sin(x)
+	return z.Inv(t)
+}
+
+// Coth sets z to the hyperbolic cotangent of x, coth(x) = 1/tanh(x), and returns z.
+func (z *Complex) Coth(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Coth(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Tanh(x)
+	return z.Inv(t)
+}
+
 // Tan sets z to the tangent of x and returns z.
 func (z *Complex) Tan(x *Complex) *Complex {
 	// TODO: take this as an example for future review of guard bits strategy.

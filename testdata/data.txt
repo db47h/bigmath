@@ -389,3 +389,39 @@ hypot 1 1
 hypot +inf 0
 
 fma 1 1 1
+
+# sec, csc, coth, sech, csch
+sec 0
+sec 0.5
+sec 1
+sec 1.5
+sec -0.5
+sec inf          !panic
+sec -inf         !panic
+csc 0.5
+csc 1
+csc 1.5
+csc -0.5
+csc 0
+csc inf          !panic
+csc -inf         !panic
+coth 0.5
+coth 1
+coth 2
+coth -0.5
+coth 0
+coth -0
+sech 0
+sech 1
+sech 2
+sech -1
+sech inf
+sech -inf
+csch 0.5
+csch 1
+csch 2
+csch -0.5
+csch 0
+csch -0
+csch inf
+csch -inf

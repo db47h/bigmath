@@ -7,26 +7,6 @@
 
 Functions ordered by priority (highest first). All items apply to both Float and Complex unless noted.
 
-### P0 — High Impact, Low Effort
-
-These have supporting infrastructure already in place (`ln10`, `ln2` cached) or are fundamental operations expected in any math library.
-
-| # | Function | Float | Complex | Via |
-|---|----------|-------|---------|-----|
-| 3 | **`Cbrt`** | ❌ | ❌ | Float: `Pow(x, ⅓)` with Newton refinement; Complex: `Pow(x, ⅓)` |
-
-### P1 — Trivial One-Liners (Reciprocal Trig / Hyperbolic)
-
-Reciprocal functions are expressible as `Inv(parentFunction)` but expected in a complete API.
-
-| # | Function | Float | Complex | Via |
-|---|----------|-------|---------|-----|
-| 4 | **`Sec`** | ❌ | ❌ | `Inv(Cos(x))` |
-| 5 | **`Csc`** | ❌ | ❌ | `Inv(Sin(x))` |
-| 6 | **`Coth`** | ❌ | ❌ | `Inv(Tanh(x))` or `Cosh(x)/Sinh(x)` |
-| 7 | **`Sech`** | ❌ | ❌ | `Inv(Cosh(x))` |
-| 8 | **`Csch`** | ❌ | ❌ | `Inv(Sinh(x))` |
-
 ### P2 — Inverse Reciprocal Trig / Hyperbolic
 
 Standard identities, less commonly used.

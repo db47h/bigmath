@@ -50,7 +50,7 @@ func loadFloatTestData(path string) (*floatTestData, error) {
 func parseHex(s string, prec uint) *bigmath.Float {
 	x, _, err := new(bigmath.Float).SetPrec(prec).Parse(s, 0)
 	if err != nil {
-		panic(fmt.Sprintf("parseHex(%q, %d): %v", s, prec, err))
+		panic(fmt.Sprintf("parseHex(%q, %d): %v (this is usually means that gmpy2 returned a NaN)", s, prec, err))
 	}
 	return x
 }
@@ -80,6 +80,11 @@ var fnMap = map[string]any{
 	"acos":      (*bigmath.Float).Acos,
 	"tan":       (*bigmath.Float).Tan,
 	"cot":       (*bigmath.Float).Cot,
+	"sec":       (*bigmath.Float).Sec,
+	"csc":       (*bigmath.Float).Csc,
+	"coth":      (*bigmath.Float).Coth,
+	"sech":      (*bigmath.Float).Sech,
+	"csch":      (*bigmath.Float).Csch,
 	"hypot":     (*bigmath.Float).Hypot,
 	"fma":       (*bigmath.Float).FMA,
 }

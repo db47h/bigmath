@@ -59,3 +59,27 @@ func (z *Complex) Tanh(x *Complex) *Complex {
 	ch := newComplex(workPrec).Cosh(x)
 	return z.Quo(sh, ch)
 }
+
+// Sech sets z to the hyperbolic secant of x, sech(x) = 1/cosh(x), and returns z.
+func (z *Complex) Sech(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Sech(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Cosh(x)
+	return z.Inv(t)
+}
+
+// Csch sets z to the hyperbolic cosecant of x, csch(x) = 1/sinh(x), and returns z.
+func (z *Complex) Csch(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Csch(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Sinh(x)
+	return z.Inv(t)
+}

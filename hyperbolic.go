@@ -266,6 +266,88 @@ func (z *Float) Tanh(x *Float) *Float {
 	return z.Quo(s, c)
 }
 
+// Coth sets z to the hyperbolic cotangent of x, coth(x) = cosh(x)/sinh(x),
+// and returns z.
+//
+// Special cases:
+//
+//	Coth(±0) = ±Inf
+//	Coth(±Inf) = ±1
+func (z *Float) Coth(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.Sign() == 0 {
+		return z.SetInf(x.Signbit())
+	}
+	if x.IsInf() {
+		if x.Signbit() {
+			return z.Set(minusOne)
+		}
+		return z.Set(one)
+	}
+	workPrec := prec + _W
+	s := newFloat(workPrec).Sinh(x)
+	c := newFloat(workPrec).Cosh(x)
+	if s.IsInf() && c.IsInf() {
+		// Both →±Inf ratio = ±1 (same edge handling as Float.Tanh)
+		neg := x.Signbit()
+		z.Set(one)
+		if neg {
+			z.Neg(z)
+		}
+		return z
+	}
+	return z.Quo(c, s)
+}
+
+// Sech sets z to the hyperbolic secant of x, sech(x) = 1/cosh(x), and returns z.
+//
+// Special cases:
+//
+//	Sech(±0) = 1
+//	Sech(±Inf) = +0
+func (z *Float) Sech(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		return z.Set(zero)
+	}
+	if x.Sign() == 0 {
+		return z.Set(one)
+	}
+	t := newFloat(prec + _W).Cosh(x)
+	return z.Inv(t)
+}
+
+// Csch sets z to the hyperbolic cosecant of x, csch(x) = 1/sinh(x), and returns z.
+//
+// Special cases:
+//
+//	Csch(±0) = ±Inf
+//	Csch(±Inf) = ±0
+func (z *Float) Csch(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		z.Set(zero)
+		if x.Signbit() {
+			z.Neg(z)
+		}
+		return z
+	}
+	t := newFloat(prec + _W).Sinh(x)
+	return z.Inv(t)
+}
+
 // Asinh sets z to the inverse hyperbolic sine of x and returns z.
 //
 // Special cases:

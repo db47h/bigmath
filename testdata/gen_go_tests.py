@@ -117,6 +117,12 @@ def generate_json_tests(input_file, output_file, precision):
                         f"but gmpy2 did not produce NaN",
                         file=sys.stderr,
                     )
+                if is_nan and not is_panic:
+                    print(
+                        f"Warning: {func_name} {str_args} NOT tagged !panic "
+                        f"but gmpy2 did produce NaN",
+                        file=sys.stderr,
+                    )
             else:
                 entry["res"] = hex_val
 
@@ -202,6 +208,41 @@ def generate_cplx_tests(input_file, output_file, precision):
                 ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
                 ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
                 result = gmpy2.cos(mpc_args[0]) / gmpy2.sin(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "sec":
+                # gmpy2 does not provide sec for mpc, compute as 1/cos
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = 1 / gmpy2.cos(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "csc":
+                # gmpy2 does not provide csc for mpc, compute as 1/sin
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = 1 / gmpy2.sin(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "coth":
+                # gmpy2 does not provide coth for mpc, compute as 1/tanh
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = 1 / gmpy2.tanh(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "sech":
+                # gmpy2 does not provide sech for mpc, compute as 1/cosh
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = 1 / gmpy2.cosh(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "csch":
+                # gmpy2 does not provide csch for mpc, compute as 1/sinh
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = 1 / gmpy2.sinh(mpc_args[0])
                 ctx.precision = saved_prec
             elif func_name == "quo":
                 result = gmpy2.div(*mpc_args)

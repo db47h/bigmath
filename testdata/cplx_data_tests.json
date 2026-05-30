@@ -1698,6 +1698,182 @@
       ],
       "res_re": "0x8.c9f53d5681854bb520cc6aa829dbe5bp-4",
       "res_im": "0x1.921fb54442d18469898cc51701b839a2p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        [
+          "0",
+          "0"
+        ]
+      ],
+      "res_re": "0x1p+0",
+      "res_im": "0x0p+0"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        [
+          "0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0xd.1900f46de58c966213132d175cdcfc4299c8cc441b479a15bdcb3c3d8ae4c68p-4",
+      "res_im": "0x4.530da2d7fb2692d8f2ff366dda0b56a3acdff537a36e083d23ac6c1143f96d98p-4"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        [
+          "1",
+          "0.5"
+        ]
+      ],
+      "res_re": "0x1.14ce0035fb67bdd0eba779b95addc7f18b3c0e2a60d9fca86c982e55570400d8p+0",
+      "res_im": "0xc.737b96ac63f14a1a5a25e2d48e472da071b56bd816ac8071df2364759836a27p-4"
+    },
+    {
+      "fn": "sec",
+      "args": [
+        [
+          "-0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0xd.1900f46de58c966213132d175cdcfc4299c8cc441b479a15bdcb3c3d8ae4c68p-4",
+      "res_im": "-0x4.530da2d7fb2692d8f2ff366dda0b56a3acdff537a36e083d23ac6c1143f96d98p-4"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        [
+          "0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0xb.f4bdd4a74d500c8de6090b07e5751e38f01b934f5a95994fd3d49b499d6e735p-4",
+      "res_im": "-0xd.3a0f9d61f0fdbf7c5d1f60d1aaaefc34b34da962b60527447ca5ede1892745p-4"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        [
+          "1",
+          "0.5"
+        ]
+      ],
+      "res_re": "0xf.7f6e21afd88bceaea38d9695b740f15c27610e8ff960424377880a23e981b64p-4",
+      "res_im": "-0x4.993950489a0c00e11ca134f08bf5c0c4a764c7ad77df51be56b9750dd1132c58p-4"
+    },
+    {
+      "fn": "csc",
+      "args": [
+        [
+          "-0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "-0xb.f4bdd4a74d500c8de6090b07e5751e38f01b934f5a95994fd3d49b499d6e735p-4",
+      "res_im": "-0xd.3a0f9d61f0fdbf7c5d1f60d1aaaefc34b34da962b60527447ca5ede1892745p-4"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        [
+          "0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0xd.b1a09426b2b8908380bf8dff5f4d0be045092445cf53c3b810aa8787516f3fp-4",
+      "res_im": "-0xb.7b992a8be079f581fa399e81eefb49c380751273685a9e51ddb9eba0bda7381p-4"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        [
+          "1",
+          "0.5"
+        ]
+      ],
+      "res_re": "0x1.202d5dfed2edcd62329ac508c6caeface32b14a2f7d46d24a174fde56140789ap+0",
+      "res_im": "-0x4.2dc38d55f471ed6ed4829b272d16462eed73f194bd7dc3a12ff0cb7b7ba15c18p-4"
+    },
+    {
+      "fn": "coth",
+      "args": [
+        [
+          "2",
+          "0"
+        ]
+      ],
+      "res_re": "0x1.098d75212f273ba5d96804ecbc0d73267151279523bad160117293841f08b394p+0",
+      "res_im": "-0x0p+0"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        [
+          "0",
+          "0"
+        ]
+      ],
+      "res_re": "0x1p+0",
+      "res_im": "-0x0p+0"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        [
+          "1",
+          "0.7"
+        ]
+      ],
+      "res_re": "0x9.9ac691b85e685d1ad02f6c651608d975e11d39664398746646519a9e4f32c65p-4",
+      "res_im": "-0x6.2942961980db49f01e2c76b376f33a2af2c3b180002a5a8c38d40f0d65aa61a8p-4"
+    },
+    {
+      "fn": "sech",
+      "args": [
+        [
+          "2",
+          "0"
+        ]
+      ],
+      "res_re": "0x4.40b9d680bd909be0bba5faa34eb890d64c2ea398adcd7da2157a75edcb617e3p-4",
+      "res_im": "-0x0p+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        [
+          "0.5",
+          "0.7"
+        ]
+      ],
+      "res_re": "0x9.49c8d9a35aad9c46fb72879a1872644a0a709e25f3618f6f5de56619d8466abp-4",
+      "res_im": "-0x1.0edec5d683b08b72ae576c22308c48342efa6affca093ab76a6a06af8c849a8ap+0"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        [
+          "1",
+          "0.5"
+        ]
+      ],
+      "res_re": "0xa.3e47904338999c97eeb0cc22ba02ecef3c50c0485d2c66e58d53aff394df262p-4",
+      "res_im": "-0x7.58ffbe5b531b9c1a6e2b9769488389917e38fea2dcde6935da41b12cd89ec488p-4"
+    },
+    {
+      "fn": "csch",
+      "args": [
+        [
+          "2",
+          "0"
+        ]
+      ],
+      "res_re": "0x4.6959f78878a98f9a7d213a2d9f9cb335b6abb57b21aaf3ffbc0a6b17f9f0eedp-4",
+      "res_im": "-0x0p+0"
     }
   ]
 }
