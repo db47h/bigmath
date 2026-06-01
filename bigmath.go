@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 // Package bigmath builds upon [big.Float] and provides [Float], a drop-in
-// replacement with a complete set of methods for transcendentals, power,
-// trigonometric and hyperbolic functions, and a [Complex] with full arithmetic
-// (add, sub, mul, quo), transcendental and trigonometric support.
+// replacement with a complete set of methods for elementary, trigonometric,
+// hyperbolic, power, rounding (floor, ceil), and special functions, and
+// [Complex] with full arithmetic (add, sub, mul, quo), transcendental and
+// trigonometric support.
 //
 // The functions in this package follow the same rounding and precision semantics
 // as the standard [big.Float] operations. Use them exactly like [big.Float]:
