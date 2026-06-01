@@ -31,6 +31,18 @@ const goLicense = `// Copyright 2014 The Go Authors. All rights reserved.
 
 `
 
+// skipMethods lists methods that have hand-written implementations in
+// float_format.go. The generator skips these so they can be overridden
+// with optimized versions.
+var skipMethods = map[string]bool{
+	"Append":     true,
+	"AppendText": true,
+	"Format":     true,
+	"MarshalText": true,
+	"String":     true,
+	"Text":       true,
+}
+
 var bigFloatType = "*math/big.Float"
 
 func main() {
@@ -91,6 +103,9 @@ func main() {
 		return strings.Compare(a.Name, b.Name)
 	})
 	for _, mi := range methods {
+		if skipMethods[mi.Name] {
+			continue
+		}
 		writeForwarder(&buf, mi.Name, mi.Sig, methodDocs)
 	}
 	if newFloatSig != nil {

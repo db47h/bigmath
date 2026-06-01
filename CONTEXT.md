@@ -21,7 +21,12 @@ True FMA semantics (one rounding for `x*y + t`):
 All functions support `z == x` correctly. Avoid passing the receiver as an argument to `big.Float` methods (Add, Sub, Mul, Quo) because they allocate internally when receiver aliases an argument. Allocation-free when aliasing: `Neg`, `Set`, `SetMantExp`, `SetPrec`, `SetUint64`, `SetInt64`, and read-only methods (`Sign`, `Signbit`, `MantExp(nil)`, `IsInf`, `Prec`, `Cmp`).
 
 ### Constant Cache
-Constants (`pi`, `ln2`, `ln10`, `sqrt2`) computed once per precision via thread-safe `cache()`. Returned pointer is **read-only** — mutation corrupts the cache. Pre-allocated singletons (`zero`, `one`, `two`, `ten`, `minusOne`) are also read-only.
+Computed constants via thread-safe `cache()`: `pi(prec)`, `ln2(prec)`, `ln10(prec)`, `sqrt2(prec)`. Returned pointer is **read-only** — mutation corrupts the cache. The cache only grows, so a cached value may have higher precision than needed; **copy computed constants before use**:
+```go
+piCopy := newFloat(prec).Set(pi(prec))
+```
+Fixed singletons (`zero`, `one`, `two`, `ten`, `minusOne`) have exact representation at any precision — they need no copy.
+For `π/2`: `newFloat(workPrec).Set(pi(workPrec)).SetMantExp(t, -1)`.
 
 ### Guard-Bit Heuristics
 Each function uses a profiled guard strategy. Convention: core Taylor loops use a flat guard (`prec + _W` typically); argument-reduction layers add precision proportional to reduction depth. See individual `.go` files for specifics.
@@ -61,9 +66,7 @@ package bigmath
   ```
 
 ### 4. Use Project Constants, Don't Recompute
-- Use `pi(prec)`, `ln2(prec)`, `ln10(prec)`, `sqrt2(prec)` — cached, precision-adaptive.
-- Use `one`, `two`, `ten`, `zero`, `minusOne` for trivial constants.
-- For `π/2`: `newFloat(workPrec).Set(pi(workPrec)).SetMantExp(t, -1)`.
+See [Constant Cache](#constant-cache) above for API. Use cached constants instead of recomputing values like π.
 
 ### 5. Internal Helper Signature
 Caller-controlled allocation: pass explicit `temp` or work-precision param. Self-contained helpers allocate internally.
