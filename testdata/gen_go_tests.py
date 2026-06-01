@@ -72,6 +72,12 @@ def generate_json_tests(input_file, output_file, precision):
                 if func is None:
                     raise AttributeError(f"constant function '{func_name}' not found in gmpy2")
                 result = func()
+            elif func_name in ("floor", "ceil"):
+                if gmpy2.is_infinite(mpfr_args[0]):
+                    result = mpfr_args[0]  # ±Inf stays ±Inf
+                else:
+                    func = gmpy2.floor if func_name == "floor" else gmpy2.ceil
+                    result = gmpy2.mpfr(func(mpfr_args[0]))
             else:
                 func = getattr(gmpy2, func_name, None)
                 if func is None:

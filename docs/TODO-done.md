@@ -1,7 +1,16 @@
 # Completed Work
 
 > Everything listed here has been implemented, tested, and is passing.
-> Moved from `docs/TODO.md` on 2026-05-30.
+> Moved from `docs/TODO.md` on 2026-06-02.
+
+## Core Functions
+
+### P1 — Floor / Ceil (`rounding.go`)
+
+- **`Floor`** — via `SetMode(ToNegativeInf)` + `SetPrec(uint(MantExp(nil)))`, zero `big.Int` usage.
+- **`Ceil`** — via `SetMode(ToPositiveInf)` + same pattern, complement of Floor.
+- Both handle ±Inf, ±0, |x| < 1, and full aliasing (`z == x`).
+- 48 golden-comparison test cases (24 floor + 24 ceil) at 128-bit via MPFR/gmpy2.
 
 ## Core Functions
 
