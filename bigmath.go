@@ -7,11 +7,11 @@
 // trigonometric support.
 //
 // The functions in this package follow the same rounding and precision semantics
-// as the standard [big.Float] operations. Use them exactly like [big.Float]:
+// as the standard [big.Float] operations:
 //
-//	var z bigmath.Float
+//	z := new(bigmath.Float)
 //	z.SetPrec(128)
-//	bigmath.Sin(&z, &z)
+//	z.Sin(z)
 package bigmath
 
 import "math/big"
