@@ -7,6 +7,9 @@ import (
 )
 
 //go:generate go run internal/gen/main.go
+// NOTE: go generate requires Go 1.26+ (the generator uses go/types APIs
+// added in 1.26). The generated float_gen.go is checked in, so end users
+// at any Go >= 1.22 are unaffected.
 
 // Float is a drop-in replacement for [big.Float] that adds transcendentals,
 // power, and trigonometric functions via the [bigmath] package.

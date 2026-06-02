@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MIT
 
+//go:build go1.26
+
 // Command gen generates forwarding methods for type bigmath.Float.
 //
 // It inspects math/big.Float's method set using go/types and writes
 // float_gen.go containing forwarding wrappers that convert between
 // *Float and *big.Float automatically.
+//
+// NOTE: This tool requires Go 1.26+ (uses go/types APIs added in 1.26).
+// The generated output (float_gen.go) is checked in, so end users of
+// the library at any Go version >= 1.22 are unaffected.
 package main
 
 import (

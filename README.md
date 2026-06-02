@@ -111,7 +111,10 @@ design choices:
 
 ## Requirements
 
-- Go 1.26+ (big.Float native method set shown [here](https://tip.golang.org/doc/go1.26))
+- **Runtime**: Go 1.22+ — the library source is compatible with Go 1.22 and later.
+- **`go generate`**: Go 1.26+ — the code generator in `internal/gen/` uses `go/types` APIs
+  added in Go 1.26. The generated output (`float_gen.go`) is checked in, so end users
+  at any Go >= 1.22 are unaffected.
 
 ## License
 

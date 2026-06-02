@@ -58,7 +58,7 @@ var switchExp = 8000
 func BenchmarkBigFloatString(b *testing.B) {
 	t := new(big.Float).SetPrec(128).SetFloat64(0.5)
 	t.SetMantExp(t, switchExp)
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		_ = t.Text('g', -1)
 	}
 }
@@ -66,7 +66,7 @@ func BenchmarkBigFloatString(b *testing.B) {
 func BenchmarkFloatString(b *testing.B) {
 	t := new(Float).SetPrec(128).SetFloat64(0.5)
 	t.SetMantExp(t, switchExp)
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		_ = t.Text('g', -1)
 	}
 }
