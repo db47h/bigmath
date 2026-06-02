@@ -31,12 +31,6 @@ Not in the original package description but expected by the intended audience (a
 | 17 | **`Gamma`** | ❌ | ❌ | Γ(x) — Stirling/Lanczos approximation |
 | 18 | **`Lgamma`** | ❌ | ❌ | Log-Gamma: `Log(Gamma(x))` |
 
-### P4 — Formatting / I/O
-
-| # | Task | Effort |
-|---|------|--------|
-| 19 | Engineering-notation string conversion (`Float.Format` with `%E`-style exponent that is a multiple of 3) | Medium |
-
 ### P5 — Test Robustness
 
 | # | Task | Effort |

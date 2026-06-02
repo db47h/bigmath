@@ -25,6 +25,8 @@ func (x *Float) String() string {
 //	'f'	-ddddd.dddd, no exponent
 //	'g'	like 'e' for large exponents, like 'f' otherwise
 //	'G'	like 'E' for large exponents, like 'f' otherwise
+//	'n'	-d.dddde±dd, engineering notation (exponent multiple of 3, 1-3 leading digits)
+//	'N'	-d.ddddE±dd, engineering notation (same as 'n' with uppercase 'E')
 //	'x'	-0xd.dddddp±dd, hexadecimal mantissa, decimal power of two exponent
 //	'p'	-0x.dddp±dd, hexadecimal mantissa, decimal power of two exponent (non-standard)
 //	'b'	-ddddddp±dd, decimal mantissa, decimal power of two exponent (non-standard)
@@ -41,8 +43,8 @@ func (x *Float) String() string {
 // unrecognized format character.
 //
 // The precision prec controls the number of digits (excluding the exponent)
-// printed by the 'e', 'E', 'f', 'g', 'G', and 'x' formats.
-// For 'e', 'E', 'f', and 'x', it is the number of digits after the decimal point.
+// printed by the 'e', 'E', 'f', 'g', 'G', 'n', 'N', and 'x' formats.
+// For 'e', 'E', 'f', 'n', 'N', and 'x', it is the number of digits after the decimal point.
 // For 'g' and 'G' it is the total number of digits. A negative precision selects
 // the smallest number of decimal digits necessary to identify the value x uniquely
 // using x.Prec() mantissa bits.
@@ -67,7 +69,7 @@ func (x *Float) Format(s fmt.State, verb rune) {
 	}
 
 	switch verb {
-	case 'e', 'E', 'f', 'b', 'p', 'x':
+	case 'e', 'E', 'f', 'b', 'p', 'x', 'n', 'N':
 		// nothing to do
 	case 'F':
 		// (*Float).Text doesn't support 'F'; handle like 'f'

@@ -59,6 +59,10 @@ func (x *Float) Append(buf []byte, fmt byte, prec int) []byte {
 			prec = max(len(d.mant)-d.exp, 0)
 		case 'g', 'G':
 			prec = len(d.mant)
+		case 'n', 'N':
+			shift := ((d.exp-1)%3 + 3) % 3
+			sigDigits := shift + 1
+			prec = max(0, len(d.mant)-sigDigits)
 		}
 	} else {
 		// round appropriately
@@ -74,6 +78,9 @@ func (x *Float) Append(buf []byte, fmt byte, prec int) []byte {
 				prec = 1
 			}
 			d.round(prec)
+		case 'n', 'N':
+			// engineering may need up to 3 leading digits
+			d.round(3 + prec)
 		}
 	}
 
@@ -81,6 +88,8 @@ func (x *Float) Append(buf []byte, fmt byte, prec int) []byte {
 	switch fmt {
 	case 'e', 'E':
 		return fmtE(buf, fmt, prec, d)
+	case 'n', 'N':
+		return fmtN(buf, fmt, prec, d)
 	case 'f':
 		return fmtF(buf, prec, d)
 	case 'g', 'G':
@@ -249,4 +258,79 @@ func fmtF(buf []byte, prec int, d decimal) []byte {
 	}
 
 	return buf
+}
+
+// %n, %N: engineering notation — exponent is always a multiple of 3,
+// mantissa has 1-3 digits before the decimal point.
+// fmtN formats d in engineering notation: exponent is always a multiple of 3,
+// mantissa has 1-3 digits before the decimal point.
+// fmt is 'n' (lowercase 'e' separator) or 'N' (uppercase 'E' separator).
+func fmtN(buf []byte, fmt byte, prec int, d decimal) []byte {
+	// map fmt to exponent separator
+	var sep byte
+	if fmt == 'N' {
+		sep = 'E'
+	} else {
+		sep = 'e'
+	}
+
+	// special case 0
+	if len(d.mant) == 0 {
+		buf = append(buf, '0')
+		if prec > 0 {
+			buf = append(buf, '.')
+			for range prec {
+				buf = append(buf, '0')
+			}
+		}
+		buf = append(buf, sep)
+		buf = append(buf, "+00"...)
+		return buf
+	}
+
+	// raw scientific exponent
+	rawExp := int64(d.exp) - 1
+	// shift = rawExp % 3 (mathematical modulo: always in [0, 2])
+	shift := int(rawExp % 3)
+	if shift < 0 {
+		shift += 3
+	}
+	engExp := rawExp - int64(shift)
+	sigDigits := shift + 1 // 1, 2, or 3 leading digits
+
+	// leading digits (may need zero-padding if mant is shorter)
+	n := min(sigDigits, len(d.mant))
+	buf = append(buf, d.mant[:n]...)
+	for i := n; i < sigDigits; i++ {
+		buf = append(buf, '0')
+	}
+
+	// fractional digits
+	if prec > 0 {
+		buf = append(buf, '.')
+		i := sigDigits
+		m := min(len(d.mant), sigDigits+prec)
+		if i < m {
+			buf = append(buf, d.mant[i:m]...)
+			i = m
+		}
+		for ; i < sigDigits+prec; i++ {
+			buf = append(buf, '0')
+		}
+	}
+
+	// exponent separator (±ee)
+	buf = append(buf, sep)
+	if engExp < 0 {
+		buf = append(buf, '-')
+		engExp = -engExp
+	} else {
+		buf = append(buf, '+')
+	}
+
+	// at least 2 exponent digits
+	if engExp < 10 {
+		buf = append(buf, '0')
+	}
+	return strconv.AppendInt(buf, engExp, 10)
 }

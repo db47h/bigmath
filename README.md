@@ -28,6 +28,7 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 | **Rounding** | `Floor`, `Ceil` |
 | **Special** | `Pi` (constant), `Inv` (multiplicative inverse) |
 | **Constants** | π, √2, ln 2, ln 10 (thread-safe cache) |
+| **Formatting** | `Text`, `Format` (`fmt.Formatter`), `String`, `Append`, `AppendText`, `MarshalText` — supports `'e'`, `'E'`, `'f'`, `'g'`, `'G'`, `'b'`, `'p'`, `'x'`, plus **engineering notation** `'n'`/`'N'` |
 
 ### Complex
 
@@ -97,7 +98,7 @@ All functions follow the same contract as [`big.Float`](https://pkg.go.dev/math/
 - **Float**: All listed functions implemented and tested.
 - **Complex**: All listed functions implemented and tested — branch cuts documented per ISO C standard.
 - **Test coverage**: Golden-comparison tests against MPFR/gmpy2 at 128-bit, plus ULP stress tests at precisions 64–1024, plus identity tests (sin²+cos²=1, etc.) and cross-validation against `math/cmplx`.
-- **Upcoming**: `Acot`, `Asec`, `Acsc`, `Acoth`, `Asech`, `Acsch`, `Erf`, `Erfc`, `Gamma`, `Lgamma`, engineering-notation string conversion.
+- **Upcoming**: `Acot`, `Asec`, `Acsc`, `Acoth`, `Asech`, `Acsch`, `Erf`, `Erfc`, `Gamma`, `Lgamma`.
 
 ## Performance
 
@@ -108,6 +109,48 @@ design choices:
 - **Hybrid argument reduction** (trig): a Payne-Hanek–inspired precision-scaled quotient estimation followed by a Ziv-style dynamic-precision remainder loop — accurate for arbitrarily large inputs without a precomputed `2/π` word table.
 - **Thread-safe constant cache**: constants are computed once and reused across calls.
 - **No intra-loop allocation**: Taylor/series loops recycle temps via pointer swapping.
+
+## Formatting
+
+`Float` implements the full `fmt.Formatter` interface and supports:
+
+| Verb | Description |
+|------|-------------|
+| `'e'`/`'E'` | Scientific notation (`-d.dddde±dd`) |
+| `'f'`/`'F'` | Fixed-point (`-ddddd.dddd`) |
+| `'g'`/`'G'` | General format (like `'e'` for large/small exponents, `'f'` otherwise) |
+| `'n'`/`'N'` | **Engineering notation** — exponent is always a multiple of 3, mantissa has 1–3 leading digits. Lowercase uses `'e'`, uppercase uses `'E'`. (non-standard, specific to this package) |
+| `'b'` | Decimal mantissa with binary exponent (non-standard) |
+| `'p'` | Hexadecimal mantissa with binary exponent (non-standard) |
+| `'x'` | Hexadecimal mantissa with decimal power-of-two exponent |
+
+### Engineering notation examples
+
+| Value | `Text('e', 6)` | `Text('n', 6)` | `Text('n', -1)` (shortest) |
+|-------|----------------|----------------|----------------------------|
+| `12345` | `1.234500e+04` | `12.345000e+03` | `12.345e+03` |
+| `0.000123` | `1.230000e-04` | `123.000000e-06` | `123e-06` |
+| `1e-13` | `1.000000e-13` | `100.000000e-15` | `100e-15` |
+| `1e100` | `1.000000e+100` | `10.000000e+99` | `10e+99` |
+| `1` | `1.000000e+00` | `1.000000e+00` | `1e+00` |
+| `0` | `0.000000e+00` | `0.000000e+00` | `0e+00` |
+
+### Workaround for Go issue [#11068](https://github.com/golang/go/issues/11068)
+
+The standard Go `big.Float.Text()` method suffers from **O(exp × prec²) time
+complexity** when formatting numbers with very large exponents (e.g. `1e1000000`),
+making it unusable for exponent magnitudes above a few million. This package's
+`Append()` implementation uses a custom fast path for the `'e'`, `'E'`, `'f'`,
+`'g'`, `'G'`, `'n'`, and `'N'` formats that avoids the expensive decimal
+conversion and scales linearly with the exponent magnitude. Formats `'b'`, `'p'`,
+and `'x'` delegate to `math/big` (already fast for those forms).
+
+```go
+// bigmath.Float handles this instantly:
+f := new(bigmath.Float).SetPrec(128)
+f.SetString("1e10000000")
+fmt.Println(f.Text('g', -1))  // fast, not O(exp × prec²)
+```
 
 ## Requirements
 

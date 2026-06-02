@@ -118,6 +118,12 @@ All methods implemented and supporting `z == x` aliasing:
 - **Code doc comments** on all exported functions with special cases listed.
 - Branch cuts documented on `Complex.Log` and all six complex inverse functions (Asin, Acos, Atan, Asinh, Acosh, Atanh).
 
+## P4 — Formatting / I/O
+
+| # | Task | Effort |
+|---|------|--------|
+| 19 | Engineering-notation string conversion (`Float.Format` with `%E`-style exponent that is a multiple of 3) | Medium |
+
 ## P1 — Reciprocal Trig / Hyperbolic (via `trig.go`, `hyperbolic.go`, `cplx_trig.go`, `cplx_hyp.go`)
 
 | # | Function | Float | Complex | Via |

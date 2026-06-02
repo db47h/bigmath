@@ -49,6 +49,7 @@ const maxShift = _W - 4
 // precision arithmetic to convert f to a base 10 representation. The result
 // cannot be an isomorphic exact translation of the floating point value, only
 // an approximation.
+// This is a workaround for https://github.com/golang/go/issues/11068.
 func (x *decimal) initHuge(f *Float) {
 	// special case 0
 	if f.Sign() == 0 {
