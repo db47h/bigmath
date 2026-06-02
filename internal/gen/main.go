@@ -35,12 +35,12 @@ const goLicense = `// Copyright 2014 The Go Authors. All rights reserved.
 // float_format.go. The generator skips these so they can be overridden
 // with optimized versions.
 var skipMethods = map[string]bool{
-	"Append":     true,
-	"AppendText": true,
-	"Format":     true,
+	"Append":      true,
+	"AppendText":  true,
+	"Format":      true,
 	"MarshalText": true,
-	"String":     true,
-	"Text":       true,
+	"String":      true,
+	"Text":        true,
 }
 
 var bigFloatType = "*math/big.Float"
@@ -123,6 +123,7 @@ func main() {
 var aliasTypes = map[string]string{
 	"math/big.Accuracy":     "Accuracy",
 	"math/big.RoundingMode": "RoundingMode",
+	"math/big.Word":         "Word",
 }
 
 // writeImports writes a compact import block for the given import paths.

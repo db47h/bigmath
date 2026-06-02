@@ -23,7 +23,7 @@ func (z *Float) Floor(x *Float) *Float {
 	E := x.MantExp(nil)
 	if E <= 0 {
 		if x.Sign() < 0 {
-			return z.Copy(minusOne)
+			return z.Set(minusOne)
 		}
 		return z.Set(zero)
 	}

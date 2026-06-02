@@ -16,6 +16,7 @@ import (
 type (
 	Accuracy = big.Accuracy
 	RoundingMode = big.RoundingMode
+	Word = big.Word
 )
 
 // Constants describing the Accuracy of a Float.

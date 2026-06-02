@@ -14,8 +14,6 @@
 //	z.Sin(z)
 package bigmath
 
-import "math/big"
-
 // An ErrNaN panic is raised by a [Float] operation that would lead to
 // a NaN under IEEE 754 rules. An ErrNaN implements the error interface.
 type ErrNaN string
@@ -35,6 +33,3 @@ type ErrNaN string
 func (err ErrNaN) Error() string {
 	return string(err)
 }
-
-// TODO: add this to float_gen.go
-type Word = big.Word
