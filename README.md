@@ -27,7 +27,7 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 | **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh` |
 | **Rounding** | `Floor`, `Ceil` |
 | **Special** | `Pi` (constant), `Inv` (multiplicative inverse) |
-| **Constants** | π, √2, √3, ln 2, ln 10, π/2, 2/π, ln(10)/ln(2) (thread-safe cache) |
+| **Constants** | π, √2, ln 2, ln 10 (thread-safe cache) |
 
 ### Complex
 
