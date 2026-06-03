@@ -87,10 +87,45 @@ func (z *Float) Hypot(x, y *Float) *Float {
 
 	workPrec := prec + _W
 
-	// Use FMA for better precision: sqrt(x*x + y*y)
-	t := newFloat(workPrec).FMA(x, x, newFloat(2*y.Prec()).Mul(y, y))
+	// Order so |x| >= |y|.
+	if y.AbsCmp(x) > 0 {
+		x, y = y, x
+	}
 
-	return z.Sqrt(t)
+	// Fast path: if |y| is negligible relative to |x|, return |x|.
+	// sqrt(1+r²) rounds to 1 when r² < 2^(-prec-1) (Borges 2019),
+	// i.e. y < x * 2^(-(prec+1)/2). In exponent terms this is
+	// an exponent gap of (prec+1)/2 bits (including mantissa margin).
+	if eA, eB := x.MantExp(nil), y.MantExp(nil); eA-eB > int(prec)/2+1 {
+		return z.Abs(x)
+	}
+
+	if e := x.MantExp(nil); e > MaxExp/2 {
+		// The intermediate product x*x would overflow MaxExp.
+		// Since the mantissa is in [0.5,1), the product has
+		// exponent 2*e or 2*e-1; guard when 2e >= MaxExp+1.
+		//
+		// Scale both operands down by a power of 2, compute,
+		// then scale the result back up.
+		shift := e - MaxExp/2 + 2
+
+		mant := newFloat(workPrec)
+		x.SetMantExp(mant.Set(x), x.MantExp(nil)-shift)
+		y.SetMantExp(mant.Set(y), y.MantExp(nil)-shift)
+
+		t := newFloat(workPrec).FMA(x, x, newFloat(2*workPrec).Mul(y, y))
+		z.Sqrt(t)
+
+		// Undo the scaling: sqrt(x'²+y'²) = sqrt(x²+y²) * 2^(-shift).
+		e := z.MantExp(mant)
+		z.SetMantExp(mant, e+shift)
+	} else {
+		// Common case — use FMA for a single rounding.
+		t := newFloat(workPrec).FMA(x, x, newFloat(2*y.Prec()).Mul(y, y))
+		z.Sqrt(t)
+	}
+
+	return z
 }
 
 // fma implements fused multiply-add: z = x*y + t with a single rounding.

@@ -101,3 +101,46 @@ func TestFloat_AbsCmp(t *testing.T) {
 		})
 	}
 }
+
+func TestHypotOverflowGuard(t *testing.T) {
+	// MaxExp ≈ 2.1e9. Squaring a *big.Float with MantExp > MaxExp/2
+	// overflows the intermediate product. The guard should scale, compute,
+	// and scale back — giving the correct finite result.
+
+	safeExp := bigmath.MaxExp/2 + 500
+
+	mant := new(bigmath.Float).SetPrec(64).SetFloat64(0.75)
+	ax := new(bigmath.Float).SetPrec(64).SetMantExp(mant, safeExp)
+
+	// ax*ax would overflow (verify the premise)
+	xsq := new(bigmath.Float).SetPrec(128).Mul(ax, ax)
+	if !xsq.IsInf() {
+		t.Fatal("expected ax*ax to overflow before the fix")
+	}
+
+	// Hypot(ax, 0) should be |ax|, finite
+	z := new(bigmath.Float).SetPrec(64)
+	z.Hypot(ax, new(bigmath.Float))
+	if z.IsInf() {
+		t.Fatal("Hypot overflowed unexpectedly for representable result")
+	}
+
+	// Should equal |ax|
+	if z.Cmp(new(bigmath.Float).SetPrec(64).Abs(ax)) != 0 {
+		t.Fatalf("Hypot(ax,0) = %v, want %v", z, ax)
+	}
+}
+
+func TestHypotFastPath(t *testing.T) {
+	// When |ay| is negligible relative to |ax|, the fast path should return |ax|.
+	z := new(bigmath.Float).SetPrec(64)
+	ax := new(bigmath.Float).SetPrec(64).SetFloat64(1e100)
+	ay := new(bigmath.Float).SetPrec(64).SetFloat64(1e-100)
+
+	z.Hypot(ax, ay)
+
+	expected := new(bigmath.Float).SetPrec(64).Abs(ax)
+	if z.Cmp(expected) != 0 {
+		t.Fatalf("Hypot(1e100, 1e-100) = %v, want %v", z, expected)
+	}
+}

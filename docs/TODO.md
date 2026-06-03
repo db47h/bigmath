@@ -3,10 +3,6 @@
 > Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
 > This file tracks only what's still pending.
 
-## Improvements:
-
-- Use fyx's more robust hypot
-
 ## Missing Public API Functions
 
 Functions ordered by priority (highest first). All items apply to both Float and Complex unless noted.
