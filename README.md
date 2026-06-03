@@ -26,7 +26,7 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 | **Hyperbolic** | `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Coth`, `Sech`, `Csch` |
 | **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh`, `Acoth`, `Asech`, `Acsch` |
 | **Rounding** | `Floor`, `Ceil` |
-| **Special** | `Pi` (constant), `Inv` (multiplicative inverse) |
+| **Special** | `Pi` (constant), `Inv` (multiplicative inverse), `AbsCmp` (compare absolute values) |
 | **Constants** | π, √2, ln 2, ln 10 (thread-safe cache) |
 | **Formatting** | `Text`, `Format` (`fmt.Formatter`), `String`, `Append`, `AppendText`, `MarshalText` — supports `'e'`, `'E'`, `'f'`, `'g'`, `'G'`, `'b'`, `'p'`, `'x'`, plus **engineering notation** `'n'`/`'N'` |
 

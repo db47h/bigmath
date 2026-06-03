@@ -5,8 +5,7 @@
 
 ## Improvements:
 
-- Use smith's algorithm for complex division
-- use fyx's more robust hypot
+- Use fyx's more robust hypot
 
 ## Missing Public API Functions
 

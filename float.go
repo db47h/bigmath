@@ -152,3 +152,47 @@ func (z *Float) FMS(x, y, t *Float) *Float {
 func (z *Float) Inv(x *Float) *Float {
 	return z.Quo(one, x)
 }
+
+// AbsCmp compares |x| and |y| and returns:
+//   - -1 if |x| < |y|;
+//   - 0 if |x| == |y| (incl. ±0 == ±0, ±Inf == ±Inf);
+//   - +1 if |x| > |y|.
+func (x *Float) AbsCmp(y *Float) int {
+	// Inf has the largest magnitude.
+	if x.IsInf() {
+		if y.IsInf() {
+			return 0
+		}
+		return 1
+	}
+	if y.IsInf() {
+		return -1
+	}
+	sx, sy := x.Sign(), y.Sign()
+	if sx == 0 {
+		if sy == 0 {
+			return 0
+		}
+		return -1
+	}
+	ex := x.MantExp(nil)
+	ey := y.MantExp(nil)
+	if ex > ey {
+		return 1
+	}
+	if ex < ey {
+		return -1
+	}
+	if sx == sy {
+		if sx < 0 {
+			return y.Cmp(x)
+		}
+		return x.Cmp(y)
+	}
+	var t Float
+	if sx < 0 {
+		return t.Neg(x).Cmp(y)
+	}
+	// sx > 0, sy < 0
+	return x.Cmp(t.Neg(y))
+}

@@ -81,30 +81,53 @@ func (z *Complex) Mul(x, y *Complex) *Complex {
 	return z
 }
 
-// Quo sets z to x/y and returns z.
+// Quo sets z to the rounded quotient x/y and returns z.
+//
+// It uses Smith's algorithm 116 (CACM 1962) for robust complex division,
+// which avoids the intermediate c²+d² term that can overflow/underflow in
+// the naive formula.
 func (z *Complex) Quo(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 
-	temp := new(Float) // temp for fma. prec will be handled by fma()
+	// Smith's algorithm for (a+bi)/(c+di):
+	//
+	//	if |c| >= |d|:
+	//	    r   = d/c                  (|r| ≤ 1)
+	//	    den = c + d*r              (= (c²+d²)/c)
+	//	    re  = a + b*r              (= (ac+bd)/c)
+	//	    im  = b - a*r              (= (bc-ad)/c)
+	//	else:
+	//	    r   = c/d                  (|r| < 1)
+	//	    den = d + c*r              (= (c²+d²)/d)
+	//	    re  = a*r + b              (= (ac+bd)/d)
+	//	    im  = b*r - a              (= (bc-ad)/d)
+	//
+	//	z = (re + i·im) / den
+	//	  = (ac+bd)/(c²+d²) + i·(bc-ad)/(c²+d²)
+
+	temp := new(Float) // for fma/fms — must NOT alias any argument
 	re := newFloat(workPrec)
 	im := newFloat(workPrec)
+	ratio := newFloat(workPrec)
+	den := newFloat(workPrec)
 
-	// (a+bi)/(c+di) = ((ac+bd) + (bc-ad)i) / (c^2+d^2)
-	// denom = c^2 + d^2.
-	c2 := newFloat(y.Real.Prec()*2).Mul(&y.Real, &y.Real)
-	denom := newFloat(workPrec).fma(&y.Imag, &y.Imag, c2, temp)
+	if y.Real.AbsCmp(&y.Imag) >= 0 {
+		// |c| >= |d|
+		ratio.Quo(&y.Imag, &y.Real)            // r = d/c
+		den.fma(&y.Imag, ratio, &y.Real, temp) // den = c + d*r
+		re.fma(&x.Imag, ratio, &x.Real, temp)  // re  = a + b*r
+		im.fms(&x.Real, ratio, &x.Imag, temp)  // im  = a*r - b
+		im.Neg(im)                             // im  = b - a*r
+	} else {
+		// |c| < |d|
+		ratio.Quo(&y.Real, &y.Imag)            // r = c/d
+		den.fma(&y.Real, ratio, &y.Imag, temp) // den = d + c*r
+		re.fma(&x.Real, ratio, &x.Imag, temp)  // re  = a*r + b
+		im.fms(&x.Imag, ratio, &x.Real, temp)  // im  = b*r - a
+	}
 
-	// ac + bd
-	ac := newFloat(x.Real.Prec()+y.Real.Prec()).Mul(&x.Real, &y.Real)
-	re.fma(&x.Imag, &y.Imag, ac, temp)
-
-	// bc - ad
-	ad := newFloat(x.Real.Prec()+y.Imag.Prec()).Mul(&x.Real, &y.Imag)
-	im.fma(&x.Imag, &y.Real, ad.Neg(ad), temp)
-
-	z.Real.Quo(re, denom)
-	z.Imag.Quo(im, denom)
-
+	z.Real.Quo(re, den)
+	z.Imag.Quo(im, den)
 	return z
 }
 
