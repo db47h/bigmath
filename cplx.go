@@ -50,18 +50,36 @@ func (z *Complex) Sub(x, y *Complex) *Complex {
 func (z *Complex) Mul(x, y *Complex) *Complex {
 	workPrec := z.setPrec2(x, y) + _W
 
-	temp := new(Float) // temp for fma. prec will be handled by fma()
+	// Smith's 3-multiply algorithm: (a+bi)(c+di)
+	//   re = a*c - b*d
+	//   im = (a+b)*(c+d) - a*c - b*d
+
+	// t1 = a*c — full precision product
+	t1 := newFloat(x.Real.Prec() + y.Real.Prec())
+	t1.Mul(&x.Real, &y.Real)
+
+	// t2 = b*d — full precision product
+	t2 := newFloat(x.Imag.Prec() + y.Imag.Prec())
+	t2.Mul(&x.Imag, &y.Imag)
+
+	// re = t1 - t2 — round to workPrec
 	re := newFloat(workPrec)
+	re.Sub(t1, t2)
+
+	// a+b, c+d — round to workPrec
+	aPlusB := newFloat(workPrec)
+	aPlusB.Add(&x.Real, &x.Imag)
+	cPlusD := newFloat(workPrec)
+	cPlusD.Add(&y.Real, &y.Imag)
+
+	// (a+b)*(c+d) — full precision at sum of input precs
+	sum := newFloat(aPlusB.Prec() + cPlusD.Prec())
+	sum.Mul(aPlusB, cPlusD)
+
+	// im = sum - t1 - t2 — round to workPrec
 	im := newFloat(workPrec)
-
-	// (a+bi)(c+di) = (ac-bd) + (ad+bc)i
-	// Real: ac - bd
-	bd := newFloat(x.Imag.Prec()+y.Imag.Prec()).Mul(&x.Imag, &y.Imag)
-	re.fma(&x.Real, &y.Real, bd.Neg(bd), temp)
-
-	// Imag: ad + bc
-	bc := newFloat(x.Imag.Prec()+y.Real.Prec()).Mul(&x.Imag, &y.Real)
-	im.fma(&x.Real, &y.Imag, bc, temp)
+	im.Sub(sum, t1)
+	im.Sub(im, t2)
 
 	z.Real.Set(re)
 	z.Imag.Set(im)
