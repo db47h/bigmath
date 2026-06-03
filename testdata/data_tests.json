@@ -2984,6 +2984,380 @@
         "-123456789.123456789"
       ],
       "res": "-0x7.5bcd15p+24"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "0"
+      ],
+      "res": "0x1.921fb54442d18469898cc51701b839a252049c1114cf98e804177d4c76273644p+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "1"
+      ],
+      "res": "0xc.90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22p-4"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "-1"
+      ],
+      "res": "0x2.5b2f8fe6643a469e4e5327a2829456737b06ea199f37655c06233bf2b13ad168p+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.1b6e192ebbe446c6d19aa220a39af3209afa914d81c1296792aff1d9017612cp+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "-0.5"
+      ],
+      "res": "0x2.08d15159c9bec20c417ee80d5fd58024090ea6d4a7de0868757f08bfead859c8p+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "2"
+      ],
+      "res": "0x7.6b19c1586ed3da2b7f222f65e1d4681b70a0ac3930e6f8071678b7374b12385p-4"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "-2"
+      ],
+      "res": "0x2.ad8dce72feb5cb305b276737a5532cc2ecff2d5e9690c24f96c76f25779d4904p+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "acot",
+      "args": [
+        "-inf"
+      ],
+      "res": "0x3.243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c88p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "1"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "-1"
+      ],
+      "res": "0x3.243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c88p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "2"
+      ],
+      "res": "0x1.0c152382d73658465bb32e0f567ad116e158680b6335109aad64fe32f96f7984p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "-2"
+      ],
+      "res": "0x2.182a4705ae6cb08cb7665c1eacf5a22dc2b0d016c66a21355ac9fc65f2def308p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "inf"
+      ],
+      "res": "0x1.921fb54442d18469898cc51701b839a252049c1114cf98e804177d4c76273644p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "-inf"
+      ],
+      "res": "0x1.921fb54442d18469898cc51701b839a252049c1114cf98e804177d4c76273644p+0"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "-0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "asec",
+      "args": [
+        "0"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "1"
+      ],
+      "res": "0x1.921fb54442d18469898cc51701b839a252049c1114cf98e804177d4c76273644p+0"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "-1"
+      ],
+      "res": "-0x1.921fb54442d18469898cc51701b839a252049c1114cf98e804177d4c76273644p+0"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "2"
+      ],
+      "res": "0x8.60a91c16b9b2c232dd99707ab3d688b70ac3405b19a884d56b27f197cb7bcc2p-4"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "-2"
+      ],
+      "res": "-0x8.60a91c16b9b2c232dd99707ab3d688b70ac3405b19a884d56b27f197cb7bcc2p-4"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "-inf"
+      ],
+      "res": "-0x0p+0"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "-0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acsc",
+      "args": [
+        "0"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "2"
+      ],
+      "res": "0x8.c9f53d5681854bb520cc6aa829dbe5adf0a216cdbf046f81ecbf77528a49ac6p-4"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "-2"
+      ],
+      "res": "-0x8.c9f53d5681854bb520cc6aa829dbe5adf0a216cdbf046f81ecbf77528a49ac6p-4"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "1.5"
+      ],
+      "res": "0xc.e020fbf6c699b57efbbd28b03ac98fa24a638607b6f97064285b1563e0addcfp-4"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "-1.5"
+      ],
+      "res": "-0xc.e020fbf6c699b57efbbd28b03ac98fa24a638607b6f97064285b1563e0addcfp-4"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "1"
+      ],
+      "panics": true
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "-1"
+      ],
+      "panics": true
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "0"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "1"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.51242719804349be684bd0188d52cecca6fe0b5b28c71976e990acef4eabd1aep+0"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "0.1"
+      ],
+      "res": "0x2.fe43da39c0ba87f9072bef0f6918cc2d5d299ae39cc2c53fd8c0ed0a81f360b4p+0"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "-0.5"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "asech",
+      "args": [
+        "2"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "1"
+      ],
+      "res": "0xe.1a1b30bcea13660d8f99e8dd2518a53cd3ba807f85dae5d81ae4e22f4d354d7p-4"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "-1"
+      ],
+      "res": "-0xe.1a1b30bcea13660d8f99e8dd2518a53cd3ba807f85dae5d81ae4e22f4d354d7p-4"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "2"
+      ],
+      "res": "0x7.b30b2bb14582652f810812a5a31c0834c9eb2333477c9df6f00a0e71d4dfd428p-4"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "-2"
+      ],
+      "res": "-0x7.b30b2bb14582652f810812a5a31c0834c9eb2333477c9df6f00a0e71d4dfd428p-4"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.719218313d0872f8e831837f0e954189e5dc16999d675d9e4d01e2b557e9f7c8p+0"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x1.719218313d0872f8e831837f0e954189e5dc16999d675d9e4d01e2b557e9f7c8p+0"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "-0"
+      ],
+      "res": "-inf"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "inf"
+      ],
+      "res": "0x0p+0"
+    },
+    {
+      "fn": "acsch",
+      "args": [
+        "-inf"
+      ],
+      "res": "-0x0p+0"
     }
   ]
 }

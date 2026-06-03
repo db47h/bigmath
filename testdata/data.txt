@@ -477,3 +477,68 @@ ceil 1e-10
 ceil -1e-10
 ceil 123456789.123456789
 ceil -123456789.123456789
+
+# acot
+acot 0
+acot 1
+acot -1
+acot 0.5
+acot -0.5
+acot 2
+acot -2
+acot inf
+acot -inf
+
+# asec
+asec 1
+asec -1
+asec 2
+asec -2
+asec inf
+asec -inf
+asec 0.5       !panic
+asec -0.5      !panic
+asec 0         !panic
+
+# acsc
+acsc 1
+acsc -1
+acsc 2
+acsc -2
+acsc inf
+acsc -inf
+acsc 0.5       !panic
+acsc -0.5      !panic
+acsc 0         !panic
+
+# acoth
+acoth 2
+acoth -2
+acoth 1.5
+acoth -1.5
+acoth inf
+acoth 1.000000000000000000000001
+acoth 1        !panic
+acoth -1       !panic
+acoth 0.5      !panic
+acoth 0        !panic
+
+# asech
+asech 0
+asech 1
+asech 0.5
+asech 0.1
+asech -0.5     !panic
+asech 2        !panic
+
+# acsch
+acsch 1
+acsch -1
+acsch 2
+acsch -2
+acsch 0.5
+acsch -0.5
+acsch 0
+acsch -0
+acsch inf
+acsch -inf

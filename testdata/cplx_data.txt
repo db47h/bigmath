@@ -206,3 +206,22 @@ sech 2 0
 csch 0.5 0.7
 csch 1 0.5
 csch 2 0
+
+# acot, asec, acsc, acoth, asech, acsch
+acot  0 0
+acot  1 0
+acot  -1 0
+acot  0.5 0.7
+asec  1 0
+asec  2 0
+asec  0.5 0.7
+acsc  1 0
+acsc  2 0
+acsc  0.5 0.7
+acoth 2 0
+acoth 1.5 0.7
+asech 1 0
+asech 0.5 0
+acsch 1 0
+acsch 2 0
+acsch 0.5 0.7

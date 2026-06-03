@@ -138,6 +138,21 @@ Tests: golden-comparison via MPFR/gmpy2 for both float and complex (3-6 values p
 
 Generator extended: added mpc special cases in `gen_go_tests.py` for sec/csc/coth/sech/csch (gmpy2 mpc lacks native versions, computed as `1/cos`, `1/sin`, `1/tanh`, `1/cosh`, `1/sinh` at 2× precision).
 
+## P2 — Inverse Reciprocal Trig / Hyperbolic (via `trig.go`, `hyperbolic.go`, `cplx_trig.go`, `cplx_hyp.go`)
+
+| # | Function | Float | Complex | Via |
+|---|----------|-------|---------|-----|
+| 9 | **`Acot`** | ✅ `trig.go` | ✅ `cplx_trig.go` | `Atan2(one, x)` (Float), `π/2 - Atan(z)` (Complex) |
+| 10 | **`Asec`** | ✅ `trig.go` | ✅ `cplx_trig.go` | `Acos(Inv(x))` |
+| 11 | **`Acsc`** | ✅ `trig.go` | ✅ `cplx_trig.go` | `Asin(Inv(x))` |
+| 12 | **`Acoth`** | ✅ `hyperbolic.go` | ✅ `cplx_hyp.go` | `½·ln((x+1)/(x-1))` (Float), `Atanh(Inv(z))` (Complex) |
+| 13 | **`Asech`** | ✅ `hyperbolic.go` | ✅ `cplx_hyp.go` | `Acosh(Inv(x))` |
+| 14 | **`Acsch`** | ✅ `hyperbolic.go` | ✅ `cplx_hyp.go` | `Asinh(Inv(x))` |
+
+Tests: golden-comparison via gmpy2 at 2× precision for both float and complex (values per function covering normal, zero, ±Inf, and domain-violation panic cases). Branch cuts documented on all six Complex functions.
+
+Generator extended: added special-case blocks in `gen_go_tests.py` for acot/asec/acsc/acoth/asech/acsch in both float mode (gmpy2 identity calls) and complex mode (2× precision identity computations).
+
 ## Configuration / Infrastructure
 
 - `go.mod` / `go.sum` — module setup.

@@ -46,7 +46,7 @@ func (x *Float) isOdd() bool {
 // Returns -1 if |x| < 1, 0 if |x| == 1, 1 if |x| > 1.
 func (x *Float) absCmpOne() int {
 	exp := x.MantExp(nil)
-	if exp > 1 {
+	if x.IsInf() || exp > 1 {
 		return 1
 	}
 	if exp < 1 {

@@ -83,3 +83,52 @@ func (z *Complex) Csch(x *Complex) *Complex {
 	t := newComplex(workPrec).Sinh(x)
 	return z.Inv(t)
 }
+
+// Acoth sets z to the inverse hyperbolic cotangent of x,
+// acoth(z) = atanh(1/z), and returns z.
+//
+// The branch cut is along the real axis, in the interval [-1, +1].
+// The imaginary part of the result lies in the interval [-π/2, π/2].
+func (z *Complex) Acoth(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	// Only use Float shortcut when |x.Real| > 1 (Float.Acoth panics for |x| <= 1;
+	// the complex formula handles all inputs via Atanh(Inv(z))).
+	if x.IsReal() && x.Real.absCmpOne() > 0 {
+		z.Real.Acoth(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	return z.Atanh(newComplex(workPrec).Inv(x))
+}
+
+// Asech sets z to the inverse hyperbolic secant of x,
+// asech(z) = acosh(1/z), and returns z.
+//
+// The branch cut is along the real axis, for x < 0 and x > 1.
+// The imaginary part of the result lies in the interval [0, π].
+func (z *Complex) Asech(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	// Only use Float shortcut when x.Real is in [0, 1] (Float.Asech panics
+	// for x < 0 or x > 1; the complex formula handles all inputs via Acosh(Inv(z))).
+	if x.IsReal() && x.Real.Sign() >= 0 && x.Real.absCmpOne() <= 0 {
+		z.Real.Asech(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	return z.Acosh(newComplex(workPrec).Inv(x))
+}
+
+// Acsch sets z to the inverse hyperbolic cosecant of x,
+// acsch(z) = asinh(1/z), and returns z.
+//
+// The branch cut is along the imaginary axis, in the interval [-i, +i].
+// The imaginary part of the result lies in the interval [-π/2, π/2].
+func (z *Complex) Acsch(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	if x.IsReal() {
+		z.Real.Acsch(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	return z.Asinh(newComplex(workPrec).Inv(x))
+}

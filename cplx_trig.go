@@ -95,3 +95,57 @@ func (z *Complex) Tan(x *Complex) *Complex {
 	c := newComplex(workPrec).Cos(x)
 	return z.Quo(s, c)
 }
+
+// Acot sets z to the inverse cotangent of x, acot(z) = π/2 - atan(z), and returns z.
+//
+// The branch cut is along the imaginary axis, outside the interval [-i, +i].
+// The real part of the result lies in the interval [0, π].
+func (z *Complex) Acot(x *Complex) *Complex {
+	// Atan internally computes at prec+_W, then result stored at workPrec.
+	prec := z.setPrec(x)
+	workPrec := prec + _W
+
+	// x.IsReal shortcut: Float.Acot (Atan2(one, x)) handles all real x including 0.
+	if x.IsReal() {
+		z.Real.Acot(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	t := newComplex(workPrec).Atan(x)
+	// acot(z) = π/2 - atan(z)
+	z.Real.Sub(halfPi(workPrec), &t.Real)
+	z.Imag.Neg(&t.Imag)
+	return z
+}
+
+// Asec sets z to the inverse secant of x, asec(z) = acos(1/z), and returns z.
+//
+// The branch cut is along the real axis, in the interval [-1, +1].
+// The real part of the result lies in the interval [0, π].
+func (z *Complex) Asec(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	// Only use Float shortcut when |x.Real| >= 1 (Float.Asec panics for |x| < 1;
+	// the complex formula handles all inputs via Acos(Inv(z))).
+	if x.IsReal() && x.Real.absCmpOne() >= 0 {
+		z.Real.Asec(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	return z.Acos(newComplex(workPrec).Inv(x))
+}
+
+// Acsc sets z to the inverse cosecant of x, acsc(z) = asin(1/z), and returns z.
+//
+// The branch cut is along the real axis, in the interval [-1, +1].
+// The real part of the result lies in the interval [-π/2, π/2].
+func (z *Complex) Acsc(x *Complex) *Complex {
+	workPrec := z.setPrec(x) + _W
+	// Only use Float shortcut when |x.Real| >= 1 (Float.Acsc panics for |x| < 1;
+	// the complex formula handles all inputs via Asin(Inv(z))).
+	if x.IsReal() && x.Real.absCmpOne() >= 0 {
+		z.Real.Acsc(&x.Real)
+		z.Imag.Set(&x.Imag)
+		return z
+	}
+	return z.Asin(newComplex(workPrec).Inv(x))
+}

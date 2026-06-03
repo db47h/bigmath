@@ -3,22 +3,14 @@
 > Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
 > This file tracks only what's still pending.
 
+## Improvements:
+
+- Use smith's algorithm for complex division
+- use fyx's more robust hypot
+
 ## Missing Public API Functions
 
 Functions ordered by priority (highest first). All items apply to both Float and Complex unless noted.
-
-### P2 — Inverse Reciprocal Trig / Hyperbolic
-
-Standard identities, less commonly used.
-
-| # | Function | Float | Complex | Via |
-|---|----------|-------|---------|-----|
-| 9 | **`Acot`** | ❌ | ❌ | `Atan2(one, x)` or `π/2 - Atan(x)` |
-| 10 | **`Asec`** | ❌ | ❌ | `Acos(Inv(x))` |
-| 11 | **`Acsc`** | ❌ | ❌ | `Asin(Inv(x))` |
-| 12 | **`Acoth`** | ❌ | ❌ | `Atanh(Inv(x))` (domain \|x\| > 1) |
-| 13 | **`Asech`** | ❌ | ❌ | Log identity (domain (0, 1]) |
-| 14 | **`Acsch`** | ❌ | ❌ | Log identity (domain x ≠ 0) |
 
 ### P3 — Special Functions
 

@@ -515,3 +515,92 @@ func (z *Float) Atanh(x *Float) *Float {
 	}
 	return z
 }
+
+// Acoth sets z to the inverse hyperbolic cotangent of x,
+// acoth(x) = ½·ln((x+1)/(x-1)), and returns z.
+//
+// Special cases:
+//
+//	Acoth(±Inf) = ±0
+//	Acoth(|x| <= 1) = panic(ErrNaN)
+func (z *Float) Acoth(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		z.Set(zero)
+		if x.Signbit() {
+			z.Neg(z)
+		}
+		return z
+	}
+	if x.absCmpOne() <= 0 {
+		panic(ErrNaN("acoth of |x| <= 1"))
+	}
+	// Use the direct logarithmic form: ½·ln((x+1)/(x-1))
+	// This avoids the intermediate Inv(x) rounding that would occur
+	// with Atanh(Inv(x)) and provides a single-rounding path.
+	neg := x.Signbit()
+	xVal := new(Float).Abs(x)
+
+	workPrec := prec + _W
+	t1 := newFloat(workPrec).Add(xVal, one) // |x| + 1
+	t2 := newFloat(workPrec).Sub(xVal, one) // |x| - 1
+	t0 := newFloat(workPrec).Quo(t1, t2)    // (|x|+1)/(|x|-1)
+	z.Log(t0)                               // ln((|x|+1)/(|x|-1))
+	z.SetMantExp(z, -1)                     // ½·ln(...)
+	if neg {
+		z.Neg(z)
+	}
+	return z
+}
+
+// Asech sets z to the inverse hyperbolic secant of x,
+// asech(x) = acosh(1/x), and returns z.
+//
+// Special cases:
+//
+//	Asech(0) = +Inf
+//	Asech(1) = 0
+//	Asech(x < 0) = panic(ErrNaN)
+//	Asech(x > 1) = panic(ErrNaN)
+func (z *Float) Asech(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.Sign() < 0 {
+		panic(ErrNaN("asech of x < 0"))
+	}
+	if x.Sign() == 0 {
+		return z.SetInf(false)
+	}
+	if x.absCmpOne() > 0 {
+		panic(ErrNaN("asech of x > 1"))
+	}
+	if x.absCmpOne() == 0 {
+		return z.Set(zero)
+	}
+	t := newFloat(prec + _W).Inv(x)
+	return z.Acosh(t)
+}
+
+// Acsch sets z to the inverse hyperbolic cosecant of x,
+// acsch(x) = asinh(1/x), and returns z.
+//
+// Special cases:
+//
+//	Acsch(±0) = ±Inf
+//	Acsch(±Inf) = ±0
+func (z *Float) Acsch(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	t := newFloat(prec + _W).Inv(x)
+	return z.Asinh(t)
+}

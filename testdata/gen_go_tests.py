@@ -78,6 +78,51 @@ def generate_json_tests(input_file, output_file, precision):
                 else:
                     func = gmpy2.floor if func_name == "floor" else gmpy2.ceil
                     result = gmpy2.mpfr(func(mpfr_args[0]))
+            elif func_name == "acot":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = gmpy2.atan2(1, mpfr_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "asec":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = gmpy2.acos(1 / mpfr_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acsc":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = gmpy2.asin(1 / mpfr_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acoth":
+                # Compute at 2x precision to avoid double-rounding from 1/x step.
+                # Use direct formula ½·ln((x+1)/(x-1)) matching Go's implementation.
+                # Handle Inf explicitly since (x+1)/(x-1) = ∓1 for ±Inf leading to NaN.
+                if gmpy2.is_infinite(mpfr_args[0]):
+                    result = gmpy2.mpfr(0)
+                    if mpfr_args[0] < 0:
+                        result = -result
+                else:
+                    saved_prec = gmpy2.get_context().precision
+                    ctx = gmpy2.get_context()
+                    ctx.precision = precision * 2
+                    t = mpfr_args[0]
+                    result = gmpy2.log((t + 1) / (t - 1)) / 2
+                    ctx.precision = saved_prec
+            elif func_name == "asech":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = gmpy2.acosh(1 / mpfr_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acsch":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                result = gmpy2.asinh(1 / mpfr_args[0])
+                ctx.precision = saved_prec
             else:
                 func = getattr(gmpy2, func_name, None)
                 if func is None:
@@ -249,6 +294,60 @@ def generate_cplx_tests(input_file, output_file, precision):
                 ctx = gmpy2.get_context()
                 ctx.precision = precision * 2
                 result = 1 / gmpy2.sinh(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acot":
+                # gmpy2 does not provide acot for mpc, compute as π/2 - atan(z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.const_pi() / 2 - gmpy2.atan(mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "asec":
+                # gmpy2 does not provide asec for mpc, compute as acos(1/z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.acos(1 / mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acsc":
+                # gmpy2 does not provide acsc for mpc, compute as asin(1/z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.asin(1 / mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acoth":
+                # gmpy2 does not provide acoth for mpc, compute as atanh(1/z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.atanh(1 / mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "asech":
+                # gmpy2 does not provide asech for mpc, compute as acosh(1/z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.acosh(1 / mpc_args[0])
+                ctx.precision = saved_prec
+            elif func_name == "acsch":
+                # gmpy2 does not provide acsch for mpc, compute as asinh(1/z)
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = gmpy2.asinh(1 / mpc_args[0])
                 ctx.precision = saved_prec
             elif func_name == "quo":
                 result = gmpy2.div(*mpc_args)

@@ -473,6 +473,71 @@ func (z *Float) Csc(x *Float) *Float {
 	return z.Inv(t)
 }
 
+// Acot sets z to the inverse cotangent of x, acot(x) = atan2(1, x), and returns z.
+//
+// Special cases:
+//
+//	Acot(±0) = ±π/2
+//	Acot(±Inf) = ±0
+func (z *Float) Acot(x *Float) *Float {
+	return z.Atan2(one, x)
+}
+
+// Asec sets z to the inverse secant of x, asec(x) = acos(1/x), and returns z.
+//
+// Special cases:
+//
+//	Asec(|x| < 1) = panic(ErrNaN)
+//	Asec(1) = 0
+//	Asec(-1) = π
+//	Asec(±Inf) = π/2
+func (z *Float) Asec(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		z.Pi()
+		z.SetMantExp(z, -1)
+		return z
+	}
+	switch x.absCmpOne() {
+	case -1:
+		panic(ErrNaN("asec of |x| < 1"))
+	case 0:
+		if x.Signbit() {
+			return z.Pi()
+		}
+		return z.Set(zero)
+	}
+	return z.Acos(newFloat(prec + _W).Inv(x))
+}
+
+// Acsc sets z to the inverse cosecant of x, acsc(x) = asin(1/x), and returns z.
+//
+// Special cases:
+//
+//	Acsc(|x| < 1) = panic(ErrNaN)
+//	Acsc(±1) = ±π/2
+//	Acsc(±Inf) = ±0
+func (z *Float) Acsc(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+	if x.IsInf() {
+		// Inv(±Inf) = ±0, Asin(±0) = ±0
+		t := newFloat(prec + _W).Inv(x)
+		return z.Asin(t)
+	}
+	if x.absCmpOne() < 0 {
+		panic(ErrNaN("acsc of |x| < 1"))
+	}
+	return z.Asin(newFloat(prec + _W).Inv(x))
+}
+
 // addPrec returns prec + extra saturated to big.MaxPrec, and a boolean
 // indicating whether the addition exceeded MaxPrec (or wrapped on 32-bit).
 func addPrec(prec, extra uint) (uint, bool) {

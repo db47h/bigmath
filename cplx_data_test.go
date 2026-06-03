@@ -108,6 +108,18 @@ func callComplexFn(fn string, z, x, y *bigmath.Complex) {
 		z.Sech(x)
 	case "csch":
 		z.Csch(x)
+	case "acot":
+		z.Acot(x)
+	case "asec":
+		z.Asec(x)
+	case "acsc":
+		z.Acsc(x)
+	case "acoth":
+		z.Acoth(x)
+	case "asech":
+		z.Asech(x)
+	case "acsch":
+		z.Acsch(x)
 	case "asin":
 		z.Asin(x)
 	case "acos":
