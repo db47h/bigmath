@@ -54,35 +54,30 @@ func (z *Complex) Mul(x, y *Complex) *Complex {
 	//   re = a*c - b*d
 	//   im = (a+b)*(c+d) - a*c - b*d
 
-	// t1 = a*c — full precision product
-	t1 := newFloat(x.Real.Prec() + y.Real.Prec())
-	t1.Mul(&x.Real, &y.Real)
+	// ac = a*c — full precision product
+	ac := newFloat(x.Real.Prec() + y.Real.Prec())
+	ac.Mul(&x.Real, &y.Real)
 
-	// t2 = b*d — full precision product
-	t2 := newFloat(x.Imag.Prec() + y.Imag.Prec())
-	t2.Mul(&x.Imag, &y.Imag)
+	// bd = b*d — full precision product
+	bd := newFloat(x.Imag.Prec() + y.Imag.Prec())
+	bd.Mul(&x.Imag, &y.Imag)
 
-	// re = t1 - t2 — round to workPrec
-	re := newFloat(workPrec)
-	re.Sub(t1, t2)
-
-	// a+b, c+d — round to workPrec
-	aPlusB := newFloat(workPrec)
-	aPlusB.Add(&x.Real, &x.Imag)
-	cPlusD := newFloat(workPrec)
-	cPlusD.Add(&y.Real, &y.Imag)
+	// a+b, c+d
+	t0 := newFloat(workPrec)
+	t0.Add(&x.Real, &x.Imag)
+	t1 := newFloat(workPrec)
+	t1.Add(&y.Real, &y.Imag)
 
 	// (a+b)*(c+d) — full precision at sum of input precs
-	sum := newFloat(aPlusB.Prec() + cPlusD.Prec())
-	sum.Mul(aPlusB, cPlusD)
+	sum := newFloat(t0.Prec() + t1.Prec())
+	sum.Mul(t0, t1)
 
-	// im = sum - t1 - t2 — round to workPrec
-	im := newFloat(workPrec)
-	im.Sub(sum, t1)
-	im.Sub(im, t2)
+	// real = ac - bd
+	z.Real.Sub(ac, bd)
 
-	z.Real.Set(re)
-	z.Imag.Set(im)
+	// imag = sum - ac - bd
+	t0.Sub(sum, ac)
+	z.Imag.Sub(t0, bd)
 	return z
 }
 
