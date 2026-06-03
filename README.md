@@ -84,6 +84,13 @@ func main() {
 }
 ```
 
+## Requirements
+
+- **Runtime**: Go 1.22+ — the library source is compatible with Go 1.22 and later.
+- **`go generate`**: Go 1.26+ — the code generator in `internal/gen/` uses `go/types` APIs
+  added in Go 1.26. The generated output (`float_gen.go`) is checked in, so end users
+  at any Go >= 1.22 are unaffected.
+
 ## Precision & Rounding
 
 All functions follow the same contract as [`big.Float`](https://pkg.go.dev/math/big#Float):
@@ -98,6 +105,32 @@ All functions follow the same contract as [`big.Float`](https://pkg.go.dev/math/
 - **Float**: All listed functions implemented and tested.
 - **Complex**: All listed functions implemented and tested — branch cuts documented per ISO C standard.
 - **Test coverage**: Golden-comparison tests against MPFR/gmpy2 at 128-bit, plus ULP stress tests at precisions 64–1024, plus identity tests (sin²+cos²=1, etc.) and cross-validation against `math/cmplx`.
+  
+  The golden test data is checked in as JSON files under `testdata/`. After adding entries to
+  [`testdata/data.txt`](testdata/data.txt) or [`testdata/cplx_data.txt`](testdata/cplx_data.txt),
+  regenerate with:
+  
+  ```bash
+  go generate ./...
+  ```
+  
+  This runs the [`go:generate`](https://go.dev/wiki/Gen) directives in
+  [`data_test.go`](data_test.go) and [`cplx_data_test.go`](cplx_data_test.go), which invoke
+  [`testdata/gen_go_tests.py`](testdata/gen_go_tests.py) at 128-bit precision.
+  
+  **Prerequisites**: [Python 3](https://www.python.org/) with
+  [**gmpy2**](https://gmpy2.readthedocs.io/) (the MPFR/MPC wrapper). Install with:
+  
+  ```bash
+  pip install gmpy2
+  ```
+  
+  To generate at a different precision, use the script directly:
+  
+  ```bash
+  python testdata/gen_go_tests.py testdata/data.txt -o testdata/data_tests.json -p 256
+  python testdata/gen_go_tests.py -m cplx testdata/cplx_data.txt -o testdata/cplx_data_tests.json -p 256
+  ```
 - **Upcoming**: `Erf`, `Erfc`, `Gamma`, `Lgamma`.
 
 ## Performance
@@ -152,13 +185,6 @@ f.SetString("1e10000000")
 fmt.Println(f.Text('g', -1))  // fast, not O(exp × prec²)
 ```
 
-## Requirements
-
-- **Runtime**: Go 1.22+ — the library source is compatible with Go 1.22 and later.
-- **`go generate`**: Go 1.26+ — the code generator in `internal/gen/` uses `go/types` APIs
-  added in Go 1.26. The generated output (`float_gen.go`) is checked in, so end users
-  at any Go >= 1.22 are unaffected.
-
 ## License
 
-MIT — see [`LICENSE`](LICENSE) or the SPDX header in individual source files.
+MIT — see [`LICENSE`](LICENSE). The big.Float forwarders and the formatting code duplicate parts of the Go standard library, covered by the [`Go LICENSE`](LICENSE-go).
