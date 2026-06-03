@@ -522,7 +522,7 @@ func (z *Float) Atanh(x *Float) *Float {
 // Special cases:
 //
 //	Acoth(±Inf) = ±0
-//	Acoth(|x| <= 1) = panic(ErrNaN)
+//	Acoth(|x| < 1) = panic(ErrNaN)
 func (z *Float) Acoth(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
@@ -536,8 +536,8 @@ func (z *Float) Acoth(x *Float) *Float {
 		}
 		return z
 	}
-	if x.absCmpOne() <= 0 {
-		panic(ErrNaN("acoth of |x| <= 1"))
+	if x.absCmpOne() < 0 {
+		panic(ErrNaN("acoth of |x| < 1"))
 	}
 	// Use the direct logarithmic form: ½·ln((x+1)/(x-1))
 	// This avoids the intermediate Inv(x) rounding that would occur

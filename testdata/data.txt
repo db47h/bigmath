@@ -518,10 +518,11 @@ acoth 1.5
 acoth -1.5
 acoth inf
 acoth 1.000000000000000000000001
-acoth 1        !panic
-acoth -1       !panic
+acoth 1
+acoth -1
 acoth 0.5      !panic
 acoth 0        !panic
+acoth -0.5     !panic
 
 # asech
 asech 0

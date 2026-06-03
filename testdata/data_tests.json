@@ -3218,16 +3218,23 @@
     {
       "fn": "acoth",
       "args": [
+        "1.000000000000000000000001"
+      ],
+      "res": "0x1.bfa43a58be888323408699af50859fe1ff34c615bb8e34c68e02a72b3875137cp+4"
+    },
+    {
+      "fn": "acoth",
+      "args": [
         "1"
       ],
-      "panics": true
+      "res": "inf"
     },
     {
       "fn": "acoth",
       "args": [
         "-1"
       ],
-      "panics": true
+      "res": "-inf"
     },
     {
       "fn": "acoth",
@@ -3241,6 +3248,14 @@
       "fn": "acoth",
       "args": [
         "0"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "-0.5"
       ],
       "panics": true,
       "reason": "gmpy2 returned NaN"

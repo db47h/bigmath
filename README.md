@@ -22,9 +22,9 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 |----------|-----------|
 | **Elementary** | `Exp`, `Log`, `Log2`, `Log10`, `Pow`, `Cbrt`, `Hypot`, `FMA`, `FMS` |
 | **Trigonometric** | `Sin`, `Cos`, `Sincos`, `Tan`, `Cot`, `Sec`, `Csc` |
-| **Inverse Trig** | `Asin`, `Acos`, `Atan`, `Atan2` |
+| **Inverse Trig** | `Asin`, `Acos`, `Atan`, `Atan2`, `Acot`, `Asec`, `Acsc` |
 | **Hyperbolic** | `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Coth`, `Sech`, `Csch` |
-| **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh` |
+| **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh`, `Acoth`, `Asech`, `Acsch` |
 | **Rounding** | `Floor`, `Ceil` |
 | **Special** | `Pi` (constant), `Inv` (multiplicative inverse) |
 | **Constants** | π, √2, ln 2, ln 10 (thread-safe cache) |
@@ -39,9 +39,9 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 | **Arithmetic** | `Add`, `Sub`, `Mul`, `Quo`, `Neg`, `Conj`, `Inv` |
 | **Transcendental** | `Exp`, `Log`, `Pow`, `Sqrt` |
 | **Trigonometric** | `Sin`, `Cos`, `Tan`, `Cot`, `Sec`, `Csc` |
-| **Inverse Trig** | `Asin`, `Acos`, `Atan` |
+| **Inverse Trig** | `Asin`, `Acos`, `Atan`, `Acot`, `Asec`, `Acsc` |
 | **Hyperbolic** | `Sinh`, `Cosh`, `Tanh`, `Coth`, `Sech`, `Csch` |
-| **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh` |
+| **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh`, `Acoth`, `Asech`, `Acsch` |
 | **Utilities** | `Abs`, `Arg`, `Copy`, `Set`, `Equals`, `IsReal`, `IsZero`, `Prec`, `SetPrec`, `String`, `Format` |
 
 `Complex` supports full aliasing (`z == x` is safe in all operations).
@@ -98,7 +98,7 @@ All functions follow the same contract as [`big.Float`](https://pkg.go.dev/math/
 - **Float**: All listed functions implemented and tested.
 - **Complex**: All listed functions implemented and tested — branch cuts documented per ISO C standard.
 - **Test coverage**: Golden-comparison tests against MPFR/gmpy2 at 128-bit, plus ULP stress tests at precisions 64–1024, plus identity tests (sin²+cos²=1, etc.) and cross-validation against `math/cmplx`.
-- **Upcoming**: `Acot`, `Asec`, `Acsc`, `Acoth`, `Asech`, `Acsch`, `Erf`, `Erfc`, `Gamma`, `Lgamma`.
+- **Upcoming**: `Erf`, `Erfc`, `Gamma`, `Lgamma`.
 
 ## Performance
 
