@@ -8,7 +8,8 @@ package bigmath
 //
 //	z = |x|^(1/3) * e^(i * arg(x) / 3)
 func (z *Complex) Cbrt(x *Complex) *Complex {
-	workPrec := z.setPrec(x) + _W
+	prec := z.setPrec(x)
+	workPrec := prec + _W
 
 	if x.IsZero() {
 		return z.Set(&Complex{})
@@ -20,9 +21,10 @@ func (z *Complex) Cbrt(x *Complex) *Complex {
 			z.Real.Cbrt(&x.Real)
 			z.Imag.Set(zero)
 		} else {
-			t := newFloat(workPrec).Cbrt(new(Float).Neg(&x.Real))
-			z.Real.Mul(t, half)
-			z.Imag.Mul(t, newFloat(workPrec).SetMantExp(sqrt3(workPrec), -1))
+			t0 := newFloat(workPrec).Neg(&x.Real)
+			t1 := newFloat(workPrec).Cbrt(t0)
+			z.Imag.Mul(t1, t0.SetMantExp(sqrt3(workPrec), -1))
+			z.Real.SetMantExp(t1.SetPrec(prec), -1)
 		}
 		return z
 	}
