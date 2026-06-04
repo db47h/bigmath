@@ -94,31 +94,29 @@ func (z *Float) lgammaStirling(x *Float) *Float {
 	//   log|Γ(x)| = log|Γ(x+r)| - Σ_{j=0}^{r-1} log(x+j)
 
 	var shiftSum *Float // non-nil when argument reduction is applied
-	betaPrec := gammaBeta * float64(prec)
+	t0 := newFloat(workPrec)
+	t1 := newFloat(workPrec)
+	betaPrec := gammaBeta * float64(workPrec)
 	exp := x.MantExp(nil) // log₂(|x|) — approximate magnitude
 
 	if exp < int(math.Floor(math.Log2(betaPrec))) {
 		// |x| < β·prec: need to shift
 		xMag := math.Exp2(float64(exp)) // rough |x| in [0.5, 1)·2^exp
-		r := int(math.Ceil(betaPrec - xMag))
-		if r < 1 {
-			r = 1
-		}
+		r := max(int(math.Ceil(betaPrec-xMag)), 1)
 
 		// Compute shiftSum = Σ_{j=0}^{r-1} log(x + j)
 		// Use a separate temp for the log to avoid mutating the value being accumulated.
 		shiftSum = newFloat(workPrec)
-		logTerm := newFloat(workPrec)
-		t := newFloat(workPrec).Set(x)
-		for j := 0; j < r; j++ {
-			logTerm.Log(t) // logTerm = log(x + j)
-			shiftSum.Add(shiftSum, logTerm)
-			t.Add(t, one) // t = x + j + 1 for next iteration
+		t0.Set(x)
+		for range r {
+			t1.Log(t0) // logTerm = log(x + j)
+			shiftSum.Add(shiftSum, t1)
+			t1.Add(t0, one) // t = x + j + 1 for next iteration
+			t0, t1 = t1, t0
 		}
 
 		// Set x = x + r as the new argument for Stirling
-		x = newFloat(workPrec).Set(x)
-		x.Add(x, newFloat(workPrec).SetInt64(int64(r)))
+		x = newFloat(workPrec).Add(x, newFloat(workPrec).SetInt64(int64(r)))
 	}
 
 	// --- Stirling series evaluation ---
@@ -127,74 +125,61 @@ func (z *Float) lgammaStirling(x *Float) *Float {
 
 	// Determine number of terms: approximately prec / (4π·β) ≈ prec / 2.5,
 	// but at least 8 terms for low precision.
-	maxTerms := int(math.Ceil(float64(prec) / (4 * math.Pi * gammaBeta)))
-	if maxTerms < 8 {
-		maxTerms = 8
-	}
+	maxTerms := max(int(math.Ceil(float64(workPrec)/(4*math.Pi*gammaBeta))), 8)
 
 	// Get Bernoulli numbers B₂ ... B_{2·maxTerms}
 	bnums := bernoulli.floats(maxTerms, workPrec)
 
-	// Pre-compute z² and 1/z
-	zSquared := newFloat(workPrec).Mul(x, x) // z²
-	zInv := newFloat(workPrec).Quo(one, x)   // 1/z
+	// t0 = 1/z²
+	t0.Inv(t1.Mul(x, x))
+	// t1 tracks z^{-(2k-1)}: starts at z^{-1}, then z^{-3}, z^{-5}, ...
+	t1.Inv(x)
+	sum := newFloat(workPrec) // series accumulator
 
-	// zInvPow tracks z^{-(2k-1)}: starts at z^{-1}, then z^{-3}, z^{-5}, ...
-	zInvPow := newFloat(workPrec).Set(zInv)
-
-	sum := newFloat(workPrec).SetPrec(workPrec) // series accumulator
-	t0 := newFloat(workPrec)
-	t1 := newFloat(workPrec)
 	t2 := newFloat(workPrec)
+	t3 := newFloat(workPrec)
+	t4 := newFloat(workPrec)
 
 	for k := 1; k <= maxTerms; k++ {
 		// term = B_{2k} · z^{-(2k-1)} / (2k·(2k-1))
-		t0.Mul(bnums[k-1], zInvPow)           // B_{2k} · z^{-(2k-1)}
-		t2.SetInt64(int64(2 * k * (2*k - 1))) // (2k)(2k-1)
-		t1.Quo(t0, t2)                        // B_{2k} / (2k(2k-1) · z^{2k-1})
+		t2.Mul(bnums[k-1], t1)                // B_{2k} · z^{-(2k-1)}
+		t4.SetInt64(int64(2 * k * (2*k - 1))) // (2k)(2k-1)
+		t3.Quo(t2, t4)                        // B_{2k} / (2k(2k-1) · z^{2k-1})
 
 		// Stop if term underflows or series starts diverging
-		if t1.Sign() == 0 || t1.MantExp(nil) < sum.ULPExponent() {
+		if t3.Sign() == 0 || t3.MantExp(nil) < sum.ULPExponent() {
 			break
 		}
 
 		// Accumulate: sum += term
-		t0.Add(sum, t1)
-		sum, t0 = t0, sum // pointer swap
+		t2.Add(sum, t3)
+		sum, t2 = t2, sum
 
 		// Update zInvPow for next iteration: z^{-(2k+1)} = z^{-(2k-1)} / z²
-		t0.Quo(zInvPow, zSquared)
-		zInvPow, t0 = t0, zInvPow // pointer swap
+		t2.Mul(t1, t0)
+		t2, t1 = t1, t2
 	}
 
 	// --- Combine terms ---
-	// log(z) term
-	logZ := newFloat(workPrec).Log(x) // log(z)
 
 	// (z - ½)·log(z)
-	t0.Sub(x, half)
-	t0.Mul(t0, logZ) // (z - ½)·log(z)
-
+	t1.Sub(x, half)
+	t2.Mul(t1, t0.Log(x)) // (z - ½)·log(z)
 	// -z
-	t0.Sub(t0, x) // (z - ½)·log(z) - z
+	t0.Sub(t2, x) // (z - ½)·log(z) - z
 
-	// + log(2π)/2 = (ln(2) + ln(π))/2
-	ln2Val := newFloat(workPrec).Set(ln2(workPrec))
-	piCopy := newFloat(workPrec).Set(pi(workPrec))
-	logPi := newFloat(workPrec).Log(piCopy)
-	t1.Add(ln2Val, logPi) // ln(2π)
-	t1.Mul(t1, half)      // ln(2π)/2
-	t0.Add(t0, t1)        // (z-½)·log(z) - z + log(2π)/2
-
-	// + series sum
-	t0.Add(t0, sum) // log|Γ(z)| via Stirling
+	t2.SetMantExp(log2Pi(workPrec), -1) // log(2π)/2
+	t1.Add(t0, t2)                      // (z-½)·log(z) - z + log(2π)/2
 
 	// Subtract rising factorial if argument reduction was applied
 	if shiftSum != nil {
-		t0.Sub(t0, shiftSum)
+		// + series sum
+		t2.Add(t1, sum) // log|Γ(z)| via Stirling
+		return z.Sub(t2, shiftSum)
 	}
 
-	return z.SetPrec(prec).Set(t0)
+	// + series sum
+	return z.Add(t1, sum) // log|Γ(z)| via Stirling
 }
 
 // lgammaReflect computes log|Γ(x)| and the sign for x < 0 (non-integer)
@@ -207,36 +192,34 @@ func (z *Float) lgammaReflect(x *Float) (*Float, int) {
 	workPrec := prec + 2*_W // extra guard bits for sin(πx) near integers
 
 	// 1. Compute 1 - x
-	oneMinusX := newFloat(workPrec).Sub(one, x)
-	logGamma1mX := newFloat(workPrec).SetPrec(workPrec).lgammaStirling(oneMinusX)
+	t0 := newFloat(workPrec).Sub(one, x)
+	logGamma1mX := newFloat(workPrec).lgammaStirling(t0)
 
 	// 2. Compute sin(πx)
-	piCopy := newFloat(workPrec).Set(pi(workPrec))
-	piX := newFloat(workPrec).Mul(piCopy, x)
-	sinVal := newFloat(workPrec + _W).Sin(piX) // Sin uses workPrec+_W internally
+	t2 := newFloat(workPrec).Set(pi(workPrec))
+	t1 := newFloat(workPrec).Mul(t2, x)
+	t0.Sin(t1)
 
 	// Determine sign from sin(πx)
 	sign := 1
-	if sinVal.Sign() < 0 {
+	if t0.Sign() < 0 {
 		sign = -1
 	}
 
 	// 3. log|sin(πx)|
-	absSin := newFloat(workPrec).Abs(sinVal)
-	if absSin.Sign() == 0 {
+	t0.Abs(t0)
+	if t0.Sign() == 0 {
 		// Pole at integer — should not happen (caught by caller)
 		return z.SetInf(false), 1
 	}
-	logSin := newFloat(workPrec).Log(absSin)
+	t1.Log(t0)
 
 	// 4. log(π)
-	piCopy2 := newFloat(workPrec).Set(pi(workPrec))
-	logPiVal := newFloat(workPrec).Log(piCopy2)
+	t0.Log(t2)
 
 	// 5. log|Γ(x)| = log(π) - log|sin(πx)| - log|Γ(1-x)|
-	z.SetPrec(prec)
-	z.Sub(logPiVal, logSin)
-	z.Sub(z, logGamma1mX)
+	t2.Sub(t0, t1)
+	z.Sub(t2, logGamma1mX)
 
 	return z, sign
 }
@@ -289,8 +272,7 @@ func (z *Float) Lgamma(x *Float) (*Float, int) {
 			return z.SetInf(false), 1 // pole at negative integer
 		}
 		// Non-integer negative: use reflection
-		workPrec := prec + 2*_W
-		return newFloat(workPrec).SetPrec(workPrec).lgammaReflect(x)
+		return z.lgammaReflect(x)
 	}
 
 	// x > 0 from here
@@ -301,9 +283,7 @@ func (z *Float) Lgamma(x *Float) (*Float, int) {
 	}
 
 	// --- General case: Stirling series ---
-	workPrec := prec + _W
-	result := newFloat(workPrec).SetPrec(workPrec).lgammaStirling(x)
-	return z.Set(result), 1
+	return z.lgammaStirling(x), 1
 }
 
 // Gamma sets z to Γ(x) and returns z.
@@ -356,14 +336,13 @@ func (z *Float) Gamma(x *Float) *Float {
 	}
 
 	// --- General case: Gamma(x) = exp(Lgamma(x)), then apply sign ---
-	workPrec := prec + _W
-	logGamma, sign := newFloat(workPrec).SetPrec(workPrec).Lgamma(x)
+	logGamma, sign := newFloat(prec + _W).Lgamma(x)
 
 	// Exp handles overflow (returns ±Inf when exponent exceeds MaxExp).
-	result := newFloat(workPrec).Exp(logGamma)
+	z.Exp(logGamma)
 	if sign < 0 {
-		result.Neg(result)
+		z.Neg(z)
 	}
 
-	return z.Set(result)
+	return z
 }

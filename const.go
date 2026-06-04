@@ -50,6 +50,10 @@ var (
 	ln2       = cache(func(prec uint) *Float { return newFloat(prec + _W).lnCore(two).SetPrec(prec) })
 	ln10      = cache(func(prec uint) *Float { return newFloat(prec).Log(ten) })
 	ln10Of2   = cache(func(prec uint) *Float { return newFloat(prec).Quo(ln2(prec+2), ln10(prec+2)) })
+	log2Pi    = cache(func(prec uint) *Float {
+		twoPi := newFloat(prec+_W).SetMantExp(pi(prec+_W), 1)
+		return newFloat(prec).Log(twoPi)
+	})
 )
 
 // cache wraps a constProvider with thread-safe memoization.

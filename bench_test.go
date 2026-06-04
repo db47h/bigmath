@@ -10,33 +10,6 @@ import (
 	"github.com/db47h/bigmath"
 )
 
-func benchmarkPowInt(b *testing.B, x, y, z *bigmath.Float) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		z.Pow(x, y)
-	}
-}
-
-func benchmarkLGamma(b *testing.B, prec uint, x *bigmath.Float) {
-	z := new(bigmath.Float).SetPrec(prec)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		z.Lgamma(x)
-	}
-}
-
-func BenchmarkFloat_LGamma_stirling(b *testing.B) {
-	prec := uint(1024)
-	x := new(bigmath.Float).SetPrec(prec).SetInt64(1000)
-	benchmarkLGamma(b, prec, x)
-}
-
-func BenchmarkFloat_LGamma_reflect(b *testing.B) {
-	prec := uint(1024)
-	x := new(bigmath.Float).SetPrec(prec).SetFloat64(-1000.5)
-	benchmarkLGamma(b, prec, x)
-}
-
 func BenchmarkPow(b *testing.B) {
 	precisions := []uint{256, 1024, 2048}
 	exponents := []int64{10, 100, 1000, 10000}
@@ -57,5 +30,35 @@ func BenchmarkPow(b *testing.B) {
 				benchmarkPowInt(b, x, y, z)
 			})
 		}
+	}
+}
+
+func benchmarkPowInt(b *testing.B, x, y, z *bigmath.Float) {
+	b.Helper()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		z.Pow(x, y)
+	}
+}
+
+func BenchmarkFloat_LGamma_stirling(b *testing.B) {
+	prec := uint(256)
+	x := new(bigmath.Float).SetFloat64(10.5)
+	z := new(bigmath.Float).SetPrec(prec)
+	z.Lgamma(x)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		z.Lgamma(x)
+	}
+}
+
+func BenchmarkFloat_LGamma_reflect(b *testing.B) {
+	prec := uint(256)
+	x := new(bigmath.Float).SetFloat64(-10.5)
+	z := new(bigmath.Float).SetPrec(prec)
+	z.Lgamma(x)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		z.Lgamma(x)
 	}
 }

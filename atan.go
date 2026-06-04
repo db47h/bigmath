@@ -266,7 +266,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 // where 1-x² loses significant bits. Returns the required working precision.
 func (x *Float) asinGuard(prec uint) uint {
 	// Work with |x|
-	xAbs := newFloat(prec + 2*_W).Abs(x)
+	xAbs := new(Float).Abs(x)
 
 	// For |x| ≤ 0.5, 1-x² ≥ 0.75, so no catastrophic cancellation.
 	if xAbs.Cmp(newFloat(0).SetFloat64(0.5)) <= 0 {
@@ -276,8 +276,8 @@ func (x *Float) asinGuard(prec uint) uint {
 	// Near ±1: compute 1 - |x| to estimate bit loss from cancellation.
 	// Since 1 - x² = (1-x)(1+x), the precision loss from computing 1 - x²
 	// directly (as 1 - xVal*xVal) is bounded by the loss from 1 - |x|.
-	oneMinus := newFloat(prec+2*_W).Sub(one, xAbs)
-	subExp := oneMinus.MantExp(nil)
+	xAbs.Sub(one, xAbs)
+	subExp := xAbs.MantExp(nil)
 	if -subExp <= 2 {
 		return prec + 2*_W
 	}
