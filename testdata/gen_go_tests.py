@@ -123,6 +123,10 @@ def generate_json_tests(input_file, output_file, precision):
                 ctx.precision = precision * 2
                 result = gmpy2.asinh(1 / mpfr_args[0])
                 ctx.precision = saved_prec
+            elif func_name == "lgamma":
+                lg, sign = gmpy2.lgamma(mpfr_args[0])
+                # Wrap sign int as mpfr for the tuple handler
+                result = (lg, gmpy2.mpfr(sign))
             else:
                 func = getattr(gmpy2, func_name, None)
                 if func is None:

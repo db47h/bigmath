@@ -543,3 +543,37 @@ acsch 0
 acsch -0
 acsch inf
 acsch -inf
+
+# gamma
+gamma 1
+gamma 2
+gamma 3
+gamma 4
+gamma 0.5
+gamma 1.5
+gamma 10
+gamma 3.7
+gamma -0.5
+gamma -1.5
+gamma -3.3
+gamma inf
+gamma -inf       !panic
+gamma 0
+gamma -1          !panic
+gamma -2          !panic
+
+# lgamma
+lgamma 1
+lgamma 2
+lgamma 0.5
+lgamma 1.5
+lgamma 10
+lgamma 3.7
+lgamma -0.5
+lgamma -1.5
+lgamma -3.3
+lgamma inf
+lgamma -inf
+lgamma 0
+lgamma -1
+lgamma -2

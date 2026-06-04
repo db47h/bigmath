@@ -15,11 +15,20 @@ Not in the original package description but expected by the intended audience (a
 |---|----------|-------|---------|-------|
 | 15 | **`Erf`** | ❌ | ❌ | Gauss error function — series/asymptotic expansion |
 | 16 | **`Erfc`** | ❌ | ❌ | Complementary error function: `1 - Erf(x)` (with numerical care for large x) |
-| 17 | **`Gamma`** | ❌ | ❌ | Γ(x) — Stirling/Lanczos approximation |
-| 18 | **`Lgamma`** | ❌ | ❌ | Log-Gamma: `Log(Gamma(x))` |
+| 17 | **`Gamma`** | ✅ | ❌ | Γ(x) — Stirling series with Bernoulli numbers |
+| 18 | **`Lgamma`** | ✅ | ❌ | Log-Gamma: `(log|Γ|, sign)` with reflection formula |
+
+### P4 — Gamma/Lgamma Deferred Optimizations
+
+| # | Task | Effort |
+|---|------|--------|
+| 19 | Lanczos fast path for Gamma at ≤128-bit | Small |
+| 20 | Dynamic precision optimization for high-order Stirling terms | Small |
+| 21 | Rising factorial loop: use product of reciprocals instead of per-term Log | Small |
 
 ### P5 — Test Robustness
 
 | # | Task | Effort |
 |---|------|--------|
-| 20 | Edge-case tests for complex functions (±0, ±Inf, large exponents, branch cuts) | Medium |
+| 22 | Edge-case tests for complex functions (±0, ±Inf, large exponents, branch cuts) | Medium |
+| 23 | Complex Gamma / Lgamma | Medium |

@@ -3373,6 +3373,233 @@
         "-inf"
       ],
       "res": "-0x0p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "1"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "2"
+      ],
+      "res": "0x1p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "3"
+      ],
+      "res": "0x2p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "4"
+      ],
+      "res": "0x6p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x1.c5bf891b4ef6aa79c3b0520d5db9384p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "1.5"
+      ],
+      "res": "0xe.2dfc48da77b553ce1d82906aedc9c2p-4"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "10"
+      ],
+      "res": "0x5.898p+16"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "3.7"
+      ],
+      "res": "0x4.2bafd5d66914c767b940f1aff46f1168p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-0.5"
+      ],
+      "res": "-0x3.8b7f12369ded54f38760a41abb72708p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-1.5"
+      ],
+      "res": "0x2.5cff6179be9e38a25a406d6727a1a054p+0"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-3.3"
+      ],
+      "res": "0x7.042ad02388c5d407ab9456f097332688p-4"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "inf"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "0"
+      ],
+      "res": "inf"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-1"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "gamma",
+      "args": [
+        "-2"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "1"
+      ],
+      "res": "0x0p+0",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "2"
+      ],
+      "res": "0x0p+0",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "0.5"
+      ],
+      "res": "0x9.28682473d0de85eafcab635421fa4ccp-4",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "1.5"
+      ],
+      "res": "-0x1.eeb95b094c1914d1a18fd62c1d351e32p-4",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "10"
+      ],
+      "res": "0xc.cd4490d3fbe7a583ebac5a615e07c3ep+0",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "3.7"
+      ],
+      "res": "0x1.6d9625e359b864893208523d03b1baap+0",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-0.5"
+      ],
+      "res": "0x1.43f89a3f0edd620a79ae69cd46129b7cp+0",
+      "res2": "-0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-1.5"
+      ],
+      "res": "0xd.c2c0a8c107c323f9f78901044ca1575p-4",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-3.3"
+      ],
+      "res": "-0xd.308fb66d14e5f58499218854fc3c1dep-4",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "inf"
+      ],
+      "res": "inf",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-inf"
+      ],
+      "res": "inf",
+      "res2": "-0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "0"
+      ],
+      "res": "inf",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-1"
+      ],
+      "res": "inf",
+      "res2": "0x1p+0"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        "-2"
+      ],
+      "res": "inf",
+      "res2": "0x1p+0"
     }
   ]
 }

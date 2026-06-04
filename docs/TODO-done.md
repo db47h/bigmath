@@ -30,6 +30,18 @@
 - **`Asin`**, **`Acos`** — guard-bit aware (`asinGuard` near x=±1). All special cases documented.
 - **`Atan`**, **`Atan2`** — all special cases documented.
 
+### Gamma / Lgamma (`gamma.go`)
+- **`Gamma(x)`** — Γ(x) via Stirling series with Bernoulli numbers.
+  - Bernoulli number cache: exact `math/big.Rat` recurrence, converted to `*Float`.
+  - Argument reduction via rising factorial shift when |x| < β·prec (β=0.2, Arb convention).
+  - Reflection formula for x < 0 (non-integer): `log|Γ(x)| = log(π) - log|sin(πx)| - log|Γ(1-x)|`.
+  - Special cases: ±Inf, ±0, negative integers (panic), 1, 2.
+- **`Lgamma(x)`** — `(log|Γ(x)|, sign)` as a method returning `(*Float, int)`.
+  - Sign: +1 for Γ(x) > 0, -1 for Γ(x) < 0, +1 at poles.
+  - Matches gmpy2 reference at 128-bit (30 test cases, including reflection path).
+- Tests: 16 gamma cases + 14 lgamma cases in golden-comparison pipeline.
+- All existing tests pass; race-clean; `go vet` clean.
+
 ### Real Exp / Log / Pow (`exp.go`, `log.go`, `pow.go`)
 - **`Exp`** — Taylor series with argument reduction (Brent-Zimmermann method). Overflow guard at exp > 31. All special cases (+0, -Inf, +Inf) documented.
 - **`Log`** — uses `computeLn` (artanh series), handles ±0, ±Inf. Panics on negative inputs.

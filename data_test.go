@@ -95,10 +95,26 @@ var fnMap = map[string]any{
 	"hypot":     (*bigmath.Float).Hypot,
 	"floor":     (*bigmath.Float).Floor,
 	"fma":       (*bigmath.Float).FMA,
+	"gamma":     (*bigmath.Float).Gamma,
+	"lgamma":    lgammaTestWrapper,
 }
 
 func testPiConst(z *bigmath.Float) *bigmath.Float {
 	return z.Pi()
+}
+
+// lgammaTestWrapper wraps Lgamma's (*Float, int) return into the
+// (*Float, *Float) tuple expected by the golden-comparison test harness.
+// The sign ±1 is stored as an exact *Float value.
+func lgammaTestWrapper(z1, z2, x *bigmath.Float) (*bigmath.Float, *bigmath.Float) {
+	logGamma, sign := z1.Lgamma(x)
+	z1.Set(logGamma)
+	if sign < 0 {
+		z2.SetFloat64(-1)
+	} else {
+		z2.SetFloat64(1)
+	}
+	return z1, z2
 }
 
 // makeReflectArgs builds a reflect.Value slice for calling fn.

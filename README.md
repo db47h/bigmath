@@ -26,7 +26,7 @@ z.Sin(z)  // same rounding/precision contract as big.Float
 | **Hyperbolic** | `Sinh`, `Cosh`, `Tanh`, `SinhCosh`, `Coth`, `Sech`, `Csch` |
 | **Inverse Hyperbolic** | `Asinh`, `Acosh`, `Atanh`, `Acoth`, `Asech`, `Acsch` |
 | **Rounding** | `Floor`, `Ceil` |
-| **Special** | `Pi` (constant), `Inv` (multiplicative inverse), `AbsCmp` (compare absolute values) |
+| **Special** | `Pi` (constant), `Inv` (multiplicative inverse), `AbsCmp` (compare absolute values), `Gamma`, `Lgamma` |
 | **Constants** | π, √2, ln 2, ln 10 (thread-safe cache) |
 | **Formatting** | `Text`, `Format` (`fmt.Formatter`), `String`, `Append`, `AppendText`, `MarshalText` — supports `'e'`, `'E'`, `'f'`, `'g'`, `'G'`, `'b'`, `'p'`, `'x'`, plus **engineering notation** `'n'`/`'N'` |
 
@@ -131,7 +131,7 @@ All functions follow the same contract as [`big.Float`](https://pkg.go.dev/math/
   python testdata/gen_go_tests.py testdata/data.txt -o testdata/data_tests.json -p 256
   python testdata/gen_go_tests.py -m cplx testdata/cplx_data.txt -o testdata/cplx_data_tests.json -p 256
   ```
-- **Upcoming**: `Erf`, `Erfc`, `Gamma`, `Lgamma`.
+- **Upcoming**: `Erf`, `Erfc` (Float), `Gamma`, `Lgamma` (Complex).
 
 ## Performance
 
