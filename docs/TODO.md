@@ -7,6 +7,7 @@
 
 Float.Acosh(-Inf)
 Float.Acoth(-Inf)
+Test Float to string: test integer path for fexp in initHuge.
 
 ## Aliasing review
 

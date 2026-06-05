@@ -81,9 +81,14 @@ func (x *decimal) initHuge(f *Float) {
 	// Break into integer part (iexp) and fractional part (fexp).
 	// This will give us mantissa×2^exp = (mantissa×10^fexp) × 10^iexp
 	if E := fexp.MantExp(nil); E > 0 {
-		iexp.SetPrec(uint(E)).SetMode(ToNegativeInf).Set(fexp)
-		t0.Sub(fexp, iexp)
-		fexp, t0 = t0, fexp
+		if fexp.IsInt() {
+			iexp.Set(fexp)
+			fexp.Set(zero)
+		} else {
+			iexp.SetPrec(uint(E)).SetMode(ToNegativeInf).Set(fexp)
+			t0.Sub(fexp, iexp)
+			fexp, t0 = t0, fexp
+		}
 	}
 	// iexp = integer part
 	// fexp = fractional part
