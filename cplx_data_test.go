@@ -48,7 +48,7 @@ func loadCplxTestData(path string) (*cplxTestData, error) {
 func parseCplxHex(x *bigmath.Float, s string) {
 	_, _, err := x.Parse(s, 0)
 	if err != nil {
-		panic(fmt.Sprintf("parseCplxHex(%q): %v", s, err))
+		panic(bigmath.ErrNaN(fmt.Sprintf("parseHex(%q): %v (this usually means that mpmath returned a NaN)", s, err)))
 	}
 }
 

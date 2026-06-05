@@ -388,6 +388,12 @@ def generate_cplx_tests(input_file, output_file, precision):
                         f"but gmpy2 did not produce NaN",
                         file=sys.stderr,
                     )
+                if (nan_re or nan_im) and not is_panic:
+                    print(
+                        f"Warning: complex {func_name} {tokens} NOT tagged !panic "
+                        f"but reference produced NaN",
+                        file=sys.stderr,
+                    )
             else:
                 entry["res_re"] = hex_re
                 entry["res_im"] = hex_im

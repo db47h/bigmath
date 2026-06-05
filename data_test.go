@@ -50,7 +50,7 @@ func loadFloatTestData(path string) (*floatTestData, error) {
 func parseHex(s string, prec uint) *bigmath.Float {
 	x, _, err := new(bigmath.Float).SetPrec(prec).Parse(s, 0)
 	if err != nil {
-		panic(fmt.Sprintf("parseHex(%q, %d): %v (this is usually means that gmpy2 returned a NaN)", s, prec, err))
+		panic(bigmath.ErrNaN(fmt.Sprintf("parseHex(%q, %d): %v (this usually means that mpmath returned a NaN)", s, prec, err)))
 	}
 	return x
 }
