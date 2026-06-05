@@ -3,6 +3,18 @@
 > Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
 > This file tracks only what's still pending.
 
+## Aliasing review
+
+docs/aliasing.md details wich functions of the big.Float API do not cause hidden
+allocations when called with arguments aliasing the receiver. We need to extend
+that to the full bigmath.Float API. Aliasing is fully supported but:
+
+- some functions do not have any specific handling for this (because it's not needed)
+- others have defensive aliasing handling (copy x, just in case...)
+
+This should be reviewed and documented. Functions with defensive handling of
+aliasing may need updating to make copies of x only if needed.
+
 ## Missing Public API Functions
 
 Functions ordered by priority (highest first). All items apply to both Float and Complex unless noted.
@@ -26,9 +38,8 @@ Not in the original package description but expected by the intended audience (a
 | 20 | Dynamic precision optimization for high-order Stirling terms | Small |
 | 21 | Rising factorial loop: use product of reciprocals instead of per-term Log | Small |
 
-### P5 — Test Robustness
+### P6 — Test Robustness
 
 | # | Task | Effort |
 |---|------|--------|
 | 22 | Edge-case tests for complex functions (±0, ±Inf, large exponents, branch cuts) | Medium |
-| 23 | Complex Gamma / Lgamma | Medium |

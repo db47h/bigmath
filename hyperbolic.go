@@ -430,29 +430,28 @@ func (z *Float) Acosh(x *Float) *Float {
 		z.SetPrec(prec)
 	}
 
-	if x.IsInf() {
-		return z.SetInf(false)
-	}
 	switch x.Cmp(one) {
 	case -1:
 		panic(ErrNaN("acosh of x < 1"))
 	case 0:
 		return z.Set(zero)
 	}
+	if x.IsInf() {
+		return z.SetInf(false)
+	}
 
-	workPrec := x.acoshGuard(prec)
+	workPrec := prec + x.acoshGuard(prec)
 
 	t0 := newFloat(workPrec).Sub(x, one)
 	t1 := newFloat(workPrec).Add(x, one)
+	t2 := newFloat(workPrec)
 
 	// √(x-1) * √(x+1) for numerical stability (avoids computing x² directly).
-	t0.Sqrt(t0)
-	t1.Sqrt(t1)
-	t0.Mul(t0, t1)
-	t0.Add(x, t0)
-	t0.Log(t0)
+	t2.Sqrt(t0)
+	t0.Sqrt(t1)
+	t1.FMA(t0, t2, x)
 
-	return z.Set(t0)
+	return z.Log(t1)
 }
 
 // atanhGuard computes the working precision needed for atanh(x) near x=±1,
@@ -527,10 +526,11 @@ func (z *Float) Acoth(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		z.SetPrec(prec)
+		// because we're using z as a temp for |x|, z.SetPrec is called only
+		// when setting z on exit.
 	}
 	if x.IsInf() {
-		z.Set(zero)
+		z.SetPrec(prec).Set(zero)
 		if x.Signbit() {
 			z.Neg(z)
 		}
@@ -539,18 +539,19 @@ func (z *Float) Acoth(x *Float) *Float {
 	if x.absCmpOne() < 0 {
 		panic(ErrNaN("acoth of |x| < 1"))
 	}
+
 	// Use the direct logarithmic form: ½·ln((x+1)/(x-1))
 	// This avoids the intermediate Inv(x) rounding that would occur
 	// with Atanh(Inv(x)) and provides a single-rounding path.
 	neg := x.Signbit()
-	xVal := new(Float).Abs(x)
+	z.Abs(z.Copy(x))
 
 	workPrec := prec + _W
-	t1 := newFloat(workPrec).Add(xVal, one) // |x| + 1
-	t2 := newFloat(workPrec).Sub(xVal, one) // |x| - 1
-	t0 := newFloat(workPrec).Quo(t1, t2)    // (|x|+1)/(|x|-1)
-	z.Log(t0)                               // ln((|x|+1)/(|x|-1))
-	z.SetMantExp(z, -1)                     // ½·ln(...)
+	t1 := newFloat(workPrec).Add(z, one) // |x| + 1
+	t2 := newFloat(workPrec).Sub(z, one) // |x| - 1
+	t0 := newFloat(workPrec).Quo(t1, t2) // (|x|+1)/(|x|-1)
+	z.SetPrec(prec).Log(t0)              // ln((|x|+1)/(|x|-1))
+	z.SetMantExp(z, -1)                  // ½·ln(...)
 	if neg {
 		z.Neg(z)
 	}
