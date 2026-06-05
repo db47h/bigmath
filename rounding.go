@@ -29,17 +29,14 @@ func (z *Float) Floor(x *Float) *Float {
 	}
 
 	// Ensure work precision covers E bits.
-	workPrec := prec
-	if uint(E) > prec {
-		workPrec, _ = addPrec(prec, uint(E)-prec)
+	if x.IsInt() {
+		return z.Set(x)
 	}
 
-	temp := newFloat(workPrec)
-	temp.SetMode(ToNegativeInf)
-	temp.SetPrec(uint(E))
-	temp.Set(x)
-
-	return z.Set(temp)
+	m := z.Mode()
+	z.SetMode(ToNegativeInf).SetPrec(uint(E))
+	z.Set(x)
+	return z.SetMode(m).SetPrec(prec)
 }
 
 // Ceil sets z to the least integer value greater than or equal to x and
@@ -68,15 +65,13 @@ func (z *Float) Ceil(x *Float) *Float {
 		return z.Set(one)
 	}
 
-	workPrec := prec
-	if uint(E) > prec {
-		workPrec, _ = addPrec(prec, uint(E)-prec)
+	if x.IsInt() {
+		return z.Set(x)
 	}
 
-	temp := newFloat(workPrec)
-	temp.SetMode(ToPositiveInf)
-	temp.SetPrec(uint(E))
-	temp.Set(x)
+	m := z.Mode()
+	z.SetMode(ToPositiveInf).SetPrec(uint(E))
+	z.Set(x)
 
-	return z.Set(temp)
+	return z.SetMode(m).SetPrec(prec)
 }
