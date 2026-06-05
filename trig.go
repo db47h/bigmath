@@ -38,7 +38,7 @@ func (z *Float) modPi2(x *Float) (*Float, int) {
 	// for large x.
 	xExp := x.MantExp(nil)
 	multPrec, _ := addPrec(prec, uint(xExp))
-	q := newFloat(multPrec).Set(twoOverPi(multPrec))
+	q := newFloat(multPrec).setConst(twoOverPi)
 	t := newFloat(multPrec).Mul(x, q)
 	q.Add(t, half)
 

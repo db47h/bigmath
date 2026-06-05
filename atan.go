@@ -248,7 +248,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 	res := newFloat(workPrec).Atan(q)
 
 	if x.Signbit() {
-		pi := newFloat(workPrec).Set(pi(workPrec))
+		pi := pi.get(workPrec)
 		if yNeg {
 			q.Sub(res, pi)
 		} else {
@@ -367,7 +367,5 @@ func (z *Float) Acos(x *Float) *Float {
 	// Acos(x) = π/2 - Asin(x)
 	workPrec := x.asinGuard(prec)
 
-	halfPi := newFloat(workPrec).Pi()
-	halfPi.SetMantExp(halfPi, -1)
-	return z.Sub(halfPi, newFloat(workPrec).Asin(x))
+	return z.Sub(halfPi.get(workPrec), newFloat(workPrec).Asin(x))
 }

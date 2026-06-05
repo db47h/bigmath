@@ -168,8 +168,8 @@ func (z *Float) lgammaStirling(x *Float) *Float {
 	// -z
 	t0.Sub(t2, x) // (z - ½)·log(z) - z
 
-	t2.SetMantExp(log2Pi(workPrec), -1) // log(2π)/2
-	t1.Add(t0, t2)                      // (z-½)·log(z) - z + log(2π)/2
+	t2.SetMantExp(log2Pi.get(workPrec), -1) // log(2π)/2
+	t1.Add(t0, t2)                          // (z-½)·log(z) - z + log(2π)/2
 
 	// Subtract rising factorial if argument reduction was applied
 	if shiftSum != nil {
@@ -196,7 +196,7 @@ func (z *Float) lgammaReflect(x *Float) (*Float, int) {
 	logGamma1mX := newFloat(workPrec).lgammaStirling(t0)
 
 	// 2. Compute sin(πx)
-	t2 := newFloat(workPrec).Set(pi(workPrec))
+	t2 := newFloat(workPrec).setConst(pi)
 	t1 := newFloat(workPrec).Mul(t2, x)
 	t0.Sin(t1)
 

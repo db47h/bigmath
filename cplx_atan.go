@@ -30,14 +30,14 @@ func (z *Complex) Atan(x *Complex) *Complex {
 			z.Imag.Atanh(&x.Imag)
 			return z
 		}
-		z.Real.Set(halfPi(prec))
+		z.Real.setConst(halfPi)
 		z.Imag.Atanh(newFloat(workPrec).Inv(&x.Imag))
 		return z
 	}
 	if x.Real.IsInf() || x.Imag.IsInf() {
 		sgn := x.Real.Signbit()
 		sgnI := x.Imag.Signbit()
-		z.Real.Set(halfPi(prec))
+		z.Real.setConst(halfPi)
 		if sgn {
 			z.Real.Neg(&z.Real)
 		}
@@ -135,7 +135,7 @@ func (z *Complex) Acos(x *Complex) *Complex {
 		z.Imag.Set(&x.Imag)
 		return z
 	case x.Real.Sign() == 0 && x.Imag.absCmpOne() <= 0:
-		z.Real.Set(halfPi(prec))
+		z.Real.setConst(halfPi)
 		z.Imag.Asinh(&x.Imag)
 		z.Imag.Neg(&z.Imag)
 		return z
@@ -191,7 +191,7 @@ func (z *Complex) Asinh(x *Complex) *Complex {
 		neg := x.Imag.Signbit()
 		z.Real.Set(&x.Real)
 		if x.Imag.IsInf() {
-			z.Imag.Set(pi(prec))
+			z.Imag.setConst(pi)
 			z.Imag.SetMantExp(&z.Imag, -2)
 		} else {
 			z.Imag.Set(zero)
@@ -230,12 +230,12 @@ func (z *Complex) Asinh(x *Complex) *Complex {
 //
 //	Acosh(0 ± i·0) = 0 ± i·π/2
 func (z *Complex) Acosh(x *Complex) *Complex {
-	prec := z.setPrec(x)
+	z.setPrec(x)
 
 	if x.IsZero() {
 		neg := x.Imag.Signbit()
 		z.Real.Set(zero)
-		z.Imag.Set(halfPi(prec))
+		z.Imag.setConst(halfPi)
 		if neg {
 			z.Imag.Neg(&z.Imag)
 		}

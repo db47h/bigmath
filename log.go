@@ -58,7 +58,7 @@ func (z *Float) Log(x *Float) *Float {
 
 	// 2. Secondary Reduction: Center m around 1.0
 	// If m < sqrt(0.5), it's closer to 0.5. Shift it to [0.707, 1.414]
-	if m.Cmp(sqrt2(prec)) < 0 {
+	if m.Cmp(sqrt2.get(prec)) < 0 {
 		m.SetMantExp(m, 1)
 		exp--
 	}
@@ -71,7 +71,7 @@ func (z *Float) Log(x *Float) *Float {
 	if exp != 0 {
 		// FMA is cheap here since the internal precision will be prec+64
 		// and it will handle temps nicely.
-		return z.FMA(m.SetPrec(0).SetInt64(int64(exp)), ln2(prec), lnM)
+		return z.FMA(m.SetPrec(0).SetInt64(int64(exp)), ln2.get(prec), lnM)
 	}
 
 	return z.Set(lnM)
@@ -87,7 +87,7 @@ func (z *Float) Log10(x *Float) *Float {
 	// Log10(x) = Log(x) / ln(10)
 	workPrec := prec + _W
 	lnX := newFloat(workPrec).Log(x)
-	return z.Quo(lnX, ln10(workPrec))
+	return z.Quo(lnX, ln10.get(workPrec))
 }
 
 // Log2 sets z to the base-2 logarithm of x and returns z.
@@ -100,5 +100,5 @@ func (z *Float) Log2(x *Float) *Float {
 	// Log2(x) = Log(x) / ln(2)
 	workPrec := prec + _W
 	lnX := newFloat(workPrec).Log(x)
-	return z.Quo(lnX, ln2(workPrec))
+	return z.Quo(lnX, ln2.get(workPrec))
 }

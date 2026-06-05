@@ -383,7 +383,7 @@ func (z *Float) Asinh(x *Float) *Float {
 	t0 := newFloat(workPrec).Mul(z, z)
 	if t0.IsInf() {
 		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
-		z.SetPrec(prec).Add(t0.Log(z), newFloat(workPrec).Set(ln2(workPrec)))
+		z.SetPrec(prec).Add(t0.Log(z), ln2.get(workPrec))
 		if neg {
 			z.Neg(z)
 		}

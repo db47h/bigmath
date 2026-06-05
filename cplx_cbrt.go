@@ -23,7 +23,7 @@ func (z *Complex) Cbrt(x *Complex) *Complex {
 		} else {
 			t0 := newFloat(workPrec).Neg(&x.Real)
 			t1 := newFloat(workPrec).Cbrt(t0)
-			z.Imag.Mul(t1, t0.SetMantExp(sqrt3(workPrec), -1))
+			z.Imag.Mul(t1, t0.SetMantExp(sqrt3.get(workPrec), -1))
 			z.Real.SetMantExp(t1.SetPrec(prec), -1)
 		}
 		return z

@@ -71,7 +71,7 @@ func (x *decimal) initHuge(f *Float) {
 
 	prec := f.Prec()
 	workPrec := prec + 16 // > 4*ln(10)/ln(2)
-	t0 := newFloat(workPrec).Set(ln10Of2(workPrec))
+	t0 := newFloat(workPrec).setConst(ln10Of2)
 
 	// convert mantissa×2^exp to mantissa×10^exp10
 	// log10(10^exp10) = log10(2^exp) => exp10 = exp×log10(2) = exp×ln2/ln10

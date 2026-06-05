@@ -113,7 +113,7 @@ func (z *Complex) Acot(x *Complex) *Complex {
 	}
 	t := newComplex(workPrec).Atan(x)
 	// acot(z) = π/2 - atan(z)
-	z.Real.Sub(halfPi(workPrec), &t.Real)
+	z.Real.Sub(halfPi.get(workPrec), &t.Real)
 	z.Imag.Neg(&t.Imag)
 	return z
 }

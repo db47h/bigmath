@@ -42,39 +42,59 @@ var (
 	half     = NewFloat(0.5)
 
 	// cached constants
-	pi        = cache(computePi)
-	halfPi    = cache(func(prec uint) *Float { return newFloat(prec).SetMantExp(pi(prec), -1) })
-	twoOverPi = cache(func(prec uint) *Float { return newFloat(prec).Quo(two, pi(prec+2)) })
-	sqrt2     = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(two) })
-	sqrt3     = cache(func(prec uint) *Float { return newFloat(prec).Sqrt(three) })
-	ln2       = cache(func(prec uint) *Float { return newFloat(prec + _W).lnCore(two).SetPrec(prec) })
-	ln10      = cache(func(prec uint) *Float { return newFloat(prec).Log(ten) })
-	ln10Of2   = cache(func(prec uint) *Float { return newFloat(prec).Quo(ln2(prec+2), ln10(prec+2)) })
-	log2Pi    = cache(func(prec uint) *Float {
-		twoPi := newFloat(prec+_W).SetMantExp(pi(prec+_W), 1)
+	pi        = &constCache{fn: computePi}
+	halfPi    = &constCache{fn: func(prec uint) *Float { return newFloat(prec).SetMantExp(pi.get(prec), -1) }}
+	twoOverPi = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Quo(two, pi.get(prec)) }}
+	sqrt2     = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Sqrt(two) }}
+	sqrt3     = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Sqrt(three) }}
+	ln2       = &constCache{fn: func(prec uint) *Float { return newFloat(prec + _W).lnCore(two).SetPrec(prec) }}
+	ln10      = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Log(ten) }}
+	ln10Of2   = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Quo(ln2.get(prec+2), ln10.get(prec+2)) }}
+	log2Pi    = &constCache{fn: func(prec uint) *Float {
+		twoPi := newFloat(prec+_W).SetMantExp(pi.get(prec+_W), 1)
 		return newFloat(prec).Log(twoPi)
-	})
+	}}
 )
 
-// cache wraps a constProvider with thread-safe memoization.
+// constCache is thread-safe a [*Float] cache.
 //
-// It only invokes the provider when the requested precision exceeds the
-// precision of the currently cached value. It returns the internal pointer
-// directly to avoid the cost of copying.
-func cache(fn constProvider) constProvider {
-	var (
-		m sync.Mutex
-		v *Float
-	)
-	return func(prec uint) *Float {
-		m.Lock()
-		defer m.Unlock()
-		if v != nil && v.Prec() >= prec {
-			return v
+// It only invokes the constProvider function when the requested precision exceeds the
+// precision of the currently cached value.
+type constCache struct {
+	m  sync.Mutex
+	fn constProvider
+	v  *Float
+}
+
+// get returns the cached constant rounded to prec bits. The returned *Float MUST NOT be modified.
+// If the precision of the cached value matches exactly the requested precision,
+// it returns a pointer to the cached value without allocations.
+func (c *constCache) get(prec uint) *Float {
+	c.m.Lock()
+	defer c.m.Unlock()
+	if c.v != nil {
+		switch pv := c.v.Prec(); {
+		case pv > prec:
+			return newFloat(prec).Set(c.v)
+		case pv == prec:
+			return c.v
 		}
-		v = fn(prec)
-		return v
 	}
+	c.v = c.fn(prec)
+	return c.v
+}
+
+// get performs the operation z.Set(c.get(z.Prec())) optimizing
+// out any intermediate allocation and rounding.
+func (z *Float) setConst(c *constCache) *Float {
+	prec := z.Prec()
+	c.m.Lock()
+	defer c.m.Unlock()
+	if c.v != nil && c.v.Prec() >= prec {
+		return z.Set(c.v)
+	}
+	c.v = c.fn(prec)
+	return z.Set(c.v)
 }
 
 // Pi sets z to the rounded value of π and returns z.
@@ -87,7 +107,7 @@ func (z *Float) Pi() *Float {
 	if prec == 0 {
 		prec = 53
 	}
-	return z.Set(pi(prec))
+	return z.setConst(pi)
 }
 
 // computePi computes PI using Machin's formula: PI/4 = 4*arctan(1/5) - arctan(1/239)
@@ -122,7 +142,7 @@ func (z *Float) Ln2() *Float {
 	if prec == 0 {
 		prec = 53
 	}
-	return z.Set(ln2(prec))
+	return z.setConst(ln2)
 }
 
 // Ln10 sets z to the rounded value of ln(10) and returns z.
@@ -135,7 +155,7 @@ func (z *Float) Ln10() *Float {
 	if prec == 0 {
 		prec = 53
 	}
-	return z.Set(ln10(prec))
+	return z.setConst(ln10)
 }
 
 // Sqrt2 sets z to the rounded value of √2 and returns z.
@@ -148,5 +168,5 @@ func (z *Float) Sqrt2() *Float {
 	if prec == 0 {
 		prec = 53
 	}
-	return z.Set(sqrt2(prec))
+	return z.setConst(sqrt2)
 }
