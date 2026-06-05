@@ -528,9 +528,13 @@ func (z *Float) Acsc(x *Float) *Float {
 		z.SetPrec(prec)
 	}
 	if x.IsInf() {
-		// Inv(±Inf) = ±0, Asin(±0) = ±0
-		t := newFloat(prec + _W).Inv(x)
-		return z.Asin(t)
+		// return Asin(1/±Inf) = ±0
+		sgn := x.Signbit()
+		z.Set(zero)
+		if sgn {
+			z.Neg(z)
+		}
+		return z
 	}
 	if x.absCmpOne() < 0 {
 		panic(ErrNaN("acsc of |x| < 1"))

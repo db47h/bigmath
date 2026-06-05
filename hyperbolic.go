@@ -358,14 +358,15 @@ func (z *Float) Asinh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		z.SetPrec(prec)
+		// because we're using z as a temp for |x|, z.SetPrec is called only
+		// when setting z on exit.
 	}
 
 	if x.Sign() == 0 {
-		return z.Set(x)
+		return z.SetPrec(prec).Set(x)
 	}
 	if x.IsInf() {
-		return z.SetInf(x.Signbit())
+		return z.SetPrec(prec).SetInf(x.Signbit())
 	}
 
 	// Flat +2*_W guard. The computation involves a sqrt, an add, and a Log
@@ -374,13 +375,15 @@ func (z *Float) Asinh(x *Float) *Float {
 	workPrec := prec + 2*_W
 
 	neg := x.Signbit()
-	xVal := new(Float).Abs(x)
+	z.Copy(x)
+	if neg {
+		z.Neg(z)
+	}
 
-	t0 := newFloat(workPrec).Mul(xVal, xVal)
+	t0 := newFloat(workPrec).Mul(z, z)
 	if t0.IsInf() {
 		// For extremely large x, asinh(x) ≈ ln(x) + ln(2)
-		t0.Log(xVal)
-		z.Add(t0, ln2(workPrec))
+		z.SetPrec(prec).Add(t0.Log(z), newFloat(workPrec).Set(ln2(workPrec)))
 		if neg {
 			z.Neg(z)
 		}
@@ -389,8 +392,8 @@ func (z *Float) Asinh(x *Float) *Float {
 
 	t1 := newFloat(workPrec).Add(t0, one)
 	t0.Sqrt(t1)
-	t1.Add(xVal, t0)
-	z.Log(t1)
+	t1.Add(z, t0)
+	z.SetPrec(prec).Log(t1)
 	if neg {
 		z.Neg(z)
 	}
@@ -501,11 +504,11 @@ func (z *Float) Atanh(x *Float) *Float {
 	workPrec := x.atanhGuard(prec)
 
 	neg := x.Signbit()
-	t0 := new(Float).Abs(x)
+	t0 := newFloat(workPrec).Abs(x)
 
 	t1 := newFloat(workPrec).Sub(one, t0)
 	t2 := newFloat(workPrec).Add(one, t0)
-	t0.SetPrec(0).SetPrec(workPrec).Quo(t2, t1)
+	t0.Quo(t2, t1)
 	z.Log(t0)
 	z.SetMantExp(z, -1)
 
@@ -544,7 +547,10 @@ func (z *Float) Acoth(x *Float) *Float {
 	// This avoids the intermediate Inv(x) rounding that would occur
 	// with Atanh(Inv(x)) and provides a single-rounding path.
 	neg := x.Signbit()
-	z.Abs(z.Copy(x))
+	z.Copy(x)
+	if neg {
+		z.Neg(z)
+	}
 
 	workPrec := prec + _W
 	t1 := newFloat(workPrec).Add(z, one) // |x| + 1
@@ -601,6 +607,18 @@ func (z *Float) Acsch(x *Float) *Float {
 	if prec == 0 {
 		prec = x.Prec()
 		z.SetPrec(prec)
+	}
+	if x.Sign() == 0 {
+		z.SetInf(x.Signbit())
+		return z
+	}
+	if x.IsInf() {
+		sgn := x.Signbit()
+		z.Set(zero)
+		if sgn {
+			z.Neg(z)
+		}
+		return z
 	}
 	t := newFloat(prec + _W).Inv(x)
 	return z.Asinh(t)

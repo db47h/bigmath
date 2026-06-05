@@ -3,6 +3,11 @@
 > Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
 > This file tracks only what's still pending.
 
+## Missing tests
+
+Float.Acosh(-Inf)
+Float.Acoth(-Inf)
+
 ## Aliasing review
 
 docs/aliasing.md details wich functions of the big.Float API do not cause hidden

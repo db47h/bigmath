@@ -123,10 +123,9 @@ func (z *Float) Atan(x *Float) *Float {
 	// We need some added precision plus one bit per reduction step.
 	workPrec := prec + 8 + uint(max(0, min(x.MantExp(nil), 2)+u))
 
+	neg := x.Signbit()
 	xVal := newFloat(workPrec).Set(x)
-	var neg bool
-	if xVal.Signbit() {
-		neg = true
+	if neg {
 		xVal.Neg(xVal)
 	}
 
@@ -143,17 +142,17 @@ func (z *Float) Atan(x *Float) *Float {
 		nReductions++
 	}
 
-	t0.atanCore(xVal)
+	z.atanCore(xVal)
 
 	// Undo the double angle reductions: Atan(x) = 2^n * Atan(x_reduced)
 	if nReductions > 0 {
-		t0.SetMantExp(t0, nReductions)
+		z.SetMantExp(z, nReductions)
 	}
 
 	if neg {
-		t0.Neg(t0)
+		z.Neg(z)
 	}
-	return z.Set(t0)
+	return z
 }
 
 // Atan2 sets z to the arc tangent of y/x, using the signs of the
@@ -249,11 +248,11 @@ func (z *Float) Atan2(y, x *Float) *Float {
 	res := newFloat(workPrec).Atan(q)
 
 	if x.Signbit() {
-		p := pi(workPrec)
+		pi := newFloat(workPrec).Set(pi(workPrec))
 		if yNeg {
-			q.Sub(res, p)
+			q.Sub(res, pi)
 		} else {
-			q.Add(res, p)
+			q.Add(res, pi)
 		}
 		res, q = q, res
 		_ = q // quiet warnings about unused q.
@@ -296,11 +295,12 @@ func (z *Float) Asin(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		z.SetPrec(prec)
+		// because we're using z as a temp for |x|, z.SetPrec is called only
+		// when setting z on exit.
 	}
 
 	if x.Sign() == 0 {
-		return z.Set(x)
+		return z.SetPrec(prec).Set(x)
 	}
 
 	// Domain check: |x| ≤ 1
@@ -310,8 +310,8 @@ func (z *Float) Asin(x *Float) *Float {
 
 	case 0:
 		// |x| == 1 → ±π/2
-		z.Pi()              // z = π at z's precision
-		z.SetMantExp(z, -1) // z = π/2, keeps z's precision
+		z.SetPrec(prec).Pi() // z = π at z's precision
+		z.SetMantExp(z, -1)  // z = π/2, keeps z's precision
 		if x.Signbit() {
 			z.Neg(z)
 		}
@@ -320,23 +320,22 @@ func (z *Float) Asin(x *Float) *Float {
 
 	workPrec := x.asinGuard(prec)
 
-	xVal := newFloat(workPrec).Set(x)
-	neg := xVal.Signbit()
+	z.Copy(x)
+	neg := z.Signbit()
 	if neg {
-		xVal.Neg(xVal)
+		z.Neg(z)
 	}
 
 	// Asin(x) = Atan(x / sqrt(1 - x²))
-	x2 := newFloat(workPrec).Mul(xVal, xVal)
-	oneMinusX2 := newFloat(workPrec).Sub(one, x2)
-	sqrt := newFloat(workPrec).Sqrt(oneMinusX2)
-	ratio := newFloat(workPrec).Quo(xVal, sqrt)
-	result := newFloat(workPrec).Atan(ratio)
+	t0 := newFloat(workPrec).Mul(z, z)
+	t1 := newFloat(workPrec).Sub(one, t0)
+	t1.Quo(z, t0.Sqrt(t1))
+	z.SetPrec(prec).Atan(t1)
 
 	if neg {
-		result.Neg(result)
+		z.Neg(z)
 	}
-	return z.Set(result)
+	return z
 }
 
 // Acos sets z to the rounded value of arc cosine of x and returns z.
@@ -368,11 +367,7 @@ func (z *Float) Acos(x *Float) *Float {
 	// Acos(x) = π/2 - Asin(x)
 	workPrec := x.asinGuard(prec)
 
-	tmp := newFloat(workPrec).Asin(x)
-	result := newFloat(workPrec)
-	result.Pi()                   // result = π at workPrec
-	result.SetMantExp(result, -1) // result = π/2, keeps workPrec
-	result.Sub(result, tmp)
-
-	return z.Set(result)
+	halfPi := newFloat(workPrec).Pi()
+	halfPi.SetMantExp(halfPi, -1)
+	return z.Sub(halfPi, newFloat(workPrec).Asin(x))
 }
