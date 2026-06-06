@@ -33,6 +33,12 @@ func (z *Float) lnCore(x *Float) *Float {
 }
 
 func (z *Float) Log(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+
 	if x.Sign() <= 0 {
 		if x.Sign() == 0 {
 			return z.SetInf(true) // ln(0) = -Inf
@@ -41,12 +47,6 @@ func (z *Float) Log(x *Float) *Float {
 	}
 	if x.IsInf() {
 		return z.Set(x)
-	}
-
-	prec := z.Prec()
-	if prec == 0 {
-		prec = x.Prec()
-		z.SetPrec(prec)
 	}
 
 	// Guard bits for intermediate calculations
