@@ -13,6 +13,12 @@ import (
 //
 // The operation uses the Taylor series e^x = ∑(x^n/n!) for n ≥ 0.
 func (z *Float) Exp(x *Float) *Float {
+	prec := z.Prec()
+	if prec == 0 {
+		prec = x.Prec()
+		z.SetPrec(prec)
+	}
+
 	sgn := x.Sign()
 	if sgn == 0 {
 		return z.Set(one)
@@ -31,14 +37,8 @@ func (z *Float) Exp(x *Float) *Float {
 		return z.SetInf(false)
 	}
 
-	// make a modifyable copy of x. Also covers the case where z == x.
+	// make a mutable copy of x. Also covers the case where z == x.
 	x = new(Float).Copy(x)
-
-	prec := z.Prec()
-	if prec == 0 {
-		prec = x.Prec()
-		z.SetPrec(prec)
-	}
 
 	// The following is based on R. P. Brent, P. Zimmermann, Modern Computer
 	// Arithmetic, Cambridge Monographs on Computational and Applied Mathematics
