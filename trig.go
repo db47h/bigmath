@@ -39,14 +39,15 @@ func (z *Float) modPi2(x *Float) (*Float, int) {
 	xExp := x.MantExp(nil)
 	multPrec, _ := addPrec(prec, uint(xExp))
 	q := newFloat(multPrec).setConst(twoOverPi)
-	t := newFloat(multPrec).Mul(x, q)
-	q.Add(t, half)
+	q.FMA(x, q, half)
 
 	// 2. q = Floor(q)
 	q.SetMode(ToNegativeInf)
 	E := q.MantExp(nil)
 	if E > 0 {
-		q.SetPrec(uint(E))
+		if !q.IsInt() {
+			q.SetPrec(uint(E))
+		}
 	} else if q.Sign() < 0 {
 		q.Copy(minusOne)
 	} else {
@@ -70,9 +71,8 @@ func (z *Float) modPi2(x *Float) (*Float, int) {
 		// 3. Compute r = x - q * (π/2)
 		// Force a copy: pi() can return a value with a much higher precision
 		// and Mul uses the full precision of its arguments.
-		pi := newFloat(workPrec).Pi()
-		qPi2 := newFloat(workPrec).Mul(q, pi.SetMantExp(pi, -1))
-		r.SetPrec(workPrec).Sub(x, qPi2)
+		r.SetPrec(workPrec)
+		r.Neg(r.FMS(q, halfPi.get(workPrec), x))
 
 		// 4. Measure bit loss from cancellation
 		if r.Sign() == 0 {
@@ -287,7 +287,6 @@ func (z *Float) Cos(x *Float) *Float {
 	// (modPi2 → cosCore) is identical in structure.
 	workPrec := prec + _W
 
-	// modPi2 handles z == x aliasing; reuse xVal as both input and output.
 	xr, quad := newFloat(workPrec).modPi2(x)
 
 	if quad == 0 || quad == 2 {
