@@ -268,7 +268,7 @@ func (x *Float) asinGuard(prec uint) uint {
 	xAbs := new(Float).Abs(x)
 
 	// For |x| ≤ 0.5, 1-x² ≥ 0.75, so no catastrophic cancellation.
-	if xAbs.Cmp(newFloat(0).SetFloat64(0.5)) <= 0 {
+	if xAbs.Cmp(half) <= 0 {
 		return prec + 2*_W
 	}
 
@@ -320,11 +320,8 @@ func (z *Float) Asin(x *Float) *Float {
 
 	workPrec := x.asinGuard(prec)
 
-	z.Copy(x)
-	neg := z.Signbit()
-	if neg {
-		z.Neg(z)
-	}
+	neg := x.Signbit()
+	z.SetPrec(x.Prec()).Abs(x)
 
 	// Asin(x) = Atan(x / sqrt(1 - x²))
 	t0 := newFloat(workPrec).Mul(z, z)
