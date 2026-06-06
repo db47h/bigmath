@@ -264,19 +264,24 @@ func (z *Float) Atan2(y, x *Float) *Float {
 // asinGuard computes the working precision needed for asin(x) near x=±1,
 // where 1-x² loses significant bits. Returns the required working precision.
 func (x *Float) asinGuard(prec uint) uint {
-	// Work with |x|
-	xAbs := new(Float).Abs(x)
-
-	// For |x| ≤ 0.5, 1-x² ≥ 0.75, so no catastrophic cancellation.
-	if xAbs.Cmp(half) <= 0 {
-		return prec + 2*_W
-	}
-
+	var subExp int
 	// Near ±1: compute 1 - |x| to estimate bit loss from cancellation.
 	// Since 1 - x² = (1-x)(1+x), the precision loss from computing 1 - x²
-	// directly (as 1 - xVal*xVal) is bounded by the loss from 1 - |x|.
-	xAbs.Sub(one, xAbs)
-	subExp := xAbs.MantExp(nil)
+	// directly (as 1 - x*x) is bounded by the loss from 1 - |x|.
+	if x.Sign() >= 0 {
+		// For |x| ≤ 0.5, 1-x² ≥ 0.75, so no catastrophic cancellation.
+		if x.Cmp(half) <= 0 {
+			return prec + 2*_W
+		}
+		subExp = newFloat(prec).Sub(one, x).MantExp(nil)
+	} else {
+		t := newFloat(prec).Neg(half)
+		// for x ≥ -0.5, 1-x² ≥ 0.75
+		if x.Cmp(t) >= 0 {
+			return prec + 2*_W
+		}
+		subExp = t.Add(one, x).MantExp(nil)
+	}
 	if -subExp <= 2 {
 		return prec + 2*_W
 	}
