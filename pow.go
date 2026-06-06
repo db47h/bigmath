@@ -133,21 +133,22 @@ func (z *Float) Pow(x, y *Float) *Float {
 
 // powInt computes x^n using exponentiation by squaring.
 func (z *Float) powInt(x *Float, n *big.Int) *Float {
-	workPrec := z.Prec() + _W
+	prec := z.Prec()
+	workPrec := prec + _W
 
 	neg := n.Sign() < 0
 	absN := new(big.Int).Abs(n)
 
 	res := newFloat(workPrec).Set(one)
 	temp := newFloat(workPrec)
-	base := newFloat(workPrec).Abs(x)
+	z.SetPrec(x.Prec()).Abs(x)
 
 	for i := absN.BitLen() - 1; i >= 0; i-- {
 		temp.Mul(res, res)
 		res, temp = temp, res
 
 		if absN.Bit(i) != 0 {
-			temp.Mul(res, base)
+			temp.Mul(res, z)
 			res, temp = temp, res
 		}
 		if res.IsInf() {
@@ -155,6 +156,7 @@ func (z *Float) powInt(x *Float, n *big.Int) *Float {
 		}
 	}
 
+	z.SetPrec(prec)
 	if neg {
 		return z.Inv(res)
 	}
