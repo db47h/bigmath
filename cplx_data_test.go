@@ -138,6 +138,10 @@ func callComplexFn(fn string, z, x, y *bigmath.Complex) {
 		z.Sqrt(x)
 	case "pow":
 		z.Pow(x, y)
+	case "gamma":
+		z.Gamma(x)
+	case "lgamma":
+		z.Lgamma(x)
 	default:
 		panic(fmt.Sprintf("unknown complex function: %s", fn))
 	}

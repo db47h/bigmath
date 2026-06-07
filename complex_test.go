@@ -494,4 +494,12 @@ func TestComplex_Aliasing(t *testing.T) {
 	if !z.Equals(want) {
 		t.Errorf("Inv aliasing failed: got %v, want %v", z, want)
 	}
+
+	// Sqrt aliasing
+	z = newComplex(3, 4, prec)
+	want = newComplex(0, 0, prec).Sqrt(z)
+	z.Sqrt(z)
+	if !z.Equals(want) {
+		t.Errorf("Sqrt aliasing failed: got %v, want %v", z, want)
+	}
 }

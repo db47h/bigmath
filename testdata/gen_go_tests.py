@@ -5,6 +5,7 @@
 import sys
 import json
 import argparse
+import math
 import gmpy2
 import builtins
 
@@ -366,6 +367,22 @@ def generate_cplx_tests(input_file, output_file, precision):
                 if func is None:
                     raise AttributeError(f"constant function '{func_name}' not found in gmpy2")
                 result = func()
+            elif func_name == "gamma":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = _gamma_cplx_gmpy2(mpc_args[0], precision * 2)
+                ctx.precision = saved_prec
+            elif func_name == "lgamma":
+                saved_prec = gmpy2.get_context().precision
+                ctx = gmpy2.get_context()
+                ctx.precision = precision * 2
+                ctx.emax = min(GO_EMAX, gmpy2.get_emax_max())
+                ctx.emin = max(GO_EMIN, gmpy2.get_emin_min())
+                result = _lgamma_cplx_gmpy2(mpc_args[0], precision * 2)
+                ctx.precision = saved_prec
             else:
                 func = getattr(gmpy2, func_name, None)
                 if func is None:
@@ -409,6 +426,167 @@ def generate_cplx_tests(input_file, output_file, precision):
     finally:
         if output_file:
             out.close()
+
+
+def _bernoulli_even(n, prec):
+    """Generate even Bernoulli numbers B_2, B_4, ..., B_{2*floor(n/2)} as mpfr
+    values at the specified precision, using exact rational arithmetic via
+    gmpy2.mpq.
+
+    Uses the standard recurrence:
+        B_0 = 1
+        B_m = -1/(m+1) * sum_{k=0}^{m-1} C(m+1, k) * B_k
+
+    Only even-index results are returned (odd B_m = 0 for m > 1).
+    """
+    from math import comb
+
+    B = [gmpy2.mpq(0, 1) for _ in range(n + 1)]
+    B[0] = gmpy2.mpq(1, 1)
+
+    for m in range(1, n + 1):
+        s = gmpy2.mpq(0, 1)
+        for k in range(m):
+            s += gmpy2.mpq(comb(m + 1, k), 1) * B[k]
+        B[m] = -s / (m + 1)
+
+    # Convert even Bernoulli numbers (B_2, B_4, ...) to mpfr at target precision
+    result = []
+    # Get mpfr numbers for numerator/denominator
+    saved = gmpy2.get_context().precision
+    gmpy2.get_context().precision = prec + 64  # extra guard bits for the division
+    for i in range(2, n + 1, 2):
+        num = gmpy2.mpfr(B[i].numerator)
+        den = gmpy2.mpfr(B[i].denominator)
+        result.append(num / den)
+    gmpy2.get_context().precision = saved
+    return result
+
+
+_GAMMA_BETA = 0.2  # Rising factorial coefficient (matching Go's gammaBeta)
+
+
+_SIGNIFICAND_BITS = 64  # gmpy2.mpfr significand bits at default prec; used in convergence
+
+
+def _lgamma_cplx_gmpy2(z, prec=128):
+    """Compute log Gamma(z) using gmpy2 only. z is gmpy2.mpc.
+
+    Uses the Stirling series with the Euler reflection formula for
+    Re(z) < 0.5, and a precision-determined rising factorial shift.
+    """
+    ctx = gmpy2.get_context()
+    ctx.precision = prec
+
+    def _impl(w, one, half, two):
+        pi = gmpy2.const_pi()
+
+        # --- Short-circuit to Float.Lgamma for purely real inputs ---
+        # Avoids numerical noise from complex arithmetic on real inputs.
+        if w.imag == 0:
+            wr = w.real
+            if wr >= 0:
+                # z >= 0: Lgamma is purely real
+                lg, _ = gmpy2.lgamma(wr)
+                return gmpy2.mpc(lg, gmpy2.mpfr('0'))
+            # z < 0 (non-integer): principal branch gives imag = -π when Γ(z) < 0
+            lg, sign = gmpy2.lgamma(wr)
+            if sign < 0:
+                return gmpy2.mpc(lg, -pi)
+            else:
+                return gmpy2.mpc(lg, gmpy2.mpfr('0'))
+
+        # --- Reflection for Re(z) < 0.5 ---
+        if w.real < 0.5:
+            w1 = gmpy2.mpc(one - w.real, gmpy2.mpfr('0') - w.imag)
+            lw1 = _impl(w1, one, half, two)
+            logSin = gmpy2.log(gmpy2.sin(pi * w))
+            logPi = gmpy2.log(pi)
+            return logPi - logSin - lw1
+
+        # --- Rising factorial shift (precision-dependent) ---
+        abs_w = abs(w)
+        beta_threshold = _GAMMA_BETA * prec
+
+        shift_needed = 0
+        shift_sum = gmpy2.mpc('0')
+        if abs_w < beta_threshold:
+            shift_needed = int(beta_threshold - abs_w) + 1
+            if shift_needed > 0:
+                w_cur = w
+                for j in range(shift_needed):
+                    shift_sum += gmpy2.log(w_cur)
+                    w_cur = w_cur + one
+                w = w_cur
+
+        # --- Bernoulli numbers ---
+        # Generate enough terms. Estimate: for z ~ beta_threshold (~25.6 at 128 bit),
+        # each Stirling term decreases by ~2*log2(z) ≈ 10 bits. To get prec bits,
+        # we need about prec/10 ≈ 13 terms. Add generous margin + cap.
+        w_abs = abs(w)
+        if w_abs > 1.1:
+            bits_per_term = 2 * math.log2(float(w_abs))
+            if bits_per_term > 0:
+                max_terms = max(int(prec / bits_per_term) + 5, 8)
+            else:
+                max_terms = 30
+        else:
+            max_terms = 30
+        max_terms = min(max_terms, 50)  # cap at B_2..B_100
+        bernoulli = _bernoulli_even(2 * max_terms, prec)
+
+        # --- Stirling series ---
+        w_inv = one / w
+        w_inv_sq = w_inv * w_inv
+        z_pow = w_inv
+
+        series = gmpy2.mpc('0')
+        # Precompute 2**-(prec+10) for convergence test
+        eps = 2.0 ** (-prec - 10)
+        for k in range(1, len(bernoulli) + 1):
+            coeff = bernoulli[k - 1] / (2 * k * (2 * k - 1))
+            term = coeff * z_pow
+            series += term
+
+            # Convergence: check if term is negligible relative to accumulated sum
+            s_re = abs(series.real)
+            s_im = abs(series.imag)
+            t_re = abs(term.real)
+            t_im = abs(term.imag)
+
+            # A term is converged if it's zero, or its magnitude is below
+            # eps * series_magnitude in both components, OR the term itself
+            # is smaller than the target ULP so it can't affect rounding.
+            conv_re = (t_re == 0) or (s_re > 0 and t_re / s_re < eps) or (t_re < 2.0 ** (-prec - 10))
+            conv_im = (t_im == 0) or (s_im > 0 and t_im / s_im < eps) or (t_im < 2.0 ** (-prec - 10))
+
+            if conv_re and conv_im:
+                break
+
+            z_pow = z_pow * w_inv_sq
+
+        log2pi = gmpy2.log(two * pi)
+        result = (w - half) * gmpy2.log(w) - w + half * log2pi + series
+
+        if shift_needed > 0:
+            result -= shift_sum
+        return result
+
+    one = gmpy2.mpfr('1')
+    half = gmpy2.mpfr('0.5')
+    two = gmpy2.mpfr('2')
+    return _impl(z, one, half, two)
+
+
+def _gamma_cplx_gmpy2(z, prec=128):
+    """Compute Gamma(z) via exp(Lgamma(z)) using gmpy2 only.
+
+    Short-circuits to Float.Gamma for purely real inputs to avoid
+    numerical noise in the imaginary part.
+    """
+    if z.imag == 0:
+        return gmpy2.mpc(gmpy2.gamma(z.real), gmpy2.mpfr('0'))
+    return gmpy2.exp(_lgamma_cplx_gmpy2(z, prec))
 
 
 if __name__ == "__main__":

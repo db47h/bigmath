@@ -234,3 +234,41 @@ asech 0.5 0
 acsch 1 0
 acsch 2 0
 acsch 0.5 0.7
+
+# Gamma function
+gamma 1 0
+gamma 2 0
+gamma 0.5 0
+gamma -0.5 0
+gamma 1 1
+gamma 0.5 0.5
+gamma -0.5 0.5
+gamma 3 -2
+gamma 0 1
+gamma 0 -1
+gamma -1.5 0
+gamma 10 0
+gamma -3.5 0
+# poles
+gamma 0 0     !panic
+gamma -1 0    !panic
+gamma -2 0    !panic
+
+# Log Gamma
+lgamma 1 0
+lgamma 2 0
+lgamma 0.5 0
+lgamma -0.5 0
+lgamma 1 1
+lgamma 0.5 0.5
+lgamma -0.5 0.5
+lgamma 3 -2
+lgamma 0 1
+lgamma 0 -1
+lgamma -1.5 0
+lgamma 10 0
+lgamma -3.5 0
+# poles
+lgamma 0 0     !panic
+lgamma -1 0    !panic
+lgamma -2 0    !panic

@@ -9,9 +9,9 @@ Float.Acosh(-Inf)
 Float.Acoth(-Inf)
 Test Float to string: test integer path for fexp in initHuge.
 
-## Aliasing review
+## Aliasing doc review
 
-docs/aliasing.md details wich functions of the big.Float API do not cause hidden
+docs/aliasing.md details which functions of the big.Float API do not cause hidden
 allocations when called with arguments aliasing the receiver. We need to extend
 that to the full bigmath.Float API. Aliasing is fully supported but:
 
@@ -20,6 +20,20 @@ that to the full bigmath.Float API. Aliasing is fully supported but:
 
 This should be reviewed and documented. Functions with defensive handling of
 aliasing may need updating to make copies of x only if needed.
+
+- [ ] Finish updating the aliasing doc.
+
+## Gamma/Lgamma review
+
+- [ ] Review Complex.Gamma, Complex.Lgamma
+
+## Dynamic precision guards
+
+- [ ] Review the dynamic precision guards (they&#39;re overkill) and update edge cases for these
+
+## Test gen warnings
+
+- [ ] Fix warnings in test gen about Complex.Gamma tests flagged as `!panic` but not producing NaN
 
 ## Missing Public API Functions
 
