@@ -16,28 +16,26 @@ func (z *Float) Cbrt(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		z.SetPrec(prec)
+		// we use z as a temp, delay z.SetPrec
 	}
 
 	if x.Sign() == 0 {
-		return z.Set(x)
+		return z.SetPrec(prec).Set(x)
 	}
 	if x.IsInf() {
-		return z.SetInf(x.Signbit())
+		return z.SetPrec(prec).SetInf(x.Signbit())
 	}
 
 	// Guard bits for intermediate calculations
 	workPrec := prec + _W
 
 	neg := x.Signbit()
-	// allocate t0 with workPrec bits but use only prec for xAbs
-	t0 := newFloat(workPrec).SetPrec(prec)
-	t0.Abs(x)
+	z.SetPrec(x.Prec()).Abs(x)
 
 	// Compute cbrt(|x|) = exp(ln(|x|) / 3)
-	t1 := newFloat(workPrec).Log(t0)
-	t0.SetPrec(workPrec).Quo(t1, three)
-	z.Exp(t0)
+	t0 := newFloat(workPrec).Log(z)
+	t1 := newFloat(workPrec).Quo(t0, three)
+	z.SetPrec(prec).Exp(t1)
 
 	if neg {
 		z.Neg(z)

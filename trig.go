@@ -497,8 +497,7 @@ func (z *Float) Asec(x *Float) *Float {
 		z.SetPrec(prec)
 	}
 	if x.IsInf() {
-		z.Pi()
-		z.SetMantExp(z, -1)
+		z.setConst(halfPi)
 		return z
 	}
 	switch x.absCmpOne() {
@@ -506,7 +505,7 @@ func (z *Float) Asec(x *Float) *Float {
 		panic(ErrNaN("asec of |x| < 1"))
 	case 0:
 		if x.Signbit() {
-			return z.Pi()
+			return z.setConst(pi)
 		}
 		return z.Set(zero)
 	}

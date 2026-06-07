@@ -141,26 +141,26 @@ func (z *Float) Cosh(x *Float) *Float {
 	prec := z.Prec()
 	if prec == 0 {
 		prec = x.Prec()
-		z.SetPrec(prec)
+		// since we use z as a temp, delay z.SetPrec
 	}
 
 	if x.IsInf() {
-		return z.SetInf(false)
+		return z.SetPrec(prec).SetInf(false)
 	}
 	if x.Sign() == 0 {
-		return z.Set(one)
+		return z.SetPrec(prec).Set(one)
 	}
 
 	// Flat +_W guard. Always uses Exp internally (no Taylor path), so
 	// Exp's own proportional guard plus this outer margin covers it.
 	workPrec := prec + _W
 
-	t0 := new(Float).Abs(x)
+	z.SetPrec(x.Prec()).Abs(x)
 
-	t1 := newFloat(workPrec).Exp(t0)
-	t0.SetPrec(0).SetPrec(workPrec).Inv(t1)
+	t0 := newFloat(workPrec).Exp(z)
+	t1 := newFloat(workPrec).Inv(t0)
 
-	z.Add(t1, t0)
+	z.SetPrec(prec).Add(t1, t0)
 	z.SetMantExp(z, -1)
 
 	return z
@@ -375,10 +375,7 @@ func (z *Float) Asinh(x *Float) *Float {
 	workPrec := prec + 2*_W
 
 	neg := x.Signbit()
-	z.Copy(x)
-	if neg {
-		z.Neg(z)
-	}
+	z.SetPrec(x.Prec()).Abs(x)
 
 	t0 := newFloat(workPrec).Mul(z, z)
 	if t0.IsInf() {
@@ -410,7 +407,7 @@ func (x *Float) acoshGuard(prec uint) uint {
 	// x is in [1, 2). Compute x-1 at the default working precision to
 	// determine the guard bits needed.
 	workPrec := prec + 2*_W
-	t := newFloat(workPrec).Sub(x, one)
+	t := newFloat(prec).Sub(x, one)
 	subExp := t.MantExp(nil)
 	if -subExp <= 2 {
 		return prec + 2*_W
@@ -461,8 +458,12 @@ func (z *Float) Acosh(x *Float) *Float {
 // where 1-x (or 1+x) loses significant bits. Returns the required precision.
 func (x *Float) atanhGuard(prec uint) uint {
 	// Work with |x| to always check 1-|x|.
-	xAbs := newFloat(prec + 2*_W).Abs(x)
-	oneMinus := newFloat(prec+2*_W).Sub(one, xAbs)
+	oneMinus := newFloat(prec)
+	if x.Sign() < 0 {
+		oneMinus.Add(one, x)
+	} else {
+		oneMinus.Sub(one, x)
+	}
 	subExp := oneMinus.MantExp(nil)
 	if -subExp <= 2 {
 		return prec + 2*_W
@@ -508,8 +509,7 @@ func (z *Float) Atanh(x *Float) *Float {
 
 	t1 := newFloat(workPrec).Sub(one, t0)
 	t2 := newFloat(workPrec).Add(one, t0)
-	t0.Quo(t2, t1)
-	z.Log(t0)
+	z.Log(t0.Quo(t2, t1))
 	z.SetMantExp(z, -1)
 
 	if neg {
@@ -547,10 +547,7 @@ func (z *Float) Acoth(x *Float) *Float {
 	// This avoids the intermediate Inv(x) rounding that would occur
 	// with Atanh(Inv(x)) and provides a single-rounding path.
 	neg := x.Signbit()
-	z.Copy(x)
-	if neg {
-		z.Neg(z)
-	}
+	z.SetPrec(x.Prec()).Abs(x)
 
 	workPrec := prec + _W
 	t1 := newFloat(workPrec).Add(z, one) // |x| + 1

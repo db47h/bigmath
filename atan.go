@@ -106,8 +106,7 @@ func (z *Float) Atan(x *Float) *Float {
 	}
 
 	if x.IsInf() {
-		z.Pi()
-		z.SetMantExp(z, -1)
+		z.setConst(halfPi)
 		if x.Signbit() {
 			z.Neg(z)
 		}
@@ -185,7 +184,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 	yNeg := y.Signbit()
 	if y.Sign() == 0 {
 		if x.Signbit() {
-			z.Pi()
+			z.setConst(pi)
 			if yNeg {
 				z.Neg(z)
 			}
@@ -195,8 +194,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 	}
 
 	if x.Sign() == 0 {
-		z.Pi()
-		z.SetMantExp(z, -1)
+		z.setConst(halfPi)
 		if yNeg {
 			z.Neg(z)
 		}
@@ -207,12 +205,12 @@ func (z *Float) Atan2(y, x *Float) *Float {
 		if x.IsInf() && y.IsInf() {
 			if x.Signbit() {
 				prec := z.Prec() + _W
-				p := newFloat(prec).Pi()
-				q := newFloat(prec).Pi()
+				p := pi.get(prec)
+				q := newFloat(prec).setConst(pi)
 				q.SetMantExp(q, -2) // π/4 at same precision as p
 				z.Sub(p, q)
 			} else {
-				z.Pi()
+				z.setConst(pi)
 				z.SetMantExp(z, -2) // π/4
 			}
 			if yNeg {
@@ -222,8 +220,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 		}
 		if y.IsInf() {
 			// Atan2(±Inf, x) = ±π/2
-			z.Pi()
-			z.SetMantExp(z, -1)
+			z.setConst(halfPi)
 			if yNeg {
 				z.Neg(z)
 			}
@@ -232,7 +229,7 @@ func (z *Float) Atan2(y, x *Float) *Float {
 		// x is Inf, y is finite
 		if x.Signbit() {
 			// Atan2(y, -Inf) = ±π
-			z.Pi()
+			z.setConst(pi)
 			if yNeg {
 				z.Neg(z)
 			}
@@ -315,8 +312,7 @@ func (z *Float) Asin(x *Float) *Float {
 
 	case 0:
 		// |x| == 1 → ±π/2
-		z.SetPrec(prec).Pi() // z = π at z's precision
-		z.SetMantExp(z, -1)  // z = π/2, keeps z's precision
+		z.SetPrec(prec).setConst(halfPi) // z = π/2
 		if x.Signbit() {
 			z.Neg(z)
 		}
@@ -361,7 +357,7 @@ func (z *Float) Acos(x *Float) *Float {
 		panic(ErrNaN("acos of x outside [-1, 1]"))
 	case 0:
 		if x.Signbit() {
-			return z.Pi()
+			return z.setConst(pi)
 		}
 		return z.Set(zero)
 	}
