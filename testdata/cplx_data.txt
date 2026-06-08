@@ -250,9 +250,9 @@ gamma -1.5 0
 gamma 10 0
 gamma -3.5 0
 # poles
-gamma 0 0     !panic
-gamma -1 0    !panic
-gamma -2 0    !panic
+gamma 0 0
+gamma -1 0 !panic
+gamma -2 0 !panic
 
 # Log Gamma
 lgamma 1 0
@@ -269,6 +269,6 @@ lgamma -1.5 0
 lgamma 10 0
 lgamma -3.5 0
 # poles
-lgamma 0 0     !panic
-lgamma -1 0    !panic
-lgamma -2 0    !panic
+lgamma 0 0
+lgamma -1 0
+lgamma -2 0

@@ -212,6 +212,15 @@ func TestComplexData(t *testing.T) {
 			got.Set(x) // test aliasing on x at the same time
 			callComplexFn(d.Fn, got, got, y)
 
+			// If the test case expected a panic but we got here, the function
+			// returned normally — report the missing panic immediately rather
+			// than falling through to parseCplxHex (which will itself panic on
+			// the empty expected-result, masking the real bug).
+			if d.Panics {
+				t.Errorf("%s(%v): expected ErrNaN panic, got none", d.Fn, d.Args)
+				return
+			}
+
 			// Parse expected results
 			parseCplxHex(wantRe, d.ResRe)
 			parseCplxHex(wantIm, d.ResIm)

@@ -1,8 +1,5 @@
 # Workspace Plan — Remaining Work
 
-> Completed items moved to [`docs/TODO-done.md`](TODO-done.md).
-> This file tracks only what's still pending.
-
 ## Missing tests
 
 Float.Acosh(-Inf)
@@ -31,10 +28,6 @@ aliasing may need updating to make copies of x only if needed.
 
 - [ ] Review the dynamic precision guards (they&#39;re overkill) and update edge cases for these
 
-## Test gen warnings
-
-- [ ] Fix warnings in test gen about Complex.Gamma tests flagged as `!panic` but not producing NaN
-
 ## Missing Public API Functions
 
 Functions ordered by priority (highest first). All items apply to both Float and Complex unless noted.
@@ -47,8 +40,6 @@ Not in the original package description but expected by the intended audience (a
 |---|----------|-------|---------|-------|
 | 15 | **`Erf`** | ❌ | ❌ | Gauss error function — series/asymptotic expansion |
 | 16 | **`Erfc`** | ❌ | ❌ | Complementary error function: `1 - Erf(x)` (with numerical care for large x) |
-| 17 | **`Gamma`** | ✅ | ❌ | Γ(x) — Stirling series with Bernoulli numbers |
-| 18 | **`Lgamma`** | ✅ | ❌ | Log-Gamma: `(log|Γ|, sign)` with reflection formula |
 
 ### P4 — Gamma/Lgamma Deferred Optimizations
 

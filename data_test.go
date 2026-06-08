@@ -187,6 +187,15 @@ func TestFloatData(t *testing.T) {
 				args := makeReflectArgs([]*bigmath.Float{got1, got2}, d.Args, data.Prec)
 				reflect.ValueOf(fn).Call(args)
 
+				// If the test case expected a panic but we got here, the function
+				// returned normally — report immediately rather than falling
+				// through to parseHex (which will itself panic on empty results,
+				// masking the real bug).
+				if d.Panics {
+					t.Errorf("%s(%v): expected ErrNaN panic, got none", d.Fn, d.Args)
+					return
+				}
+
 				want1 := parseHex(d.Res, data.Prec)
 				if got1.Cmp(want1) != 0 {
 					t.Fatalf("%s(%v)[0]: got %s, want %s",
@@ -205,6 +214,15 @@ func TestFloatData(t *testing.T) {
 				// Single-result function (existing logic)
 				args := buildReflectArgs(got, d.Args, data.Prec)
 				reflect.ValueOf(fn).Call(args)
+
+				// If the test case expected a panic but we got here, the function
+				// returned normally — report immediately rather than falling
+				// through to parseHex (which will itself panic on empty results,
+				// masking the real bug).
+				if d.Panics {
+					t.Errorf("%s(%v): expected ErrNaN panic, got none", d.Fn, d.Args)
+					return
+				}
 
 				// Parse expected result
 				want := parseHex(d.Res, data.Prec)

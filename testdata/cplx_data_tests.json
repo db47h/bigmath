@@ -2348,7 +2348,8 @@
           "0"
         ]
       ],
-      "panics": true
+      "res_re": "inf",
+      "res_im": "0x0p+0"
     },
     {
       "fn": "gamma",
@@ -2523,7 +2524,8 @@
           "0"
         ]
       ],
-      "panics": true
+      "res_re": "inf",
+      "res_im": "0x0p+0"
     },
     {
       "fn": "lgamma",
@@ -2533,7 +2535,8 @@
           "0"
         ]
       ],
-      "panics": true
+      "res_re": "inf",
+      "res_im": "0x0p+0"
     },
     {
       "fn": "lgamma",
@@ -2543,7 +2546,8 @@
           "0"
         ]
       ],
-      "panics": true
+      "res_re": "inf",
+      "res_im": "0x0p+0"
     }
   ]
 }
