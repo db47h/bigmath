@@ -1534,6 +1534,14 @@
       "res": "inf"
     },
     {
+      "fn": "acosh",
+      "args": [
+        "-inf"
+      ],
+      "panics": true,
+      "reason": "gmpy2 returned NaN"
+    },
+    {
       "fn": "atanh",
       "args": [
         "0"
@@ -3214,6 +3222,13 @@
         "inf"
       ],
       "res": "0x0p+0"
+    },
+    {
+      "fn": "acoth",
+      "args": [
+        "-inf"
+      ],
+      "res": "-0x0p+0"
     },
     {
       "fn": "acoth",

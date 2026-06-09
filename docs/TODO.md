@@ -1,11 +1,5 @@
 # Workspace Plan — Remaining Work
 
-## Missing tests
-
-Float.Acosh(-Inf)
-Float.Acoth(-Inf)
-Test Float to string: test integer path for fexp in initHuge.
-
 ## Aliasing doc review
 
 docs/aliasing.md details which functions of the big.Float API do not cause hidden

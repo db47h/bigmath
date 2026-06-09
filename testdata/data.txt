@@ -243,6 +243,7 @@ acosh 2
 acosh 10
 acosh 100
 acosh inf
+acosh -inf !panic
 
 atanh 0
 atanh 0.25
@@ -517,6 +518,7 @@ acoth -2
 acoth 1.5
 acoth -1.5
 acoth inf
+acoth -inf
 acoth 1.000000000000000000000001
 acoth 1
 acoth -1
