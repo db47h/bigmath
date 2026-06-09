@@ -50,6 +50,7 @@ var (
 	ln2       = &constCache{fn: func(prec uint) *Float { return newFloat(prec + _W).lnCore(two).SetPrec(prec) }}
 	ln10      = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Log(ten) }}
 	ln10Of2   = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Quo(ln2.get(prec+2), ln10.get(prec+2)) }}
+	logPi     = &constCache{fn: func(prec uint) *Float { return newFloat(prec).Log(pi.get(prec + _W)) }}
 	log2Pi    = &constCache{fn: func(prec uint) *Float {
 		twoPi := newFloat(prec+_W).SetMantExp(pi.get(prec+_W), 1)
 		return newFloat(prec).Log(twoPi)

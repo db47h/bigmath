@@ -15,6 +15,7 @@ import "math"
 //	Lgamma(-Inf + i·y)  = +Inf + 0i
 //	Lgamma(x + i·±Inf)  = +Inf + 0i
 //	Lgamma(0 + 0i)      = +Inf + 0i
+//	Lgamma(-0 + 0i)     = +Inf - iπ
 //	Lgamma(n + 0i)      for negative integer n: +Inf + 0i
 //	Lgamma(1 + 0i)      = 0 + 0i
 //	Lgamma(2 + 0i)      = 0 + 0i
@@ -24,13 +25,6 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 
 	// Infinity (any component infinite)
 	if x.Real.IsInf() || x.Imag.IsInf() {
-		z.Real.SetInf(false) // +Inf
-		z.Imag.Set(zero)
-		return z
-	}
-
-	// Zero (pole)
-	if x.IsZero() {
 		z.Real.SetInf(false) // +Inf
 		z.Imag.Set(zero)
 		return z
@@ -47,7 +41,7 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 			return z
 		}
 
-		// z < 0 (non-integer, poles handled above):
+		// z < 0
 		// Principal branch of log Γ(z) for real z < 0 (non-integer):
 		//   log Γ(z) = log|Γ(z)| - i·π   when Γ(z) < 0 (sign = -1)
 		//   log Γ(z) = log|Γ(z)|          when Γ(z) > 0 (sign = +1)
@@ -55,8 +49,7 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 		//   log Γ(z) = log(π) - log(sin(πz)) - log Γ(1-z)
 		// and the principal Complex.Log: Log(negative + 0i) = log|negative| + iπ,
 		// so -Log(sin(πz)) contributes -iπ when sin(πz) < 0.
-		lg, sign := newFloat(workPrec).Lgamma(xr)
-		z.Real.Set(lg)
+		_, sign := z.Real.Lgamma(xr)
 		if sign < 0 {
 			z.Imag.setConst(pi)
 			z.Imag.Neg(&z.Imag) // -π
@@ -67,7 +60,6 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 	}
 
 	// Reflection for Re(z) < 0.5
-	// half is an exact static constant; safe to compare directly.
 	if x.Real.Cmp(half) < 0 {
 		return z.lgammaReflect(x, workPrec)
 	}
@@ -83,30 +75,29 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 // reentrancy occurs.
 func (z *Complex) lgammaReflect(x *Complex, workPrec uint) *Complex {
 	// 1. Compute 1 - z
-	oneC := newComplex(workPrec)
-	oneC.Real.Set(one)
-	w := newComplex(workPrec).Sub(oneC, x)
+	w := newComplex(workPrec)
+	w.Real.Sub(one, &x.Real)
+	w.Imag.Neg(&x.Imag)
 
 	// 2. log Γ(1-z) — recursive call; Re(w) >= 0.5 guarantees termination.
-	logGamma1mZ := newComplex(workPrec).Lgamma(w)
+	logGamma1mZ := w.Lgamma(w) // re-use w
 
-	// 3. sin(πz)
-	piC := newComplex(workPrec)
-	piC.Real.setConst(pi)
-	piZ := newComplex(workPrec).Mul(piC, x)
-	sinPiZ := newComplex(workPrec).Sin(piZ)
+	// 3. log sin(πz)
+	logSin := newComplex(workPrec)
+	logSin.Real.setConst(pi)
+	logSin.Mul(logSin, x)
+	logSin.Log(logSin.Sin(logSin))
 
-	// 4. log sin(πz)
-	logSin := newComplex(workPrec).Log(sinPiZ)
+	// 4. result = log π - log sin(πz) - log Γ(1-z)
+	//           = log π - (log sin(πz) + log Γ(1-z))
+	t := newFloat(workPrec)
+	t.Sub(logPi.get(workPrec), &logSin.Real)
+	z.Real.Sub(t, &logGamma1mZ.Real)
+	// imaginary part of log π is 0, just negate (logSin.Imag+logGamma1mZ.Imag)
+	z.Imag.Add(&logSin.Imag, &logGamma1mZ.Imag)
+	z.Imag.Neg(&z.Imag)
 
-	// 5. log π
-	logPi := newComplex(workPrec)
-	logPi.Real.setConst(pi)
-	logPi.Real.Log(&logPi.Real)
-
-	// 6. result = log π - log sin(πz) - log Γ(1-z)
-	t := newComplex(workPrec).Sub(logPi, logSin)
-	return z.Sub(t, logGamma1mZ)
+	return z
 }
 
 // lgammaStirling computes log Γ(z) for Re(z) >= 0.5 using the Stirling
@@ -117,64 +108,58 @@ func (z *Complex) lgammaReflect(x *Complex, workPrec uint) *Complex {
 //
 //	log Γ(z) = (z - ½)·log(z) - z + ½·log(2π) + Σ_{k=1}^{N-1} B_{2k} / (2k·(2k-1)·z^{2k-1})
 func (z *Complex) lgammaStirling(x *Complex, workPrec uint) *Complex {
-	// --- Argument reduction via rising factorial ---
+	// Argument reduction via rising factorial
 	// If |z| < γ·prec, shift z up by r so that |z+r| >= γ·prec.
-	absX := newFloat(workPrec)
-	x.Abs(absX)
+	tempFloat := x.Abs(newFloat(workPrec))
 
 	betaPrec := gammaBeta * float64(workPrec)
 
 	var shiftSum *Complex // non-nil when argument reduction applied
+	t0 := newComplex(workPrec)
+	t1 := newComplex(workPrec)
 
-	exp := absX.MantExp(nil) // log₂(|z|) — approximate magnitude
+	exp := tempFloat.MantExp(nil) // log₂(|z|) — approximate magnitude
 	if exp < int(math.Floor(math.Log2(betaPrec))) {
 		xMag := math.Exp2(float64(exp)) // rough |z| in [0.5, 1)·2^exp
 		r := max(int(math.Ceil(betaPrec-xMag)), 1)
 
 		shiftSum = newComplex(workPrec)
-		cur := newComplex(workPrec).Set(x)
-		logTerm := newComplex(workPrec)
-		oneC := newComplex(workPrec)
-		oneC.Real.Set(one)
-
+		t0.Set(x)
 		for range r {
-			logTerm.Log(cur) // log(z + j)
-			shiftSum.Add(shiftSum, logTerm)
-			cur.Add(cur, oneC) // z + j + 1
+			t1.Log(t0) // log(z + j)
+			shiftSum.Add(shiftSum, t1)
+			tempFloat.Add(&t0.Real, one)              // z + j + 1
+			t0.Real, *tempFloat = *tempFloat, t0.Real // swap by value
 		}
-		_ = logTerm // keep reference
 
 		// Set x = x + r for Stirling
-		rC := newComplex(workPrec)
-		rC.Real.SetInt64(int64(r))
-		x = newComplex(workPrec).Add(x, rC)
+		t := newComplex(workPrec)
+		t.Real.Add(&x.Real, tempFloat.SetInt64(int64(r)))
+		t.Imag.Set(&x.Imag)
+		x = t
 	}
 
-	// --- Stirling series evaluation ---
+	// Stirling series evaluation
 	maxTerms := max(int(math.Ceil(float64(workPrec)/(4*math.Pi*gammaBeta))), 8)
 	bnums := bernoulli.floats(maxTerms, workPrec)
 
-	// zInv = 1/x, zInvSq = 1/x²
-	zInv := newComplex(workPrec).Inv(x)
-	zInvSq := newComplex(workPrec).Mul(zInv, zInv)
+	sum := newComplex(workPrec) // series accumulator
 
-	sum := newComplex(workPrec)            // series accumulator
-	zPow := newComplex(workPrec).Set(zInv) // z^{-(2k-1)}, starts at z^{-1}
-	term := newComplex(workPrec)           // current term
-	denom := newFloat(workPrec)            // (2k)(2k-1) as float
-
-	t0 := newComplex(workPrec)
-	t1 := newComplex(workPrec)
+	t1.Inv(x)                                  // z^{-(2k-1)}, starts at z^{-1}
+	zInvSq := newComplex(workPrec).Mul(t1, t1) // zInvSq = 1/x²
+	term := newComplex(workPrec)               // current term
+	denom := new(Float)                        // (2k)(2k-1) as float
 
 	for k := 1; k <= maxTerms; k++ {
 		// term = B_{2k} · z^{-(2k-1)} / (2k·(2k-1))
 		// B_{2k} is real, so multiply components separately.
-		term.Real.Mul(bnums[k-1], &zPow.Real)
-		term.Imag.Mul(bnums[k-1], &zPow.Imag)
+		term.Real.Mul(bnums[k-1], &t1.Real)
+		term.Imag.Mul(bnums[k-1], &t1.Imag)
 
 		denom.SetInt64(int64(2 * k * (2*k - 1)))
-		term.Real.Quo(&term.Real, denom)
-		term.Imag.Quo(&term.Imag, denom)
+		t0.Real.Quo(&term.Real, denom)
+		t0.Imag.Quo(&term.Imag, denom)
+		term, t0 = t0, term
 
 		// Check convergence on both components.
 		if term.Real.Sign() == 0 && term.Imag.Sign() == 0 {
@@ -191,27 +176,25 @@ func (z *Complex) lgammaStirling(x *Complex, workPrec uint) *Complex {
 
 		// Update zPow for next iteration:
 		// z^{-(2k+1)} = z^{-(2k-1)} · z^{-2}
-		t0.Mul(zPow, zInvSq)
-		zPow, t0 = t0, zPow
+		t1.Mul(t1, zInvSq)
 	}
 
-	// --- Combine terms: (z-½)·log(z) - z + ½·log(2π) + Σ ---
-	halfC := newComplex(workPrec)
-	halfC.Real.Set(half) // (0.5, 0)
-	log2PiHalfC := newComplex(workPrec)
-	log2PiHalfC.Real.setConst(log2Pi)
-	log2PiHalfC.Real.SetMantExp(&log2PiHalfC.Real, -1) // (log(2π)/2, 0)
+	// Combine terms: (z-½)·log(z) - z + ½·log(2π) + Σ
+	tempFloat.setConst(log2Pi)
+	tempFloat.SetMantExp(tempFloat, -1) // (log(2π)/2, 0)
 
 	// (z - ½)·log(z)
-	t0.Sub(x, halfC) // z - 0.5
-	t1.Log(x)        // log(z)
-	t0.Mul(t0, t1)   // (z-0.5)·log(z)
+	t0.Real.Sub(&x.Real, half) // z - 0.5
+	t0.Imag.Set(&x.Imag)
+	t1.Log(x)      // log(z)
+	t0.Mul(t0, t1) // (z-0.5)·log(z)
 
 	// - z
 	t1.Sub(t0, x) // (z-0.5)·log(z) - z
 
 	// + log(2π)/2
-	t0.Add(t1, log2PiHalfC) // (z-0.5)·log(z) - z + log(2π)/2
+	t0.Real.Add(&t1.Real, tempFloat) // (z-0.5)·log(z) - z + log(2π)/2
+	t0.Imag.Set(&t1.Imag)
 
 	// + Σ (series sum)
 	t1.Add(t0, sum)
@@ -238,7 +221,7 @@ func (z *Complex) Gamma(x *Complex) *Complex {
 	prec := z.setPrec(x)
 	workPrec := prec + _W
 
-	// --- Infinity ---
+	// Infinity
 	if x.Real.IsInf() || x.Imag.IsInf() {
 		if x.Real.IsInf() && x.Real.Signbit() {
 			// -Inf in real part → NaN
@@ -249,38 +232,39 @@ func (z *Complex) Gamma(x *Complex) *Complex {
 		return z
 	}
 
-	// --- Negative real integer (pole) ---
-	if x.IsReal() && x.Real.Signbit() && x.Real.IsInt() {
-		panic(ErrNaN("gamma of negative integer"))
-	}
-
-	// --- Zero ---
+	// Zero
 	if x.IsZero() {
 		z.Real.SetInf(x.Real.Signbit()) // sign mirrors real component
 		z.Imag.Set(zero)
 		return z
 	}
 
-	// --- Short-circuit to Float.Gamma for purely real inputs ---
-	// Avoids numerical noise in the imaginary part from the complex Exp path.
 	if x.IsReal() {
+		// Negative real integer (pole)
+		if x.Real.Signbit() && x.Real.IsInt() {
+			panic(ErrNaN("gamma of negative integer"))
+		}
+
+		// Exact values
+		// Only exact for purely real 1 or 2; gamma(non-real) ≠ 1 even with Re(z)=1.
+		// Float.Gamma short-circuit above handles the real case, so this is for
+		// non-real inputs only — but we guard with IsReal to avoid returning (1,0)
+		// for e.g. gamma(1+i).
+		if x.Real.Cmp(one) == 0 || x.Real.Cmp(two) == 0 {
+			z.Real.Set(one)
+			z.Imag.Set(zero)
+			return z
+		}
+
+		// Short-circuit to Float.Gamma for purely real inputs
+		// Avoids numerical noise in the imaginary part from the complex Exp path.
 		z.Real.Gamma(&x.Real)
 		z.Imag.Set(zero)
 		return z
+
 	}
 
-	// --- Exact values ---
-	// Only exact for purely real 1 or 2; gamma(non-real) ≠ 1 even with Re(z)=1.
-	// Float.Gamma short-circuit above handles the real case, so this is for
-	// non-real inputs only — but we guard with IsReal to avoid returning (1,0)
-	// for e.g. gamma(1+i).
-	if x.IsReal() && (x.Real.Cmp(one) == 0 || x.Real.Cmp(two) == 0) {
-		z.Real.Set(one)
-		z.Imag.Set(zero)
-		return z
-	}
-
-	// --- General case: Gamma(z) = exp(Lgamma(z)) ---
+	// General case: Gamma(z) = exp(Lgamma(z))
 	lgr := newComplex(workPrec).Lgamma(x)
 	return z.Exp(lgr)
 }
