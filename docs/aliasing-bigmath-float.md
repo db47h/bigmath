@@ -37,6 +37,7 @@
 [✅] func (z *Float) Floor(x *Float) *Float
 [✅] func (z *Float) Gamma(x *Float) *Float
 [✅] func (z *Float) Hypot(x, y *Float) *Float
+[✅] func (z *Float) IntRound(x *Float) *Float
 [❌] func (z *Float) Inv(x *Float) *Float
 [✅] func (z *Float) Lgamma(x *Float) (*Float, int)
 [✅] func (z *Float) Log(x *Float) *Float
@@ -49,5 +50,6 @@
 [?] func (z *Float) Sinh(x *Float) *Float
 [?] func (z *Float) Tan(x *Float) *Float
 [?] func (z *Float) Tanh(x *Float) *Float
+[✅] func (z *Float) Trunc(x *Float) *Float
 
 ¹: FMA/FMS always allocate a temp for the product x*y.
