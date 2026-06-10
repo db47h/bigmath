@@ -6,8 +6,18 @@ import "math"
 
 // Lgamma sets z to the principal value of log Γ(x) and returns z.
 //
-// The branch cut is along the negative real axis. The imaginary part of
-// the result is continuous from above across the cut.
+// The principal branch of the log-gamma function has a single branch cut
+// along the negative real axis. It is continuous from above across the
+// cut: for negative real x (non-integer),
+//
+//	log Γ(x) = log|Γ(x)| - (⌊|x|⌋ + 1)·π·i
+//
+// For x just below the cut (Im(x) < 0, Re(x) < 0) the imaginary part
+// jumps to +(⌊|x|⌋ + 1)·π·i.
+//
+// The real part matches ln|Γ(z)| for all z where defined; the imaginary
+// part differs from the actual ln(Γ(z)) by an integer multiple of 2π
+// (the branch choice).
 //
 // Special cases:
 //
@@ -21,7 +31,7 @@ import "math"
 //	Lgamma(2 + 0i)      = 0 + 0i
 func (z *Complex) Lgamma(x *Complex) *Complex {
 	prec := z.setPrec(x)
-	workPrec := prec + 2*_W
+	workPrec := prec + _W
 
 	// Infinity (any component infinite)
 	if x.Real.IsInf() || x.Imag.IsInf() {
@@ -31,73 +41,87 @@ func (z *Complex) Lgamma(x *Complex) *Complex {
 	}
 
 	if x.IsReal() {
-		// Short-circuit to Float.Lgamma for purely positive real inputs
 		xr := &x.Real
 		if !xr.Signbit() {
-			// z >= 0: Lgamma is purely real
+			// Positive real — use Float.Lgamma directly
 			lg, _ := newFloat(workPrec).Lgamma(xr)
 			z.Real.Set(lg)
 			z.Imag.Set(zero)
 			return z
 		}
 
-		// z < 0
-		// Principal branch of log Γ(z) for real z < 0 (non-integer):
-		//   log Γ(z) = log|Γ(z)| - i·π   when Γ(z) < 0 (sign = -1)
-		//   log Γ(z) = log|Γ(z)|          when Γ(z) > 0 (sign = +1)
-		// The -π convention comes from the Euler reflection formula:
-		//   log Γ(z) = log(π) - log(sin(πz)) - log Γ(1-z)
-		// and the principal Complex.Log: Log(negative + 0i) = log|negative| + iπ,
-		// so -Log(sin(πz)) contributes -iπ when sin(πz) < 0.
-		_, sign := z.Real.Lgamma(xr)
-		if sign < 0 {
-			z.Imag.setConst(pi)
-			z.Imag.Neg(&z.Imag) // -π
-		} else {
-			z.Imag.Set(zero)
+		// Negative real — check for integer pole
+		if xr.IsInt() {
+			// Non-zero negative integer: pole
+			if xr.Sign() != 0 {
+				z.Imag.Set(zero)
+			} else {
+				// -0+0i — branch cut: limit from above gives +Inf - iπ
+				z.Imag.Neg(pi.get(workPrec)) // -π
+			}
+			z.Real.SetInf(false) // +Inf
+			return z
 		}
+
+		// Principal branch for non-integer negative real z.
+		// Compute imag part FIRST to avoid aliasing: z.Real.Lgamma(xr)
+		// would overwrite xr when z == x.
+		// For negative non-integer x: |⌊x⌋| = ⌊|x|⌋ + 1.
+		floorX := newFloat(workPrec).Floor(xr) // ⌊x⌋ (negative)
+		floorX.Neg(floorX)                     // |⌊x⌋|
+		z.Imag.Mul(floorX, pi.get(workPrec))   // |⌊x⌋|·π
+		z.Imag.Neg(&z.Imag)                    // -|⌊x⌋|·π = -(⌊|x|⌋+1)·π
+
+		z.Real.Lgamma(xr) // log|Γ(x)|
 		return z
 	}
 
-	// Reflection for Re(z) < 0.5
-	if x.Real.Cmp(half) < 0 {
-		return z.lgammaReflect(x, workPrec)
+	// For non-real z:
+	if x.Real.Signbit() {
+		return z.lgammaNegateReflect(x, workPrec)
 	}
 
 	// General case: Stirling series (with optional rising factorial shift)
 	return z.lgammaStirling(x, workPrec)
 }
 
-// lgammaReflect computes log Γ(z) for Re(z) < 0.5 via Euler's reflection
-// formula: log Γ(z) = log π - log sin(πz) - log Γ(1-z)
-//
-// The recursion Lgamma(1-z) is safe because Re(1-z) >= 0.5, so no
-// reentrancy occurs.
-func (z *Complex) lgammaReflect(x *Complex, workPrec uint) *Complex {
-	// 1. Compute 1 - z
-	w := newComplex(workPrec)
-	w.Real.Sub(one, &x.Real)
-	w.Imag.Neg(&x.Imag)
+// lgammaNegateReflect computes log Γ(z) for Re(z) < 0 via
+// negation to the right half-plane + Wolfram reflection formula
+func (z *Complex) lgammaNegateReflect(x *Complex, workPrec uint) *Complex {
+	t0 := newComplex(workPrec).Neg(x)
+	t1 := newComplex(workPrec).Log(t0) // Log(-z)
+	t2 := newComplex(workPrec)
+	pi := pi.get(workPrec) // cache pi@workPrec
 
-	// 2. log Γ(1-z) — recursive call; Re(w) >= 0.5 guarantees termination.
-	logGamma1mZ := w.Lgamma(w) // re-use w
+	// 1. Compute LogGamma[-z] via Lgamma (Re(-z) ≥ 0, goes to lgammaStirling)
+	t0.Lgamma(t0)
 
-	// 3. log sin(πz)
-	logSin := newComplex(workPrec)
-	logSin.Real.setConst(pi)
-	logSin.Mul(logSin, x)
-	logSin.Log(logSin.Sin(logSin))
+	// 2. result = -LogGamma[-z] - Log[-z]
+	t2.Neg(t2.Add(t0, t1))
 
-	// 4. result = log π - log sin(πz) - log Γ(1-z)
-	//           = log π - (log sin(πz) + log Γ(1-z))
-	t := newFloat(workPrec)
-	t.Sub(logPi.get(workPrec), &logSin.Real)
-	z.Real.Sub(t, &logGamma1mZ.Real)
-	// imaginary part of log π is 0, just negate (logSin.Imag+logGamma1mZ.Imag)
-	z.Imag.Add(&logSin.Imag, &logGamma1mZ.Imag)
-	z.Imag.Neg(&z.Imag)
+	// 3. Branch correction: Sign(Im(z)) · ⌊Re(z)⌋ · π · i
+	f0 := newFloat(workPrec).Floor(&x.Real) // ⌊Re(z)⌋
+	f1 := newFloat(workPrec).Mul(f0, pi)
 
-	return z
+	if x.Imag.Signbit() {
+		f1.Neg(f1) // flip sign for negative imag
+	}
+	t0.Imag.Add(&t2.Imag, f1)
+
+	// 4. + Log(π)
+	t0.Real.Add(&t2.Real, logPi.get(workPrec))
+
+	// 5. − Log(Sin(π·(z − ⌊Re(z)⌋)))
+	t1.Real.Sub(&x.Real, f0)
+	t1.Imag.Set(&x.Imag)
+
+	// π·frac
+	t2.Real.Mul(&t1.Real, pi)
+	t2.Imag.Mul(&t1.Imag, pi)
+
+	// Log(Sin(π·frac))
+	t2.Log(t2.Sin(t2))
+	return z.Sub(t0, t2)
 }
 
 // lgammaStirling computes log Γ(z) for Re(z) >= 0.5 using the Stirling
@@ -207,6 +231,10 @@ func (z *Complex) lgammaStirling(x *Complex, workPrec uint) *Complex {
 }
 
 // Gamma sets z to Γ(x) and returns z.
+//
+// Γ(z) is meromorphic with simple poles at z = 0, -1, -2, ... and is
+// otherwise analytic everywhere. It is computed via Γ(z) = exp(Lgamma(z)),
+// which eliminates the Lgamma branch cut — the function has no branch cuts.
 //
 // Special cases:
 //

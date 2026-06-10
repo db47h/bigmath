@@ -14,10 +14,6 @@ aliasing may need updating to make copies of x only if needed.
 
 - [ ] Finish updating the aliasing doc.
 
-## Gamma/Lgamma review
-
-- [ ] Review Complex.Gamma, Complex.Lgamma
-
 ## Dynamic precision guards
 
 - [ ] Review the dynamic precision guards (they&#39;re overkill) and update edge cases for these

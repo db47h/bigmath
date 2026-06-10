@@ -470,112 +470,33 @@ _SIGNIFICAND_BITS = 64  # gmpy2.mpfr significand bits at default prec; used in c
 
 
 def _lgamma_cplx_gmpy2(z, prec=128):
-    """Compute log Gamma(z) using gmpy2 only. z is gmpy2.mpc.
+    """Compute principal-branch log Gamma(z) using mpmath."""
+    import mpmath
+    from mpmath import mp
 
-    Uses the Stirling series with the Euler reflection formula for
-    Re(z) < 0.5, and a precision-determined rising factorial shift.
-    """
+    # Set mpmath precision
+    import math
+    dps = int(prec * math.log10(2)) + 10
+    mp.dps = dps
+
+    # mpmath.mpc from real/imag parts
+    z_mp = mp.mpc(complex(float(z.real), float(z.imag)))
+
+    try:
+        # Compute principal branch loggamma
+        result = mp.loggamma(z_mp)
+    except (ValueError, ZeroDivisionError):
+        # Pole at non-positive integer: loggamma -> +inf + 0i
+        ctx = gmpy2.get_context()
+        ctx.precision = prec
+        return gmpy2.mpc(gmpy2.mpfr('inf'), gmpy2.mpfr('0'))
+
+    # Convert back to gmpy2.mpc at target precision
     ctx = gmpy2.get_context()
     ctx.precision = prec
-
-    def _impl(w, one, half, two):
-        pi = gmpy2.const_pi()
-
-        # --- Short-circuit to Float.Lgamma for purely real inputs ---
-        # Avoids numerical noise from complex arithmetic on real inputs.
-        if w.imag == 0:
-            wr = w.real
-            if wr >= 0:
-                # z >= 0: Lgamma is purely real
-                lg, _ = gmpy2.lgamma(wr)
-                return gmpy2.mpc(lg, gmpy2.mpfr('0'))
-            # z < 0 (non-integer): principal branch gives imag = -π when Γ(z) < 0
-            lg, sign = gmpy2.lgamma(wr)
-            if sign < 0:
-                return gmpy2.mpc(lg, -pi)
-            else:
-                return gmpy2.mpc(lg, gmpy2.mpfr('0'))
-
-        # --- Reflection for Re(z) < 0.5 ---
-        if w.real < 0.5:
-            w1 = gmpy2.mpc(one - w.real, gmpy2.mpfr('0') - w.imag)
-            lw1 = _impl(w1, one, half, two)
-            logSin = gmpy2.log(gmpy2.sin(pi * w))
-            logPi = gmpy2.log(pi)
-            return logPi - logSin - lw1
-
-        # --- Rising factorial shift (precision-dependent) ---
-        abs_w = abs(w)
-        beta_threshold = _GAMMA_BETA * prec
-
-        shift_needed = 0
-        shift_sum = gmpy2.mpc('0')
-        if abs_w < beta_threshold:
-            shift_needed = int(beta_threshold - abs_w) + 1
-            if shift_needed > 0:
-                w_cur = w
-                for j in range(shift_needed):
-                    shift_sum += gmpy2.log(w_cur)
-                    w_cur = w_cur + one
-                w = w_cur
-
-        # --- Bernoulli numbers ---
-        # Generate enough terms. Estimate: for z ~ beta_threshold (~25.6 at 128 bit),
-        # each Stirling term decreases by ~2*log2(z) ≈ 10 bits. To get prec bits,
-        # we need about prec/10 ≈ 13 terms. Add generous margin + cap.
-        w_abs = abs(w)
-        if w_abs > 1.1:
-            bits_per_term = 2 * math.log2(float(w_abs))
-            if bits_per_term > 0:
-                max_terms = max(int(prec / bits_per_term) + 5, 8)
-            else:
-                max_terms = 30
-        else:
-            max_terms = 30
-        max_terms = min(max_terms, 50)  # cap at B_2..B_100
-        bernoulli = _bernoulli_even(2 * max_terms, prec)
-
-        # --- Stirling series ---
-        w_inv = one / w
-        w_inv_sq = w_inv * w_inv
-        z_pow = w_inv
-
-        series = gmpy2.mpc('0')
-        # Precompute 2**-(prec+10) for convergence test
-        eps = 2.0 ** (-prec - 10)
-        for k in range(1, len(bernoulli) + 1):
-            coeff = bernoulli[k - 1] / (2 * k * (2 * k - 1))
-            term = coeff * z_pow
-            series += term
-
-            # Convergence: check if term is negligible relative to accumulated sum
-            s_re = abs(series.real)
-            s_im = abs(series.imag)
-            t_re = abs(term.real)
-            t_im = abs(term.imag)
-
-            # A term is converged if it's zero, or its magnitude is below
-            # eps * series_magnitude in both components, OR the term itself
-            # is smaller than the target ULP so it can't affect rounding.
-            conv_re = (t_re == 0) or (s_re > 0 and t_re / s_re < eps) or (t_re < 2.0 ** (-prec - 10))
-            conv_im = (t_im == 0) or (s_im > 0 and t_im / s_im < eps) or (t_im < 2.0 ** (-prec - 10))
-
-            if conv_re and conv_im:
-                break
-
-            z_pow = z_pow * w_inv_sq
-
-        log2pi = gmpy2.log(two * pi)
-        result = (w - half) * gmpy2.log(w) - w + half * log2pi + series
-
-        if shift_needed > 0:
-            result -= shift_sum
-        return result
-
-    one = gmpy2.mpfr('1')
-    half = gmpy2.mpfr('0.5')
-    two = gmpy2.mpfr('2')
-    return _impl(z, one, half, two)
+    re = gmpy2.mpfr(str(result.real))
+    im = gmpy2.mpfr(str(result.imag))
+    return gmpy2.mpc(re, im)
 
 
 def _gamma_cplx_gmpy2(z, prec=128):

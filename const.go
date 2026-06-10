@@ -81,6 +81,7 @@ func (c *constCache) get(prec uint) *Float {
 			return c.v
 		}
 	}
+	// c.v == nil || c.v.Prec() < prec
 	c.v = c.fn(prec)
 	return c.v
 }

@@ -2249,8 +2249,8 @@
           "1"
         ]
       ],
-      "res_re": "0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5f258851438p-4",
-      "res_im": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf23980efc1dea8cp-4"
+      "res_re": "0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5f09586ea8p-4",
+      "res_im": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf239806d3897864p-4"
     },
     {
       "fn": "gamma",
@@ -2260,8 +2260,8 @@
           "0.5"
         ]
       ],
-      "res_re": "0xd.1733224cbde8395cb76aaa0f0a9ca7244aee2969b6cbb96b0c3f8032e38f7fep-4",
-      "res_im": "-0xc.36888fae93deb8ef78c1f11450a275e978e345f605c5a3e85ec6633551489fbp-4"
+      "res_re": "0xd.1733224cbde8395cb76aaa0f0a9ca7244aee2969b6cbb96b0c3f802a36ef34ap-4",
+      "res_im": "-0xc.36888fae93deb8ef78c1f11450a275e978e345f605c5a3e85ec66317e3fa2cep-4"
     },
     {
       "fn": "gamma",
@@ -2271,8 +2271,8 @@
           "0.5"
         ]
       ],
-      "res_re": "-0x1.94dbbb1fb51c6f24c302c9b235b3f1d0dc3d16f5fbc915d536b05e3354f267e6p+0",
-      "res_im": "-0xe.0aa929e2a09806d3ea8b8fab9fa313ad20ae373b1061582ad791d0a569b2ceep-8"
+      "res_re": "-0x1.94dbbb1fb51c6f24c302c9b235b3f1d0dc3d16f5fbc915d536b05e3421ae9618p+0",
+      "res_im": "-0xe.0aa929e2a09806d3ea8b8fab9fa313ad20ae373b1061582ad791d1252f507e8p-8"
     },
     {
       "fn": "gamma",
@@ -2282,8 +2282,8 @@
           "-2"
         ]
       ],
-      "res_re": "-0x6.c31f50ac6dc7b54130f3e2e2e9e1f6c3158c4a5778e13c97a1f8de33d5fccabp-4",
-      "res_im": "-0xd.f2f3814673029e23c5302f694c3701d32a52a7e80bafe12f30b7ad32eb979d6p-4"
+      "res_re": "-0x6.c31f50ac6dc7b54130f3e2e2e9e1f6c3158c4a5778e13c97a1f8de42d0bfc778p-4",
+      "res_im": "-0xd.f2f3814673029e23c5302f694c3701d32a52a7e80bafe12f30b7ad3445ae74p-4"
     },
     {
       "fn": "gamma",
@@ -2293,8 +2293,8 @@
           "1"
         ]
       ],
-      "res_re": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf23980c8b919a1p-4",
-      "res_im": "-0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5ea8131c0a8p-4"
+      "res_re": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf239806d389786cp-4",
+      "res_im": "-0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5f09586ea8p-4"
     },
     {
       "fn": "gamma",
@@ -2304,8 +2304,8 @@
           "-1"
         ]
       ],
-      "res_re": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf23980c8b919a1p-4",
-      "res_im": "0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5ea8131c0a8p-4"
+      "res_re": "-0x2.7aacabd13bc4efc113b129026a5c927054db034f725302cabf239806d389786cp-4",
+      "res_im": "0x7.f7df46f76c40e0f8a0a09b48c27aa2de3660251cc0546064139ac5f09586ea8p-4"
     },
     {
       "fn": "gamma",
@@ -2425,8 +2425,8 @@
           "1"
         ]
       ],
-      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6a1952f8p-4",
-      "res_im": "-0x4.d384ccf9021b81fe6aba850195807da26c5a6d638cf43080cc321d508b7530cp-4"
+      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6a9748259ep-4",
+      "res_im": "-0x4.d384ccf9021b81fe6aba850195807da26c5a6d638cf43080cc321d429cb0db48p-4"
     },
     {
       "fn": "lgamma",
@@ -2436,8 +2436,19 @@
           "0.5"
         ]
       ],
-      "res_re": "0x1.cc5690c5add81aff8a3e22b47f67bb0ea9d9904a4de20c9a13eb526e1acd4p-4",
-      "res_im": "-0xc.02fc9fb44319822edfe5e5507fe6238fba1204ddc49af44aff1b094704d1322p-4"
+      "res_re": "0x1.cc5690c5add81aff8a3e22b47f67bb0ea9d9904a4de20c9a13eb52567ef9e846p-4",
+      "res_im": "-0xc.02fc9fb44319822edfe5e5507fe6238fba1204ddc49af44aff1b093913e2dffp-4"
+    },
+    {
+      "fn": "lgamma",
+      "args": [
+        [
+          "0.5",
+          "-0.5"
+        ]
+      ],
+      "res_re": "0x1.cc5690c5add81aff8a3e22b47f67bb0ea9d9904a4de20c9a13eb52567ef9e846p-4",
+      "res_im": "0xc.02fc9fb44319822edfe5e5507fe6238fba1204ddc49af44aff1b093913e2dffp-4"
     },
     {
       "fn": "lgamma",
@@ -2447,8 +2458,8 @@
           "0.5"
         ]
       ],
-      "res_re": "0x7.57e750843c53e85dd95bbf749eff7088b173a97de2a7be0664540d2a9ab2d09p-4",
-      "res_im": "-0x3.1b5f59e1a86bdec13c5185f78a92b8ac76a80a677b8114a0b614ec868eaf09c8p+0"
+      "res_re": "0x7.57e750843c53e85dd95bbf749eff7088b173a97de2a7be0664540d32dc51b9a8p-4",
+      "res_im": "-0x3.1b5f59e1a86bdec13c5185f78a92b8ac76a80a677b8114a0b614ec864278ff64p+0"
     },
     {
       "fn": "lgamma",
@@ -2458,8 +2469,8 @@
           "-2"
         ]
       ],
-      "res_re": "-0x8.197f554990c9ce408fd1c317b74f4b3f9d03a4b04dca101b146fca06f8e1p-8",
-      "res_im": "-0x2.05ae7411763d0a89bc4d9cfc54939d7d1f2a4b7f1afeb635a1d002f44d90d1f8p+0"
+      "res_re": "-0x8.197f554990c9ce408fd1c317b74f4b3f9d03a4b04dca101b146fc986f8959cap-8",
+      "res_im": "-0x2.05ae7411763d0a89bc4d9cfc54939d7d1f2a4b7f1afeb635a1d002f5226d073p+0"
     },
     {
       "fn": "lgamma",
@@ -2469,8 +2480,8 @@
           "1"
         ]
       ],
-      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6b153d533ap-4",
-      "res_im": "-0x1.df580213d2f33c8970386d671b10417c78ca42e74d9edbf010da9f217ede895p+0"
+      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6a9748259ep-4",
+      "res_im": "-0x1.df580213d2f33c8970386d671b10417c78ca42e74d9edbf010da9f209ff243fap+0"
     },
     {
       "fn": "lgamma",
@@ -2480,8 +2491,8 @@
           "-1"
         ]
       ],
-      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6b153d533ap-4",
-      "res_im": "0x1.df580213d2f33c8970386d671b10417c78ca42e74d9edbf010da9f217ede895p+0"
+      "res_re": "-0xa.6a2e71d358bb4f52f53fc048bcb4d22d18a0c089680f231ddda7e6a9748259ep-4",
+      "res_im": "0x1.df580213d2f33c8970386d671b10417c78ca42e74d9edbf010da9f209ff243fap+0"
     },
     {
       "fn": "lgamma",
@@ -2492,7 +2503,7 @@
         ]
       ],
       "res_re": "0xd.c2c0a8c107c323f9f78901044ca1574f309316d074a0ea1f04257323de15712p-4",
-      "res_im": "0x0p+0"
+      "res_im": "-0x6.487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd91p+0"
     },
     {
       "fn": "lgamma",
@@ -2514,7 +2525,7 @@
         ]
       ],
       "res_re": "-0x1.4f1b0fe64a5d865fa2cc44a4e0c50f672092876b58fff30a2f14278099d5326ep+0",
-      "res_im": "0x0p+0"
+      "res_im": "-0xc.90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22p+0"
     },
     {
       "fn": "lgamma",
