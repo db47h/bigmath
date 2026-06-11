@@ -43,7 +43,7 @@
 [✅] func (z *Float) Log(x *Float) *Float
 [✅] func (z *Float) Log10(x *Float) *Float
 [✅] func (z *Float) Log2(x *Float) *Float
-[?] func (z *Float) Pow(x, y *Float) *Float
+[✅] func (z *Float) Pow(x, y *Float) *Float
 [?] func (z *Float) Sec(x *Float) *Float
 [?] func (z *Float) Sech(x *Float) *Float
 [?] func (z *Float) Sin(x *Float) *Float

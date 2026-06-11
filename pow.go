@@ -98,29 +98,14 @@ func (z *Float) Pow(x, y *Float) *Float {
 
 	// For integer exponents, use optimizations.
 	if y.IsInt() {
-		// Detect huge exponents that will surely overflow or underflow.
-		// yExp > 64 implies |y| >= 2^64 (as f*2^e with 0.5 <= f < 1).
-		yExp := y.MantExp(nil)
-		if yExp > 64 {
-			cmp := x.absCmpOne()
-			if (y.Sign() > 0 && cmp > 0) || (y.Sign() < 0 && cmp < 0) {
-				if x.Signbit() && y.isOdd() {
-					return z.SetInf(true)
-				}
-				return z.SetInf(false)
-			}
-			// underflow
-			if x.Signbit() && y.isOdd() {
-				return z.Set(zero).Neg(z)
-			}
-			return z.Set(zero)
+		// Binary exponentiation costs O(BitLen(n)) iterations. Skip it when n
+		// would take O(prec²) or more — the general case exp(y·ln(x)) is
+		// asymptotically cheaper for huge exponents.
+		if e := y.MantExp(nil); uint(e) <= prec {
+			n := new(big.Int)
+			y.Int(n)
+			return z.powInt(x, n)
 		}
-
-		// Since yExp <= 64, |y| fits in a big.Int with BitLen() <= 64.
-		// Binary exponentiation is efficient for this range.
-		n := new(big.Int)
-		y.Int(n)
-		return z.powInt(x, n)
 	}
 
 	// General case: x^y = exp(y * ln(x))
