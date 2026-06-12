@@ -134,6 +134,17 @@ func (x *Float) MantExp(mant *Float) (exp int) {
 This method has an explicit aliasing test in the standard library:
 `TestFloatMantExpAliasing` in `float_test.go`.
 
+### `bigmath.Float` methods
+
+For `bigmath.Float` methods that are allocation-free under aliasing, there
+are two categories:
+
+- **Argument transformation** — the method applies an absolute value,
+  argument reduction, or another mathematical transform to `x` before
+  computing the result. Examples: `Acos`, `Sin`, `Exp`, `Log`, `Pow`.
+- **In-place mantissa modification** — `IntRound`, `Floor`, `Ceil`, `Trunc`
+  directly truncate the mantissa of `x`.
+
 ---
 
 ## Methods where aliasing **does** allocate
@@ -206,6 +217,20 @@ func (z nat) divLarge(stk *stack, u, uIn, vIn nat) (q, r nat) {
 Additionally, `uquo` may allocate `xadj` when the dividend needs extra words
 for sufficient result precision.
 
+### `Inv(x *Float) *Float` ❌
+
+`Inv` delegates to `Quo`:
+
+```go
+func (z *Float) Inv(x *Float) *Float {
+    return z.Quo(one, x)   // one is a package-level *Float with value 1
+}
+```
+
+When `z == x`, this becomes `z.Quo(one, z)`, hitting the same `nat.div`
+aliasing guard described for `Quo` above and forcing a fresh allocation for
+the result mantissa.
+
 ### `Sqrt(x *Float) *Float` ❌
 
 Internally calls `z.sqrtInverse(z)` when aliased. That function creates fresh
@@ -218,23 +243,67 @@ forcing a fresh allocation for the result mantissa.
 
 ## Quick reference table
 
-| Method | Aliasing allocates? | Sign flips in-place? |
-|---|---|---|
-| `Neg(x)` | **No** ✅ | Yes |
-| `Abs(x)` | **No** ✅ | Yes |
-| `Set(x)` | **No** ✅¹ | — |
-| `Copy(x)` | **No** ✅¹ | — |
-| `SetMantExp(mant, exp)` | **No** ✅ | — |
-| `MantExp(mant)` | **No** ✅ | — |
-| `Add(x, y)` | **Yes** ❌² | — |
-| `Sub(x, y)` | **Yes** ❌² | — |
-| `Mul(x, y)` | **Yes** ❌³ | — |
-| `Quo(x, y)` | **Yes** ❌³ | — |
-| `Sqrt(x)` | **Yes** ❌³ | — |
+| Method | Aliasing allocates? |
+|---|---|
+| `Abs(x)`       | **No** ✅¹ |
+| `Acos(x)`      | **No** ✅ |
+| `Acosh(x)`     | **No** ✅ |
+| `Acot(x)`      | **No** ✅ |
+| `Acoth(x)`     | **No** ✅ |
+| `Acsc(x)`      | **No** ✅ |
+| `Acsch(x)`     | **No** ✅ |
+| `Add(x, y)`    | **Yes** ❌² |
+| `Asec(x)`      | **No** ✅ |
+| `Asech(x)`     | **No** ✅ |
+| `Asin(x)`      | **No** ✅ |
+| `Asinh(x)`     | **No** ✅ |
+| `Atan(x)`      | **No** ✅ |
+| `Atan2(y, x)`  | **No** ✅ |
+| `Atanh(x)`     | **No** ✅ |
+| `Cbrt(x)`      | **No** ✅ |
+| `Ceil(x)`      | **No** ✅³ |
+| `Copy(x)`      | **No** ✅⁴ |
+| `Cos(x)`       | **No** ✅ |
+| `Cosh(x)`      | **No** ✅ |
+| `Cot(x)`       | **No** ✅ |
+| `Coth(x)`      | **No** ✅ |
+| `Csc(x)`       | **No** ✅ |
+| `Csch(x)`      | **No** ✅ |
+| `Exp(x)`       | **No** ✅ |
+| `Floor(x)`     | **No** ✅³ |
+| `FMA(x, y, t)` | **No** ✅⁵ |
+| `FMS(x, y, t)` | **No** ✅⁵ |
+| `Gamma(x)`     | **No** ✅ |
+| `Hypot(x, y)`  | **No** ✅ |
+| `IntRound(x)`  | **No** ✅³ |
+| `Inv(x)`       | **Yes** ❌ |
+| `Lgamma(x)`    | **No** ✅ |
+| `Log(x)`       | **No** ✅ |
+| `Log10(x)`     | **No** ✅ |
+| `Log2(x)`      | **No** ✅ |
+| `MantExp(mant)` | **No** ✅ |
+| `Mul(x, y)`    | **Yes** ❌⁶ |
+| `Neg(x)`       | **No** ✅¹ |
+| `Pow(x, y)`    | **No** ✅ |
+| `Quo(x, y)`    | **Yes** ❌⁶ |
+| `Sec(x)`       | **No** ✅ |
+| `Sech(x)`      | **No** ✅ |
+| `Set(x)`       | **No** ✅⁴ |
+| `SetMantExp(mant, exp)` | **No** ✅¹ |
+| `Sin(x)`       | **No** ✅ |
+| `Sinh(x)`      | **No** ✅ |
+| `Sqrt(x)`      | **Yes** ❌⁶ |
+| `Sub(x, y)`    | **Yes** ❌² |
+| `Tan(x)`       | **No** ✅ |
+| `Tanh(x)`      | **No** ✅ |
+| `Trunc(x)`     | **No** ✅³ |
 
-¹ No-op when aliased (the `if z != x` guard skips all work).
+¹ Internal fields (sign, exponent) are updated in-place without touching the mantissa.
 ² Allocates a temporary shifted `nat` via `nat(nil).lsh`.
-³ Forces a fresh `nat.make` allocation because `nat.mul`/`nat.sqr`/`nat.div`
+³ Modifies the mantissa in-place (no argument transformation needed).
+⁴ No-op when aliased (the `if z != x` guard skips all work).
+⁵ FMA/FMS always allocate a temp for the product x*y.
+⁶ Forces a fresh `nat.make` allocation because `nat.mul`/`nat.sqr`/`nat.div`
   discard the receiver slice when aliasing is detected.
 
 ---
