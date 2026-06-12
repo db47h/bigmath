@@ -44,12 +44,12 @@
 [✅] func (z *Float) Log10(x *Float) *Float
 [✅] func (z *Float) Log2(x *Float) *Float
 [✅] func (z *Float) Pow(x, y *Float) *Float
-[?] func (z *Float) Sec(x *Float) *Float
-[?] func (z *Float) Sech(x *Float) *Float
-[?] func (z *Float) Sin(x *Float) *Float
-[?] func (z *Float) Sinh(x *Float) *Float
-[?] func (z *Float) Tan(x *Float) *Float
-[?] func (z *Float) Tanh(x *Float) *Float
+[✅] func (z *Float) Sec(x *Float) *Float
+[✅] func (z *Float) Sech(x *Float) *Float
+[✅] func (z *Float) Sin(x *Float) *Float
+[✅] func (z *Float) Sinh(x *Float) *Float
+[✅] func (z *Float) Tan(x *Float) *Float
+[✅] func (z *Float) Tanh(x *Float) *Float
 [✅] func (z *Float) Trunc(x *Float) *Float
 
 ¹: FMA/FMS always allocate a temp for the product x*y.

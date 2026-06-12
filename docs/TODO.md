@@ -1,19 +1,5 @@
 # Workspace Plan — Remaining Work
 
-## Aliasing doc review
-
-docs/aliasing.md details which functions of the big.Float API do not cause hidden
-allocations when called with arguments aliasing the receiver. We need to extend
-that to the full bigmath.Float API. Aliasing is fully supported but:
-
-- some functions do not have any specific handling for this (because it's not needed)
-- others have defensive aliasing handling (copy x, just in case...)
-
-This should be reviewed and documented. Functions with defensive handling of
-aliasing may need updating to make copies of x only if needed.
-
-- [ ] Finish updating the aliasing doc.
-
 ## Dynamic precision guards
 
 - [ ] Review the dynamic precision guards (they&#39;re overkill) and update edge cases for these
