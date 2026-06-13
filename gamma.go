@@ -11,36 +11,79 @@ import (
 // Gamma-related constants for argument reduction (Arb convention).
 const gammaBeta = 0.2 // β: threshold coefficient for Stirling series convergence
 
-// bernoulliCache caches Bernoulli numbers B₂, B₄, ..., B_{2n} as exact
-// math/big.Rat fractions, converted to *Float on demand.
+// bernoulliCache caches Bernoulli numbers B₂, B₄, ..., B_{2n} as *Float
+// values computed at cachedPrec bits of precision.
 type bernoulliCache struct {
-	mu   sync.Mutex
-	vals []*big.Rat // vals[k] = B_{2(k+1)}
+	mu         sync.Mutex
+	vals       []*Float // vals[k] = B_{2(k+1)} at cachedPrec bits
+	cachedPrec uint     // precision at which vals were stored
 }
 
 var bernoulli = new(bernoulliCache)
 
-// ensure computes Bernoulli numbers up to B_{2n} if not already cached.
-func (bc *bernoulliCache) ensure(n int) {
+// ensure computes Bernoulli numbers up to B_{2n} at the requested
+// precision, stored at a higher guard-bit precision. Cache hit when
+// len(vals) >= n AND cachedPrec >= prec.
+func (bc *bernoulliCache) ensure(n int, prec uint) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	if len(bc.vals) >= n {
+	if len(bc.vals) >= n && bc.cachedPrec >= prec {
 		return
 	}
 
-	m := 2 * n // highest index needed
-	B := make([]*big.Rat, m+1)
-	B[0] = new(big.Rat).SetFrac64(1, 1) // B₀ = 1
-	if m > 0 {
-		B[1] = new(big.Rat).SetFrac64(-1, 2) // B₁ = ½
+	// Guard bits to absorb rounding in the float recurrence.
+	// Per-operation loss: 2 bits/Mul, 1 bit/Add, 2 bits/Quo, plus
+	// ⌈log₂(n)⌉ for alternating-sign cancellation.
+	guardBits := uint(1.5*float64(n) + 2 + math.Ceil(math.Log2(float64(n))))
+	workPrec := prec + guardBits + _W
+
+	bc.vals = computeBernoulliFloats(n, workPrec)
+	bc.cachedPrec = prec
+}
+
+// floats returns Bernoulli numbers B₂, B₄, ..., B_{2n} as *Float values
+// at the given precision.
+func (bc *bernoulliCache) floats(n int, prec uint) []*Float {
+	bc.ensure(n, prec)
+	r := make([]*Float, n)
+	for i, v := range bc.vals[:n] {
+		if v.Prec() == prec {
+			r[i] = v
+		} else {
+			r[i] = newFloat(prec).Set(v)
+		}
+	}
+	return r
+}
+
+// computeBernoulliFloats computes Bernoulli numbers B₂, B₄, ..., B_{2n}
+// directly as *Float values using the recurrence:
+//
+//	B_i = -1/(i+1) · Σ_{k=0}^{i-1} C(i+1, k) · B_k
+//
+// Binomial coefficients come from big.Int (exact), converted to *Float
+// at the working precision.
+func computeBernoulliFloats(n int, prec uint) []*Float {
+	m := 2 * n
+	B := make([]*Float, m+1)
+
+	// B₀ = 1
+	B[0] = one
+
+	// B₁ = -½ (exact in binary)
+	if m >= 1 {
+		B[1] = new(Float).Neg(half)
 	}
 
-	// Sequential recurrence: B_i = -1/(i+1) · Σ_{k=0}^{i-1} C(i+1, k) · B_k
-	binom := new(big.Rat)
-	term := new(big.Rat)
-	sum := new(big.Rat)
-	s0 := new(big.Rat)
+	// Reusable temporaries for the inner loop
+	sum := newFloat(prec)
+	term := newFloat(prec)
+	binomF := newFloat(prec)
+	s0 := newFloat(prec)
+	denom := newFloat(prec)
+	binomInt := new(big.Int)
+
 	for i := 2; i <= m; i++ {
 		// For odd i > 1, B_i = 0
 		if i%2 == 1 {
@@ -49,37 +92,33 @@ func (bc *bernoulliCache) ensure(n int) {
 		sum.SetInt64(0)
 		for k := 0; k < i; k++ {
 			if k%2 == 1 && k > 1 {
-				// B[k] is nil (0)
+				// B_k = 0 for odd k > 1
 				continue
 			}
-			binom.Num().Binomial(int64(i+1), int64(k))
-			term.Mul(binom, B[k])
+			// binom = C(i+1, k) as *Float (may lose low bits — guard bits absorb)
+			binomInt.Binomial(int64(i+1), int64(k))
+			binomF.SetInt(binomInt)
+
+			// term = binom · B_k
+			term.Mul(binomF, B[k])
+
+			// sum += term (pointer swap to avoid allocation)
 			s0.Add(sum, term)
 			sum, s0 = s0, sum
 		}
 
-		// B_i = -sum / (i+1)
-		B[i] = new(big.Rat).Neg(sum)
-		B[i].Mul(B[i], new(big.Rat).SetFrac64(1, int64(i+1)))
+		// B[i] = -(sum) / (i+1)
+		s0.Neg(sum)
+		denom.SetInt64(int64(i + 1))
+		B[i] = newFloat(prec).Quo(s0, denom)
 	}
 
 	// Extract even-index Bernoulli numbers B₂, B₄, ..., B_{2n}
-	// vals[0] = B₂, vals[1] = B₄, ...
-	bc.vals = make([]*big.Rat, n)
-	for i := range bc.vals {
-		bc.vals[i] = B[2*(i+1)]
+	result := make([]*Float, n)
+	for k := range result {
+		result[k] = B[2*(k+1)]
 	}
-}
-
-// floats returns Bernoulli numbers B₂, B₄, ..., B_{2n} as *Float values
-// at the given precision.
-func (bc *bernoulliCache) floats(n int, prec uint) []*Float {
-	bc.ensure(n)
-	r := make([]*Float, n)
-	for i, v := range bc.vals[:n] {
-		r[i] = newFloat(prec).SetRat(v)
-	}
-	return r
+	return result
 }
 
 // lgammaStirling computes log|Γ(x)| for x ≥ ½ using the Stirling series

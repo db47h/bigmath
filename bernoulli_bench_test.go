@@ -25,8 +25,9 @@ func BenchmarkBernoulliOnly(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				bernoulli.mu.Lock()
 				bernoulli.vals = nil
+				bernoulli.cachedPrec = 0
 				bernoulli.mu.Unlock()
-				bernoulli.ensure(n)
+				bernoulli.ensure(n, c.prec)
 			}
 		})
 	}
@@ -53,9 +54,10 @@ func BenchmarkGammaLoopOnly(b *testing.B) {
 	{
 		bernoulli.mu.Lock()
 		bernoulli.vals = nil
+		bernoulli.cachedPrec = 0
 		bernoulli.mu.Unlock()
 		warmN := max(int(math.Ceil(float64(warmPrec)/(4*math.Pi*0.2))), 8)
-		bernoulli.ensure(warmN)
+		bernoulli.ensure(warmN, warmPrec)
 	}
 	for _, c := range cases {
 		n := max(int(math.Ceil(float64(c.prec)/(4*math.Pi*0.2))), 8)
