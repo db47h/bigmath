@@ -32,23 +32,30 @@ func (bc *bernoulliCache) ensure(n int) {
 	m := 2 * n // highest index needed
 	B := make([]*big.Rat, m+1)
 	B[0] = new(big.Rat).SetFrac64(1, 1) // B₀ = 1
+	if m > 0 {
+		B[1] = new(big.Rat).SetFrac64(-1, 2) // B₁ = ½
+	}
 
 	// Sequential recurrence: B_i = -1/(i+1) · Σ_{k=0}^{i-1} C(i+1, k) · B_k
-	binom := new(big.Int)
+	binom := new(big.Rat)
 	term := new(big.Rat)
-	for i := 1; i <= m; i++ {
+	sum := new(big.Rat)
+	s0 := new(big.Rat)
+	for i := 2; i <= m; i++ {
 		// For odd i > 1, B_i = 0
-		if i > 1 && i%2 == 1 {
-			B[i] = new(big.Rat)
+		if i%2 == 1 {
 			continue
 		}
-
-		sum := new(big.Rat)
+		sum.SetInt64(0)
 		for k := 0; k < i; k++ {
-			binom.Binomial(int64(i+1), int64(k))
-			term.SetFrac(binom, big.NewInt(1))
-			term.Mul(term, B[k])
-			sum.Add(sum, term)
+			if k%2 == 1 && k > 1 {
+				// B[k] is nil (0)
+				continue
+			}
+			binom.Num().Binomial(int64(i+1), int64(k))
+			term.Mul(binom, B[k])
+			s0.Add(sum, term)
+			sum, s0 = s0, sum
 		}
 
 		// B_i = -sum / (i+1)
