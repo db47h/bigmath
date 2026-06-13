@@ -4,7 +4,6 @@ package bigmath
 
 import (
 	"math"
-	"math/big"
 	"sync"
 )
 
@@ -62,8 +61,8 @@ func (bc *bernoulliCache) floats(n int, prec uint) []*Float {
 //
 //	B_i = -1/(i+1) · Σ_{k=0}^{i-1} C(i+1, k) · B_k
 //
-// Binomial coefficients come from big.Int (exact), converted to *Float
-// at the working precision.
+// The binomial coefficient C(i+1, k) is maintained iteratively as a *Float
+// within the inner loop.
 func computeBernoulliFloats(n int, prec uint) []*Float {
 	m := 2 * n
 	B := make([]*Float, m+1)
@@ -79,10 +78,10 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 	// Reusable temporaries for the inner loop
 	sum := newFloat(prec)
 	term := newFloat(prec)
-	binomF := newFloat(prec)
 	s0 := newFloat(prec)
 	denom := newFloat(prec)
-	binomInt := new(big.Int)
+	binom := newFloat(prec)
+	ratio := newFloat(prec)
 
 	for i := 2; i <= m; i++ {
 		// For odd i > 1, B_i = 0
@@ -90,21 +89,28 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 			continue
 		}
 		sum.SetInt64(0)
-		for k := 0; k < i; k++ {
-			if k%2 == 1 && k > 1 {
-				// B_k = 0 for odd k > 1
-				continue
+		binom.SetUint64(1) // C(i+1, 0) = 1
+
+		for k := 0; k < i; {
+			// binom = C(i+1, k) — invariant: holds at k=0, maintained by advance below
+
+			if k%2 != 1 || k <= 1 {
+				// B_k is non-zero (B₀, B₁, or even k ≥ 2)
+				term.Mul(binom, B[k])
+				s0.Add(sum, term)
+				sum, s0 = s0, sum
 			}
-			// binom = C(i+1, k) as *Float (may lose low bits — guard bits absorb)
-			binomInt.Binomial(int64(i+1), int64(k))
-			binomF.SetInt(binomInt)
 
-			// term = binom · B_k
-			term.Mul(binomF, B[k])
+			k++
+			if k >= i {
+				break
+			}
 
-			// sum += term (pointer swap to avoid allocation)
-			s0.Add(sum, term)
-			sum, s0 = s0, sum
+			// Advance binom: C(i+1, k) = C(i+1, k-1) · (i+2-k) / k
+			ratio.SetInt64(int64(i + 2 - k))
+			s0.Mul(binom, ratio) // s0 = binom · (i+2-k)
+			ratio.SetInt64(int64(k))
+			binom.Quo(s0, ratio) // binom = s0 / k
 		}
 
 		// B[i] = -(sum) / (i+1)
