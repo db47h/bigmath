@@ -165,7 +165,7 @@ func (z *Complex) lgammaStirling(x *Complex, workPrec uint) *Complex {
 
 	// Stirling series evaluation
 	maxTerms := max(int(math.Ceil(float64(workPrec)/(4*math.Pi*gammaBeta))), 8)
-	bnums := bernoulli.floats(maxTerms, workPrec)
+	bernoulli.ensure(maxTerms, workPrec)
 
 	sum := newComplex(workPrec) // series accumulator
 
@@ -177,8 +177,9 @@ func (z *Complex) lgammaStirling(x *Complex, workPrec uint) *Complex {
 	for k := 1; k <= maxTerms; k++ {
 		// term = B_{2k} · z^{-(2k-1)} / (2k·(2k-1))
 		// B_{2k} is real, so multiply components separately.
-		term.Real.Mul(bnums[k-1], &t1.Real)
-		term.Imag.Mul(bnums[k-1], &t1.Imag)
+		bk := bernoulli.get(k-1, workPrec)
+		term.Real.Mul(bk, &t1.Real)
+		term.Imag.Mul(bk, &t1.Imag)
 
 		denom.SetInt64(int64(2 * k * (2*k - 1)))
 		t0.Real.Quo(&term.Real, denom)

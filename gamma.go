@@ -13,7 +13,7 @@ const gammaBeta = 0.2 // β: threshold coefficient for Stirling series convergen
 // bernoulliCache caches Bernoulli numbers B₂, B₄, ..., B_{2n} as *Float
 // values computed at cachedPrec bits of precision.
 type bernoulliCache struct {
-	mu         sync.Mutex
+	mu         sync.RWMutex
 	vals       []*Float // vals[k] = B_{2(k+1)} at cachedPrec bits
 	cachedPrec uint     // precision at which vals were stored
 }
@@ -31,29 +31,8 @@ func (bc *bernoulliCache) ensure(n int, prec uint) {
 		return
 	}
 
-	// Guard bits to absorb rounding in the float recurrence.
-	// Per-operation loss: 2 bits/Mul, 1 bit/Add, 2 bits/Quo, plus
-	// ⌈log₂(n)⌉ for alternating-sign cancellation.
-	guardBits := uint(1.5*float64(n) + 2 + math.Ceil(math.Log2(float64(n))))
-	workPrec := prec + guardBits + _W
-
-	bc.vals = computeBernoulliFloats(n, workPrec)
+	bc.vals = computeBernoulliFloats(n, prec)
 	bc.cachedPrec = prec
-}
-
-// floats returns Bernoulli numbers B₂, B₄, ..., B_{2n} as *Float values
-// at the given precision.
-func (bc *bernoulliCache) floats(n int, prec uint) []*Float {
-	bc.ensure(n, prec)
-	r := make([]*Float, n)
-	for i, v := range bc.vals[:n] {
-		if v.Prec() == prec {
-			r[i] = v
-		} else {
-			r[i] = newFloat(prec).Set(v)
-		}
-	}
-	return r
 }
 
 // computeBernoulliFloats computes Bernoulli numbers B₂, B₄, ..., B_{2n}
@@ -64,6 +43,12 @@ func (bc *bernoulliCache) floats(n int, prec uint) []*Float {
 // The binomial coefficient C(i+1, k) is maintained iteratively as a *Float
 // within the inner loop.
 func computeBernoulliFloats(n int, prec uint) []*Float {
+	// Guard bits to absorb rounding in the float recurrence.
+	// Per-operation loss: 2 bits/Mul, 1 bit/Add, 2 bits/Quo, plus
+	// ⌈log₂(n)⌉ for alternating-sign cancellation.
+	guardBits := uint(1.5*float64(n) + 2 + math.Ceil(math.Log2(float64(n))))
+	workPrec := prec + guardBits + _W
+
 	m := 2 * n
 	B := make([]*Float, m+1)
 
@@ -76,12 +61,12 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 	}
 
 	// Reusable temporaries for the inner loop
-	sum := newFloat(prec)
-	term := newFloat(prec)
-	s0 := newFloat(prec)
-	denom := newFloat(prec)
-	binom := newFloat(prec)
-	ratio := newFloat(prec)
+	sum := newFloat(workPrec)
+	term := newFloat(workPrec)
+	s0 := newFloat(workPrec)
+	denom := newFloat(workPrec)
+	binom := newFloat(workPrec)
+	ratio := newFloat(workPrec)
 
 	for i := 2; i <= m; i++ {
 		// For odd i > 1, B_i = 0
@@ -116,15 +101,32 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 		// B[i] = -(sum) / (i+1)
 		s0.Neg(sum)
 		denom.SetInt64(int64(i + 1))
-		B[i] = newFloat(prec).Quo(s0, denom)
+		B[i] = newFloat(workPrec).Quo(s0, denom)
 	}
 
 	// Extract even-index Bernoulli numbers B₂, B₄, ..., B_{2n}
 	result := make([]*Float, n)
 	for k := range result {
-		result[k] = B[2*(k+1)]
+		result[k] = newFloat(prec).Set(B[2*(k+1)])
 	}
 	return result
+}
+
+// get returns B_{2(n+1)} from the cache at precision prec.
+// The caller must have called bc.ensure() with N >= n+1 (i.e., one more than the
+// highest index that will be passed to get). Safe for concurrent use.
+// The returned *Float must not be mutated.
+func (bc *bernoulliCache) get(n int, prec uint) *Float {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+	if n >= len(bc.vals) {
+		panic(ErrNaN("bernoulliCache.get: index out of range"))
+	}
+	v := bc.vals[n]
+	if v.Prec() == prec {
+		return v
+	}
+	return newFloat(prec).Set(v)
 }
 
 // lgammaStirling computes log|Γ(x)| for x ≥ ½ using the Stirling series
@@ -180,7 +182,7 @@ func (z *Float) lgammaStirling(x *Float) *Float {
 	maxTerms := max(int(math.Ceil(float64(workPrec)/(4*math.Pi*gammaBeta))), 8)
 
 	// Get Bernoulli numbers B₂ ... B_{2·maxTerms}
-	bnums := bernoulli.floats(maxTerms, workPrec)
+	bernoulli.ensure(maxTerms, workPrec)
 
 	// t0 = 1/z²
 	t0.Inv(t1.Mul(x, x))
@@ -194,9 +196,9 @@ func (z *Float) lgammaStirling(x *Float) *Float {
 
 	for k := 1; k <= maxTerms; k++ {
 		// term = B_{2k} · z^{-(2k-1)} / (2k·(2k-1))
-		t2.Mul(bnums[k-1], t1)                // B_{2k} · z^{-(2k-1)}
-		t4.SetInt64(int64(2 * k * (2*k - 1))) // (2k)(2k-1)
-		t3.Quo(t2, t4)                        // B_{2k} / (2k(2k-1) · z^{2k-1})
+		t2.Mul(bernoulli.get(k-1, workPrec), t1) // B_{2k} · z^{-(2k-1)}
+		t4.SetInt64(int64(2 * k * (2*k - 1)))    // (2k)(2k-1)
+		t3.Quo(t2, t4)                           // B_{2k} / (2k(2k-1) · z^{2k-1})
 
 		// Stop if term underflows or series starts diverging
 		if t3.Sign() == 0 || t3.MantExp(nil) < sum.ULPExponent() {
