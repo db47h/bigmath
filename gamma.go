@@ -62,11 +62,9 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 
 	// Reusable temporaries for the inner loop
 	sum := newFloat(workPrec)
-	term := newFloat(workPrec)
+	t := newFloat(workPrec)
 	s0 := newFloat(workPrec)
-	denom := newFloat(workPrec)
 	binom := newFloat(workPrec)
-	ratio := newFloat(workPrec)
 
 	for i := 2; i <= m; i++ {
 		// For odd i > 1, B_i = 0
@@ -81,8 +79,8 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 
 			if k%2 != 1 || k <= 1 {
 				// B_k is non-zero (B₀, B₁, or even k ≥ 2)
-				term.Mul(binom, B[k])
-				s0.Add(sum, term)
+				t.Mul(binom, B[k])
+				s0.Add(sum, t)
 				sum, s0 = s0, sum
 			}
 
@@ -92,16 +90,16 @@ func computeBernoulliFloats(n int, prec uint) []*Float {
 			}
 
 			// Advance binom: C(i+1, k) = C(i+1, k-1) · (i+2-k) / k
-			ratio.SetInt64(int64(i + 2 - k))
-			s0.Mul(binom, ratio) // s0 = binom · (i+2-k)
-			ratio.SetInt64(int64(k))
-			binom.Quo(s0, ratio) // binom = s0 / k
+			t.SetInt64(int64(i + 2 - k))
+			s0.Mul(binom, t) // s0 = binom · (i+2-k)
+			t.SetInt64(int64(k))
+			binom.Quo(s0, t) // binom = s0 / k
 		}
 
 		// B[i] = -(sum) / (i+1)
 		s0.Neg(sum)
-		denom.SetInt64(int64(i + 1))
-		B[i] = newFloat(workPrec).Quo(s0, denom)
+		t.SetInt64(int64(i + 1))
+		B[i] = newFloat(workPrec).Quo(s0, t)
 	}
 
 	// Extract even-index Bernoulli numbers B₂, B₄, ..., B_{2n}
